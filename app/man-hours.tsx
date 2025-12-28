@@ -1,4 +1,4 @@
-import { Stack } from 'expo-router';
+import { Stack, router } from 'expo-router';
 import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   Alert,
 } from 'react-native';
-import { FileText, ClipboardList } from 'lucide-react-native';
+import { FileText, ClipboardList, Inbox } from 'lucide-react-native';
 import PlantAssetsTimesheetsTab from '@/components/accounts/PlantAssetsTimesheetsTab';
 import { FilterValues } from '@/components/accounts/FiltersBar';
 import { ExportRequest } from '@/components/accounts/ExportRequestModal';
@@ -74,15 +74,19 @@ export default function ManHoursScreen() {
       {activeTab === 'emh' ? (
         <View style={styles.content}>
           <View style={styles.placeholder}>
-            <FileText size={64} color="#94a3b8" />
-            <Text style={styles.placeholderTitle}>EMH Report - Estimated Man Hours</Text>
+            <Inbox size={64} color="#3b82f6" />
+            <Text style={styles.placeholderTitle}>EMH Inbox</Text>
             <Text style={styles.placeholderText}>
-              Generate and manage Estimated Man Hours reports for operator labor hours.
-              Select subcontractors, view operator timesheets, and process billing.
+              Review and manage Estimated Man Hours reports from enterprise clients.
+              View employee timesheets, approve hours, and handle disputes.
             </Text>
-            <Text style={styles.placeholderNote}>
-              This functionality follows the same pattern as Machine Hours EPH
-            </Text>
+            <TouchableOpacity
+              style={styles.inboxButton}
+              onPress={() => router.push('/emh-inbox')}
+            >
+              <Inbox size={20} color="#fff" />
+              <Text style={styles.inboxButtonText}>Open EMH Inbox</Text>
+            </TouchableOpacity>
           </View>
         </View>
       ) : (
@@ -158,5 +162,26 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic' as const,
     marginTop: 8,
+  },
+  inboxButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: '#3b82f6',
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 8,
+    marginTop: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  inboxButtonText: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#ffffff',
   },
 });
