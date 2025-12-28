@@ -292,6 +292,19 @@ export default function MachineHoursScreen() {
       </View>
 
       {activeTab === 'inbox' && (
+        <ScrollView style={styles.content}>
+          <View style={styles.emptyContainer}>
+            <FileText size={64} color={Colors.textSecondary} />
+            <Text style={styles.emptyText}>EPH Report Generation</Text>
+            <Text style={styles.emptySubtext}>
+              Generate EPH reports for subcontractors with asset selection, date ranges, and rate configuration.
+              This interface will be moved from Billing Management screen.
+            </Text>
+          </View>
+        </ScrollView>
+      )}
+
+      {activeTab === 'report' && (
         loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.accent} />
@@ -315,10 +328,10 @@ export default function MachineHoursScreen() {
             <ScrollView style={styles.content}>
               {filteredReports.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <FileText size={64} color={Colors.textSecondary} />
-                  <Text style={styles.emptyText}>No EPH reports sent</Text>
+                  <Send size={64} color={Colors.textSecondary} />
+                  <Text style={styles.emptyText}>No EPH reports awaiting approval</Text>
                   <Text style={styles.emptySubtext}>
-                    EPH reports you send to subcontractors will appear here
+                    EPH reports sent to subcontractors will appear here for review and approval
                   </Text>
                 </View>
               ) : (
@@ -329,18 +342,6 @@ export default function MachineHoursScreen() {
             </ScrollView>
           </>
         )
-      )}
-
-      {activeTab === 'report' && (
-        <ScrollView style={styles.content}>
-          <View style={styles.emptyContainer}>
-            <Send size={64} color={Colors.textSecondary} />
-            <Text style={styles.emptyText}>EPH Approvals</Text>
-            <Text style={styles.emptySubtext}>
-              Review and approve EPH reports from sites
-            </Text>
-          </View>
-        </ScrollView>
       )}
 
       {activeTab === 'payments' && (
