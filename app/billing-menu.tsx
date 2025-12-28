@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DollarSign } from 'lucide-react-native';
+import { DollarSign, Truck, Users } from 'lucide-react-native';
 
 export default function BillingMenuScreen() {
   const insets = useSafeAreaInsets();
@@ -22,6 +22,22 @@ export default function BillingMenuScreen() {
       icon: DollarSign,
       color: '#f59e0b',
       route: '/billing-config',
+    },
+    {
+      id: 'eph-inbox',
+      title: 'EPH Inbox',
+      description: 'Manage Equipment/Plant Hours reports and approvals',
+      icon: Truck,
+      color: '#3b82f6',
+      route: '/eph-inbox',
+    },
+    {
+      id: 'emh-inbox',
+      title: 'EMH Inbox',
+      description: 'Manage Employee/Man Hours reports and approvals',
+      icon: Users,
+      color: '#10b981',
+      route: '/emh-inbox',
     },
   ];
 
