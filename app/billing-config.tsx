@@ -1,4 +1,4 @@
-import { Stack, useFocusEffect } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
@@ -496,7 +496,9 @@ const getEffectiveEntriesForBilling = (entries: TimesheetEntry[]): TimesheetEntr
 export default function BillingConfigScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('config');
+  const params = useLocalSearchParams();
+  const initialTab = (params.tab as TabType) || 'config';
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
   const [selectedSubcontractor, setSelectedSubcontractor] = useState<string | null>(null);
   const [plantAssets, setPlantAssets] = useState<PlantAsset[]>([]);
