@@ -77,6 +77,14 @@ export default function AddEmployeeScreen() {
   const [employerType, setEmployerType] = useState<'company' | 'subcontractor'>('company');
   const [isCrossHire, setIsCrossHire] = useState(false);
   const [crossHireName, setCrossHireName] = useState('');
+  
+  // Company-level creation support
+  const [accessScope, setAccessScope] = useState<'company-level' | 'all-sites' | 'selected-sites' | 'no-sites'>('no-sites');
+  const [canAccessMasterCompanyProfile, setCanAccessMasterCompanyProfile] = useState(false);
+  const [showAccessScopeDropdown, setShowAccessScopeDropdown] = useState(false);
+  
+  // Detect if creating from company level (no site selected)
+  const isCompanyLevelCreation = !user?.siteId && user?.currentCompanyId;
 
   const handleEmployerSelect = (name: string, id: string, type: 'company' | 'subcontractor') => {
     setEmployerName(name);
@@ -308,9 +316,18 @@ export default function AddEmployeeScreen() {
   };
 
   const handleSave = async () => {
-    if (!user?.siteId || !user?.masterAccountId) {
-      Alert.alert('Error', 'Missing site or account information');
-      return;
+    // Company-level creation: only requires companyId
+    // Site-level creation: requires both siteId and companyId
+    if (isCompanyLevelCreation) {
+      if (!user?.currentCompanyId || !user?.masterAccountId) {
+        Alert.alert('Error', 'Missing company or account information');
+        return;
+      }
+    } else {
+      if (!user?.siteId || !user?.masterAccountId) {
+        Alert.alert('Error', 'Missing site or account information');
+        return;
+      }
     }
 
     const errors: typeof validationErrors = {};
@@ -360,52 +377,69 @@ export default function AddEmployeeScreen() {
 
     try {
       console.log('[AddEmployee] Checking for duplicate ID number and contact');
+      console.log('[AddEmployee] Company-level creation:', isCompanyLevelCreation);
       console.log('[AddEmployee] Current user.siteId:', user.siteId);
+      console.log('[AddEmployee] Current user.companyId:', user.currentCompanyId);
       console.log('[AddEmployee] Checking employeeIdNumber:', employeeIdNumber.trim());
       const employeesRef = collection(db, 'employees');
       
-      const idQuery = query(
-        employeesRef,
-        where('employeeIdNumber', '==', employeeIdNumber.trim()),
-        where('siteId', '==', user.siteId)
-      );
+      // For company-level creation, check duplicates at company level
+      // For site-level creation, check duplicates at site level (existing behavior)
+      const idQuery = isCompanyLevelCreation
+        ? query(
+            employeesRef,
+            where('employeeIdNumber', '==', employeeIdNumber.trim()),
+            where('companyId', '==', user.currentCompanyId)
+          )
+        : query(
+            employeesRef,
+            where('employeeIdNumber', '==', employeeIdNumber.trim()),
+            where('siteId', '==', user.siteId)
+          );
       
       const idSnapshot = await getDocs(idQuery);
-      console.log('[AddEmployee] Found', idSnapshot.size, 'matching employees in this site');
+      const scopeLabel = isCompanyLevelCreation ? 'company' : 'site';
+      console.log('[AddEmployee] Found', idSnapshot.size, 'matching employees in this', scopeLabel);
       
       if (!idSnapshot.empty) {
         const existingEmployee = idSnapshot.docs[0].data();
-        console.log('[AddEmployee] Duplicate ID number found within site:', user.siteId);
+        console.log('[AddEmployee] Duplicate ID number found within', scopeLabel);
         console.log('[AddEmployee] Existing employee:', existingEmployee.name, '| ID:', existingEmployee.employeeIdNumber);
         setValidationErrors({ employeeIdNumber: true });
         setIsBasicInfoExpanded(true);
         Alert.alert(
           'Duplicate ID Number',
-          `An employee with ID "${employeeIdNumber.trim()}" already exists in this site: "${existingEmployee.name}". Each employee must have a unique ID number within the same site. The same ID can exist in different sites.`,
+          `An employee with ID "${employeeIdNumber.trim()}" already exists in this ${scopeLabel}: "${existingEmployee.name}". Each employee must have a unique ID number within the same ${scopeLabel}.`,
           [{ text: 'OK' }]
         );
         setIsSaving(false);
         return;
       }
 
-      const contactQuery = query(
-        employeesRef,
-        where('contact', '==', contact.trim()),
-        where('siteId', '==', user.siteId)
-      );
+      const contactQuery = isCompanyLevelCreation
+        ? query(
+            employeesRef,
+            where('contact', '==', contact.trim()),
+            where('companyId', '==', user.currentCompanyId)
+          )
+        : query(
+            employeesRef,
+            where('contact', '==', contact.trim()),
+            where('siteId', '==', user.siteId)
+          );
       
       const contactSnapshot = await getDocs(contactQuery);
-      console.log('[AddEmployee] Found', contactSnapshot.size, 'employees with matching contact in this site');
+      console.log('[AddEmployee] Found', contactSnapshot.size, 'employees with matching contact in this', scopeLabel);
       
       if (!contactSnapshot.empty) {
         const existingEmployee = contactSnapshot.docs[0].data();
-        console.log('[AddEmployee] Duplicate contact number found within site:', user.siteId);
+        console.log('[AddEmployee] Duplicate contact number found within', scopeLabel);
         console.log('[AddEmployee] Existing employee:', existingEmployee.name, '| Contact:', existingEmployee.contact);
         setValidationErrors({ contact: true });
         setIsBasicInfoExpanded(true);
         Alert.alert(
           'Duplicate Contact Number',
-          `An employee with contact "${contact.trim()}" already exists in this site: "${existingEmployee.name}". Each employee must have a unique contact number within the same site.`,
+          `An employee with contact "${contact.trim()}" already exists in this ${scopeLabel}: "${existingEmployee.name}". Each employee must have a unique contact number within the same ${scopeLabel}.`,
           [{ text: 'OK' }]
         );
         setIsSaving(false);
@@ -433,9 +467,11 @@ export default function AddEmployeeScreen() {
         employerType,
         isCrossHire,
         crossHireName: isCrossHire ? crossHireName.trim() : null,
-        siteId: user.siteId,
+        siteId: user.siteId || null, // Optional for company-level creation
         masterAccountId: user.masterAccountId,
-        companyId: user.currentCompanyId || null,
+        companyId: user.currentCompanyId, // Required for both modes
+        accessScope: isCompanyLevelCreation ? accessScope : 'no-sites', // Only set for company-level creation
+        canAccessMasterCompanyProfile: isCompanyLevelCreation ? canAccessMasterCompanyProfile : false,
         inductionStatus,
         inductionNotes: inductionNotes.trim(),
         attachments,
@@ -852,6 +888,82 @@ export default function AddEmployeeScreen() {
                   </Text>
                 )}
               </View>
+
+              {/* Company-Level Access Control - Only shown for company-level creation */}
+              {isCompanyLevelCreation && (
+                <>
+                  <View style={styles.sectionDivider} />
+                  <Text style={styles.sectionSubtitle}>Access Control</Text>
+                  
+                  <View style={styles.inputGroup}>
+                    <View style={styles.inputLabel}>
+                      <Building size={18} color="#64748b" />
+                      <Text style={styles.inputLabelText}>Access Scope</Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.roleSelector}
+                      onPress={() => setShowAccessScopeDropdown(!showAccessScopeDropdown)}
+                      disabled={isSaving}
+                    >
+                      <Text style={accessScope ? styles.roleSelectorText : styles.roleSelectorPlaceholder}>
+                        {accessScope === 'company-level' ? 'Company Level Access' :
+                         accessScope === 'all-sites' ? 'All Sites' :
+                         accessScope === 'selected-sites' ? 'Selected Sites' :
+                         'No Site Access'}
+                      </Text>
+                      <ChevronDown size={20} color="#64748b" />
+                    </TouchableOpacity>
+                    <Text style={styles.fieldHint}>
+                      {accessScope === 'company-level' ? 'Employee can access company-level management' :
+                       accessScope === 'all-sites' ? 'Employee can access all company sites' :
+                       accessScope === 'selected-sites' ? 'Employee can access specific sites (assign later)' :
+                       'Employee has no site access'}
+                    </Text>
+                    {showAccessScopeDropdown && (
+                      <View style={styles.roleDropdown}>
+                        <ScrollView style={styles.roleList} nestedScrollEnabled>
+                          {[
+                            { value: 'no-sites', label: 'No Site Access' },
+                            { value: 'selected-sites', label: 'Selected Sites' },
+                            { value: 'all-sites', label: 'All Sites' },
+                            { value: 'company-level', label: 'Company Level Access' },
+                          ].map((option) => (
+                            <TouchableOpacity
+                              key={option.value}
+                              style={styles.roleOption}
+                              onPress={() => {
+                                setAccessScope(option.value as any);
+                                setShowAccessScopeDropdown(false);
+                              }}
+                            >
+                              <Text style={accessScope === option.value ? styles.roleOptionTextSelected : styles.roleOptionText}>
+                                {option.label}
+                              </Text>
+                            </TouchableOpacity>
+                          ))}
+                        </ScrollView>
+                      </View>
+                    )}
+                  </View>
+
+                  <View style={styles.switchRow}>
+                    <View style={styles.switchLabel}>
+                      <Text style={styles.switchLabelText}>Master Company Profile Access</Text>
+                      <Text style={styles.switchLabelHint}>
+                        Allow access to company-level management features
+                      </Text>
+                    </View>
+                    <Switch
+                      value={canAccessMasterCompanyProfile}
+                      onValueChange={setCanAccessMasterCompanyProfile}
+                      trackColor={{ false: '#e2e8f0', true: '#10b981' }}
+                      thumbColor={canAccessMasterCompanyProfile ? '#fff' : '#f4f3f4'}
+                      ios_backgroundColor="#e2e8f0"
+                      disabled={isSaving}
+                    />
+                  </View>
+                </>
+              )}
             </View>
           )}
 
@@ -1882,5 +1994,16 @@ const styles = StyleSheet.create({
   photoUploadHint: {
     fontSize: 13,
     color: '#94a3b8',
+  },
+  sectionDivider: {
+    height: 1,
+    backgroundColor: '#e2e8f0',
+    marginVertical: 16,
+  },
+  sectionSubtitle: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#334155',
+    marginBottom: 12,
   },
 });
