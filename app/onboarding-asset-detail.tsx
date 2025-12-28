@@ -1005,17 +1005,6 @@ export default function OnboardingAssetDetailScreen() {
             </View>
           )}
 
-          {!showOffHirePicker && (
-            <TouchableOpacity
-              style={styles.offHireButton}
-              onPress={handleOffHireNotification}
-              disabled={isSaving}
-            >
-              <Calendar size={20} color="#fff" />
-              <Text style={styles.offHireButtonText}>OFF-HIRE Notification</Text>
-            </TouchableOpacity>
-          )}
-
           {asset.offHireDate && (
             <View style={styles.offHireDateInfo}>
               <Text style={styles.offHireDateInfoLabel}>Off-Hire Date Logged:</Text>
@@ -1032,6 +1021,17 @@ export default function OnboardingAssetDetailScreen() {
                 </Text>
               )}
             </View>
+          )}
+
+          {!showOffHirePicker && (
+            <TouchableOpacity
+              style={styles.offHireButton}
+              onPress={handleOffHireNotification}
+              disabled={isSaving}
+            >
+              <Calendar size={20} color="#fff" />
+              <Text style={styles.offHireButtonText}>OFF-HIRE Notification</Text>
+            </TouchableOpacity>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1232,7 +1232,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 40,
+    paddingBottom: 100,
     gap: 12,
   },
   statusCard: {
