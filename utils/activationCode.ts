@@ -138,7 +138,7 @@ export async function createFreeAccountActivationCode(): Promise<{ success: bool
     const activationCodesRef = collection(db, 'activation_codes');
     
     const docRef = await addDoc(activationCodesRef, {
-      code: code,
+      code,
       companyName: 'Free Account',
       status: 'active',
       expiryDate: null,
