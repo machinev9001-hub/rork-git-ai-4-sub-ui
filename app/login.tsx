@@ -312,11 +312,11 @@ export default function LoginScreen() {
             <TouchableOpacity
               testID="login-activate-button"
               style={styles.activateButton}
-              onPress={() => router.push('/activate')}
+              onPress={() => router.push('/account-type-selection')}
               disabled={isLoading}
             >
               <UserPlus size={18} color="#fff" />
-              <Text style={styles.activateButtonText}>Activate New Account</Text>
+              <Text style={styles.activateButtonText}>Create New Account</Text>
             </TouchableOpacity>
             
             <Text style={styles.footerHint}>

@@ -1,3 +1,36 @@
+export type AccountType = 'enterprise' | 'free';
+
+export type VASFeatureId =
+  | 'analytics'
+  | 'reporting'
+  | 'data_exports'
+  | 'advanced_integrations'
+  | 'custom_branding'
+  | 'priority_support';
+
+export type VASFeature = {
+  id: VASFeatureId;
+  name: string;
+  description: string;
+  price?: string;
+  isActive: boolean;
+};
+
+export type FeatureFlags = {
+  employee_management: boolean;
+  asset_management: boolean;
+  external_data_reception: boolean;
+  analytics: boolean;
+  reporting: boolean;
+  data_exports: boolean;
+  advanced_integrations: boolean;
+  custom_branding: boolean;
+  priority_support: boolean;
+  task_management: boolean;
+  time_tracking: boolean;
+  progress_reporting: boolean;
+};
+
 export type UserRole =
   | "Admin"
   | "Planner"
@@ -86,6 +119,8 @@ export type MasterAccount = {
   pin: string;
   companyIds: string[];
   currentCompanyId?: string;
+  accountType?: AccountType;
+  vasFeatures?: VASFeatureId[];
   createdAt: any;
 };
 
@@ -104,6 +139,8 @@ export type User = {
   siteName?: string;
   pin?: string;
   masterAccountId?: string;
+  accountType?: AccountType;
+  vasFeatures?: VASFeatureId[];
   createdAt: any;
   isLocked?: boolean;
 };
