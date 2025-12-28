@@ -1,0 +1,259 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ============================================================================
+    // CRITICAL: LOGIN COLLECTIONS
+    // These collections must allow unauthenticated read for login to work
+    // Your app uses custom auth (not Firebase Auth), so login queries happen
+    // before request.auth is set
+    // ============================================================================
+    
+    match /masterAccounts/{accountId} {
+      // Allow read for login - app queries this collection to find master accounts
+      allow read: if true;
+      // Create allowed for activation (new master account signup)
+      allow create: if true;
+      allow update, delete: if false;
+    }
+    
+    match /users/{userId} {
+      // Allow read for login - app queries this collection to find users
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+    
+    match /employees/{employeeId} {
+      // Allow read for login - app queries this collection for employee login
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+    
+    match /companies/{companyId} {
+      // Allow read for login - app fetches company names during/after login
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+    
+    match /sites/{siteId} {
+      // Allow read for site selection and opening
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+    
+    match /qrCodes/{codeId} {
+      // Allow read for QR code login
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+    
+    // ============================================================================
+    // ACTIVATION SYSTEM
+    // ============================================================================
+    
+    match /activationCodes/{codeId} {
+      // Allow read to validate activation codes during signup
+      allow read: if true;
+      allow create, update, delete: if false;
+    }
+    
+    // ============================================================================
+    // ALL OTHER COLLECTIONS - OPEN ACCESS
+    // Since your app doesn't use Firebase Authentication, we can't check roles
+    // The security is enforced at the app level after custom login
+    // ============================================================================
+    
+    match /companyUsers/{docId} {
+      allow read, write: if true;
+    }
+    
+    match /tasks/{taskId} {
+      allow read, write: if true;
+      
+      match /taskHistory/{historyId} {
+        allow read, write: if true;
+      }
+    }
+    
+    match /activities/{activityId} {
+      allow read, write: if true;
+    }
+    
+    match /activityHistory/{historyId} {
+      allow read, write: if true;
+    }
+    
+    match /gridCellLocks/{lockId} {
+      allow read, write: if true;
+    }
+    
+    match /taskLocks/{lockId} {
+      allow read, write: if true;
+    }
+    
+    match /requests/{requestId} {
+      allow read, write: if true;
+    }
+    
+    match /handoverRequests/{requestId} {
+      allow read, write: if true;
+    }
+    
+    match /materialsRequests/{requestId} {
+      allow read, write: if true;
+    }
+    
+    match /staffRequests/{requestId} {
+      allow read, write: if true;
+    }
+    
+    match /plantRequests/{requestId} {
+      allow read, write: if true;
+    }
+    
+    match /allocationRequests/{requestId} {
+      allow read, write: if true;
+    }
+    
+    match /subcontractors/{subcontractorId} {
+      allow read, write: if true;
+    }
+    
+    match /faceData/{faceId} {
+      allow read, write: if true;
+    }
+    
+    match /clockRecords/{recordId} {
+      allow read, write: if true;
+    }
+    
+    match /plantAssets/{assetId} {
+      allow read, write: if true;
+    }
+    
+    match /assets/{assetId} {
+      allow read, write: if true;
+    }
+    
+    match /assetChecklists/{checklistId} {
+      allow read, write: if true;
+    }
+    
+    match /archivedChecklists/{checklistId} {
+      allow read, write: if true;
+    }
+    
+    match /assetTypes/{typeId} {
+      allow read, write: if true;
+    }
+    
+    match /plantAllocations/{allocationId} {
+      allow read, write: if true;
+    }
+    
+    match /plantAssetHours/{hourId} {
+      allow read, write: if true;
+    }
+    
+    match /operatorHours/{hourId} {
+      allow read, write: if true;
+    }
+    
+    match /timesheets/{timesheetId} {
+      allow read, write: if true;
+    }
+    
+    match /agreedTimesheets/{timesheetId} {
+      allow read, write: if true;
+    }
+    
+    match /pendingTimesheetEdits/{editId} {
+      allow read, write: if true;
+    }
+    
+    match /ephAgreements/{agreementId} {
+      allow read, write: if true;
+    }
+    
+    match /exportJobs/{jobId} {
+      allow read, write: if true;
+    }
+    
+    match /dailyDiaries/{diaryId} {
+      allow read, write: if true;
+    }
+    
+    match /fuelLogs/{logId} {
+      allow read, write: if true;
+    }
+    
+    match /breakdowns/{breakdownId} {
+      allow read, write: if true;
+    }
+    
+    match /messages/{messageId} {
+      allow read, write: if true;
+    }
+    
+    match /onboardingMessages/{messageId} {
+      allow read, write: if true;
+    }
+    
+    match /notifications/{notificationId} {
+      allow read, write: if true;
+    }
+    
+    match /surveyorImages/{imageId} {
+      allow read, write: if true;
+    }
+    
+    match /imageLibrary/{imageId} {
+      allow read, write: if true;
+    }
+    
+    match /pvBlocks/{blockId} {
+      allow read, write: if true;
+    }
+    
+    match /pvBlockProgress/{progressId} {
+      allow read, write: if true;
+    }
+    
+    match /menuStructure/{menuId} {
+      allow read, write: if true;
+    }
+    
+    match /billingConfig/{configId} {
+      allow read, write: if true;
+    }
+    
+    match /progressReports/{reportId} {
+      allow read, write: if true;
+    }
+    
+    match /boqProgress/{progressId} {
+      allow read, write: if true;
+    }
+    
+    match /systemConfig/{configId} {
+      allow read, write: if true;
+    }
+    
+    match /auditLogs/{logId} {
+      allow read, write: if true;
+    }
+    
+    match /offlineQueue/{queueId} {
+      allow read, write: if true;
+    }
+    
+    match /sites/{siteId}/sitePacks/{packId} {
+      allow read, write: if true;
+    }
+    
+    // Default allow for any other collections
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
