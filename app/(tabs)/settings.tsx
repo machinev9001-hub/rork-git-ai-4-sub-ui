@@ -412,14 +412,14 @@ export default function SettingsScreen() {
                     <View style={styles.subMenuCard}>
                       <TouchableOpacity 
                         style={styles.subMenuItem}
-                        onPress={() => router.push('/billing-config' as any)}
+                        onPress={() => router.push('/billing-menu' as any)}
                       >
                         <View style={styles.subMenuIcon}>
                           <FileText size={20} color="#f59e0b" />
                         </View>
                         <View style={styles.subMenuContent}>
-                          <Text style={styles.subMenuTitle}>Billing</Text>
-                          <Text style={styles.subMenuDescription}>Configure billing settings</Text>
+                          <Text style={styles.subMenuTitle}>Billing Management</Text>
+                          <Text style={styles.subMenuDescription}>Manage machine hours, man hours, and billing</Text>
                         </View>
                       </TouchableOpacity>
                     </View>
