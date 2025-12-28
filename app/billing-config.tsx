@@ -55,7 +55,7 @@ type BillingConfig = {
   };
 };
 
-type TabType = 'config' | 'eph' | 'timesheets';
+type TabType = 'config' | 'timesheets';
 type TimesheetsSubTab = 'machine' | 'man';
 type ConfigSubTab = 'machine' | 'man';
 
@@ -1973,7 +1973,7 @@ export default function BillingConfigScreen() {
               <Text style={styles.ephLinkText}>📊 Viewing timesheets for EPH Report</Text>
               <TouchableOpacity
                 onPress={() => {
-                  setActiveTab('eph');
+                  // Navigate to EPH screen instead
                   setSelectedEphAssetForTimesheets(null);
                 }}
               >
@@ -2317,7 +2317,7 @@ export default function BillingConfigScreen() {
   }, [plantAssets, user?.masterAccountId]);
 
   useEffect(() => {
-    if (activeTab === 'eph' && plantAssets.length > 0) {
+    if (activeTab === 'timesheets' && plantAssets.length > 0) {
       loadPendingEdits();
     }
   }, [activeTab, plantAssets, loadPendingEdits]);
@@ -2903,15 +2903,7 @@ export default function BillingConfigScreen() {
             Billing Config
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'eph' && styles.tabActive]}
-          onPress={() => setActiveTab('eph')}
-        >
-          <FileText size={20} color={activeTab === 'eph' ? '#1e3a8a' : '#64748b'} />
-          <Text style={[styles.tabText, activeTab === 'eph' && styles.tabTextActive]}>
-            EPH Report
-          </Text>
-        </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.tab, activeTab === 'timesheets' && styles.tabActive]}
           onPress={() => setActiveTab('timesheets')}
@@ -2947,7 +2939,7 @@ export default function BillingConfigScreen() {
           </View>
           {configSubTab === 'machine' ? renderMachineHoursConfig() : renderManHoursConfig()}
         </View>
-      ) : activeTab === 'timesheets' ? (
+      ) : (
         <View style={styles.timesheetsMainContainer}>
           <View style={styles.timesheetsSubTabBar}>
             <TouchableOpacity
@@ -2971,7 +2963,10 @@ export default function BillingConfigScreen() {
           </View>
           {timesheetsSubTab === 'machine' ? renderTimesheetsView() : renderManHoursView()}
         </View>
-      ) : (
+      )}
+
+      {/* EPH content removed - now accessible via separate EPH menu */}
+      {false && (
         <View style={styles.ephContainer}>
           <View style={styles.ephSelector}>
             <Text style={styles.ephSelectorLabel}>Select Subcontractor:</Text>
