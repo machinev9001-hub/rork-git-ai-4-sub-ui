@@ -1,16 +1,39 @@
 import { Stack } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
+  Alert,
 } from 'react-native';
 import { FileText, ClipboardList } from 'lucide-react-native';
+import PlantAssetsTimesheetsTab from '@/components/accounts/PlantAssetsTimesheetsTab';
+import { FilterValues } from '@/components/accounts/FiltersBar';
+import { ExportRequest } from '@/components/accounts/ExportRequestModal';
+import { handleExportRequest } from '@/utils/accounts/exportHandler';
+import { useAuth } from '@/contexts/AuthContext';
+import type { User } from '@/types';
+
 type TabType = 'eph' | 'payments';
 
 export default function MachineHoursScreen() {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>('eph');
+  const [filters, setFilters] = useState<FilterValues>({});
+
+  const onExport = useCallback(async (request: ExportRequest) => {
+    if (!user) {
+      Alert.alert('Error', 'User not authenticated');
+      return;
+    }
+    try {
+      await handleExportRequest(request, user as User);
+    } catch (error) {
+      console.error('[MachineHours] Export error:', error);
+      Alert.alert('Error', 'Failed to export data');
+    }
+  }, [user]);
 
   return (
     <View style={styles.container}>
@@ -63,19 +86,11 @@ export default function MachineHoursScreen() {
           </View>
         </View>
       ) : (
-        <View style={styles.content}>
-          <View style={styles.placeholder}>
-            <ClipboardList size={64} color="#94a3b8" />
-            <Text style={styles.placeholderTitle}>Process Payments - Machine Hours</Text>
-            <Text style={styles.placeholderText}>
-              Review approved machine hour timesheets and process payments.
-              View asset timesheets, generate reports, and export data.
-            </Text>
-            <Text style={styles.placeholderNote}>
-              This functionality will use the accounts/PlantAssetsTimesheetsTab component
-            </Text>
-          </View>
-        </View>
+        <PlantAssetsTimesheetsTab 
+          filters={filters}
+          onFiltersChange={setFilters}
+          onExport={onExport}
+        />
       )}
     </View>
   );
