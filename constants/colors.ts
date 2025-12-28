@@ -5,7 +5,7 @@ export const Colors = {
   accent: "#FFD600",
   surface: "#1A1A1A",
   border: "#333333",
-  cardBg: "#FFFFFF",
+  cardBg: "#1E1E1E",
   headerBg: "#000000",
   successBg: "#064E3B",
   successText: "#6EE7B7",
@@ -13,8 +13,8 @@ export const Colors = {
   warningText: "#FCD34D",
   errorBg: "#7F1D1D",
   errorText: "#FCA5A5",
-  infoBg: "#1E3A8A",
-  infoText: "#93C5FD",
+  infoBg: "#2A2A2A",
+  infoText: "#FFD600",
 } as const;
 
 export const BACKGROUND_COLOR = '#000000';
@@ -46,7 +46,7 @@ export const AppTheme: ThemeColors = {
   accent: '#FFD600',
   surface: '#1A1A1A',
   border: '#333333',
-  cardBg: '#FFFFFF',
+  cardBg: '#1E1E1E',
   headerBg: '#000000',
   headerBorder: '#FFD600',
   successBg: '#064E3B',
@@ -55,8 +55,8 @@ export const AppTheme: ThemeColors = {
   warningText: '#FCD34D',
   errorBg: '#7F1D1D',
   errorText: '#FCA5A5',
-  infoBg: '#1E3A8A',
-  infoText: '#93C5FD',
+  infoBg: '#2A2A2A',
+  infoText: '#FFD600',
 };
 
 export const RoleAccentColors = {
