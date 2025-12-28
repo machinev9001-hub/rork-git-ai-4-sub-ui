@@ -78,6 +78,12 @@ export type Company = {
   vatNumber: string;
   industrySector: string;
   status: 'Active' | 'Inactive' | 'Archived';
+  accountType?: AccountType; // Company account type (free/enterprise)
+  subscriptionTier?: 'free' | 'basic' | 'premium' | 'enterprise';
+  vasFeatures?: VASFeatureId[]; // Active VAS features for this company
+  billingEmail?: string;
+  subscriptionStartDate?: any;
+  subscriptionEndDate?: any;
   createdAt: any;
   updatedAt?: any;
   createdBy: string;
@@ -124,6 +130,8 @@ export type MasterAccount = {
   createdAt: any;
 };
 
+export type AccessScope = 'company-level' | 'all-sites' | 'selected-sites' | 'no-sites';
+
 export type User = {
   id: string;
   userId: string;
@@ -141,7 +149,10 @@ export type User = {
   masterAccountId?: string;
   accountType?: AccountType;
   vasFeatures?: VASFeatureId[];
+  canAccessMasterCompanyProfile?: boolean; // Flag for Master Company Profile access
+  accessScope?: AccessScope; // Defines where user's actions apply
   createdAt: any;
+  disabledMenus?: string[];
   isLocked?: boolean;
 };
 
@@ -431,9 +442,9 @@ export type Employee = {
   email?: string;
   employeeIdNumber?: string;
   citizenshipCountry?: string;
-  siteId: string;
+  companyId: string; // Company-level ownership (required)
   masterAccountId: string;
-  companyId?: string;
+  siteId?: string; // DEPRECATED: Use EmployeeSiteLink instead
   type?: 'employee' | 'subcontractor';
   subcontractorCompany?: string;
   employerName?: string;
@@ -441,6 +452,8 @@ export type Employee = {
   employerType: 'company' | 'subcontractor';
   isCrossHire?: boolean;
   crossHireName?: string;
+  accessScope?: AccessScope; // Access scope for this employee
+  canAccessMasterCompanyProfile?: boolean; // Can access Master Company Profile
   inductionStatus: boolean;
   inductionDate?: any;
   inductionNotes?: string;
@@ -451,6 +464,23 @@ export type Employee = {
   pdpExpiryDate?: any;
   createdAt: any;
   updatedAt?: any;
+};
+
+// New type for many-to-many employee-site relationships
+export type EmployeeSiteLink = {
+  id?: string;
+  employeeId: string;
+  employeeName?: string;
+  siteId: string;
+  siteName?: string;
+  companyId: string;
+  masterAccountId: string;
+  isActive: boolean;
+  assignedAt: any;
+  assignedBy: string;
+  removedAt?: any;
+  removedBy?: string;
+  notes?: string;
 };
 
 export type ChecklistItem = {
@@ -684,9 +714,9 @@ export type PlantAsset = {
   crossHireName?: string;
   salaryPayer?: string;
   operatorHistory?: OperatorHistory[];
-  siteId?: string | null;
+  siteId?: string | null; // DEPRECATED: Use PlantAssetAllocation instead
   masterAccountId: string;
-  companyId?: string;
+  companyId: string; // Company-level ownership (required)
   allocationStatus: AllocationStatus;
   currentAllocation?: CurrentAllocation;
   allocationHistory?: AllocationHistoryEntry[];
@@ -713,8 +743,62 @@ export type PlantAsset = {
   archived?: boolean;
   archivedAt?: any;
   archivedBy?: string;
-  isAvailableForVAS?: boolean;
+  // New marketplace fields
+  internalAllocationEnabled?: boolean; // Can be allocated to own sites
+  marketplaceVisibilityEnabled?: boolean; // Listed in marketplace (VAS-gated)
+  isAvailableForVAS?: boolean; // Legacy field (deprecated)
   availability?: 'available' | 'allocated' | 'maintenance';
+  createdAt: any;
+  updatedAt?: any;
+};
+
+// New type for plant asset allocation tracking
+export type PlantAssetAllocation = {
+  id?: string;
+  assetId: string;
+  assetType?: string;
+  companyId: string;
+  siteId: string;
+  siteName?: string;
+  masterAccountId: string;
+  isActive: boolean; // Current allocation or historical
+  allocatedAt: any;
+  allocatedBy: string;
+  deallocatedAt?: any;
+  deallocatedBy?: string;
+  pvArea?: string;
+  blockArea?: string;
+  requestId?: string;
+  notes?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+// New type for marketplace listings
+export type MarketplaceListing = {
+  id?: string;
+  assetId: string;
+  assetType: string;
+  companyId: string; // Owner company
+  companyName?: string;
+  plantNumber?: string;
+  registrationNumber?: string;
+  description?: string;
+  availability: 'available' | 'currently_allocated' | 'maintenance';
+  currentAllocationSiteId?: string; // If currently allocated
+  currentAllocationSiteName?: string;
+  dryRate?: number;
+  wetRate?: number;
+  dailyRate?: number;
+  billingMethod?: 'PER_HOUR' | 'MINIMUM_BILLING';
+  location?: string;
+  contactPerson?: string;
+  contactNumber?: string;
+  isActive: boolean; // Listing active or hidden
+  listedAt: any;
+  lastUpdatedAt?: any;
+  viewCount?: number;
+  inquiryCount?: number;
   createdAt: any;
   updatedAt?: any;
 };
