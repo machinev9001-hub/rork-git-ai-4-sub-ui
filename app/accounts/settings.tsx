@@ -53,11 +53,11 @@ export default function AccountsSettingsScreen() {
       <ScrollView style={styles.scrollView}>
         <View style={styles.profileSection}>
           <View style={styles.avatarContainer}>
-            <User size={48} color="#1e3a8a" />
+            <User size={48} color="#000000" />
           </View>
           <Text style={styles.userName}>{user?.name || 'User'}</Text>
           <View style={styles.roleBadge}>
-            <Shield size={14} color="#1e3a8a" />
+            <Shield size={14} color="#000000" />
             <Text style={styles.roleText}>{user?.role || 'Accounts'}</Text>
           </View>
         </View>
@@ -68,7 +68,7 @@ export default function AccountsSettingsScreen() {
           <View style={styles.card}>
             <View style={styles.infoRow}>
               <View style={styles.infoIcon}>
-                <User size={18} color="#64748b" />
+                <User size={18} color="#666666" />
               </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Full Name</Text>
@@ -80,7 +80,7 @@ export default function AccountsSettingsScreen() {
 
             <View style={styles.infoRow}>
               <View style={styles.infoIcon}>
-                <Briefcase size={18} color="#64748b" />
+                <Briefcase size={18} color="#666666" />
               </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>User ID</Text>
@@ -92,7 +92,7 @@ export default function AccountsSettingsScreen() {
 
             <View style={styles.infoRow}>
               <View style={styles.infoIcon}>
-                <Shield size={18} color="#64748b" />
+                <Shield size={18} color="#666666" />
               </View>
               <View style={styles.infoContent}>
                 <Text style={styles.infoLabel}>Role</Text>
@@ -105,7 +105,7 @@ export default function AccountsSettingsScreen() {
                 <View style={styles.divider} />
                 <View style={styles.infoRow}>
                   <View style={styles.infoIcon}>
-                    <Building2 size={18} color="#64748b" />
+                    <Building2 size={18} color="#666666" />
                   </View>
                   <View style={styles.infoContent}>
                     <Text style={styles.infoLabel}>Company</Text>
@@ -120,7 +120,7 @@ export default function AccountsSettingsScreen() {
                 <View style={styles.divider} />
                 <View style={styles.infoRow}>
                   <View style={styles.infoIcon}>
-                    <Phone size={18} color="#64748b" />
+                    <Phone size={18} color="#666666" />
                   </View>
                   <View style={styles.infoContent}>
                     <Text style={styles.infoLabel}>Company Contact</Text>
@@ -135,7 +135,7 @@ export default function AccountsSettingsScreen() {
                 <View style={styles.divider} />
                 <View style={styles.infoRow}>
                   <View style={styles.infoIcon}>
-                    <Building2 size={18} color="#64748b" />
+                    <Building2 size={18} color="#666666" />
                   </View>
                   <View style={styles.infoContent}>
                     <Text style={styles.infoLabel}>Site</Text>
@@ -152,7 +152,7 @@ export default function AccountsSettingsScreen() {
           
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuItemIcon}>
-              <Bell size={20} color="#1e3a8a" />
+              <Bell size={20} color="#000000" />
             </View>
             <View style={styles.menuItemContent}>
               <Text style={styles.menuItemTitle}>Notifications</Text>
@@ -162,7 +162,7 @@ export default function AccountsSettingsScreen() {
 
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuItemIcon}>
-              <FileText size={20} color="#1e3a8a" />
+              <FileText size={20} color="#000000" />
             </View>
             <View style={styles.menuItemContent}>
               <Text style={styles.menuItemTitle}>Export Settings</Text>
@@ -176,7 +176,7 @@ export default function AccountsSettingsScreen() {
           
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuItemIcon}>
-              <HelpCircle size={20} color="#1e3a8a" />
+              <HelpCircle size={20} color="#000000" />
             </View>
             <View style={styles.menuItemContent}>
               <Text style={styles.menuItemTitle}>Help & Support</Text>
@@ -186,7 +186,7 @@ export default function AccountsSettingsScreen() {
 
           <TouchableOpacity style={styles.menuItem}>
             <View style={styles.menuItemIcon}>
-              <FileText size={20} color="#1e3a8a" />
+              <FileText size={20} color="#000000" />
             </View>
             <View style={styles.menuItemContent}>
               <Text style={styles.menuItemTitle}>Documentation</Text>
@@ -218,40 +218,40 @@ export default function AccountsSettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#000000',
   },
   scrollView: {
     flex: 1,
   },
   profileSection: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 32,
     paddingHorizontal: 16,
     alignItems: 'center',
     borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
+    borderBottomColor: '#333333',
   },
   avatarContainer: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#FFD600',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
     borderWidth: 3,
-    borderColor: '#1e3a8a',
+    borderColor: '#FFD600',
   },
   userName: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: '#1e293b',
+    color: '#000000',
     marginBottom: 8,
   },
   roleBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#FFD600',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 16,
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   roleText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#1e3a8a',
+    color: '#000000',
   },
   section: {
     marginTop: 24,
@@ -269,17 +269,17 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#475569',
+    color: '#A0A0A0',
     marginBottom: 12,
     marginLeft: 4,
   },
   card: {
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 2,
   },
@@ -293,7 +293,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -303,29 +303,29 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#666666',
     marginBottom: 2,
   },
   infoValue: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#1e293b',
+    color: '#000000',
   },
   divider: {
     height: 1,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: '#F0F0F0',
     marginLeft: 60,
   },
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 2,
   },
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#FFD600',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -344,24 +344,24 @@ const styles = StyleSheet.create({
   menuItemTitle: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#1e293b',
+    color: '#000000',
     marginBottom: 2,
   },
   menuItemDescription: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#666666',
   },
   logoutButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#FFFFFF',
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#fee2e2',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.3,
     shadowRadius: 2,
     elevation: 2,
   },
@@ -385,7 +385,7 @@ const styles = StyleSheet.create({
   },
   logoutDescription: {
     fontSize: 13,
-    color: '#64748b',
+    color: '#666666',
   },
   footer: {
     paddingVertical: 32,
@@ -394,6 +394,6 @@ const styles = StyleSheet.create({
   },
   footerText: {
     fontSize: 12,
-    color: '#94a3b8',
+    color: '#A0A0A0',
   },
 });
