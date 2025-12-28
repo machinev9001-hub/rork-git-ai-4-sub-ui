@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, Calendar, DollarSign, Package, CheckCircle, AlertCircle, Clock, MessageSquare, X } from 'lucide-react-native';
+import { FileText, Calendar, DollarSign, Package, CheckCircle, AlertCircle, Clock, MessageSquare, X, Inbox, Send, CreditCard } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { getEPHReportsForSender } from '@/utils/ephReportManager';
@@ -19,13 +19,15 @@ import { collection, getDocs, query, where, orderBy as firestoreOrderBy } from '
 import { db } from '@/config/firebase';
 
 type FilterStatus = 'all' | 'sent' | 'reviewed' | 'agreed' | 'disputed';
+type TabType = 'inbox' | 'report' | 'payments';
 
-export default function EPHInboxScreen() {
+export default function MachineHoursScreen() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState<EPHReport[]>([]);
   const [filteredReports, setFilteredReports] = useState<EPHReport[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
+  const [activeTab, setActiveTab] = useState<TabType>('inbox');
   const [selectedReport, setSelectedReport] = useState<EPHReport | null>(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [detailedTimesheets, setDetailedTimesheets] = useState<any[]>([]);
@@ -259,48 +261,98 @@ export default function EPHInboxScreen() {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <Stack.Screen
         options={{
-          title: 'EPH Inbox',
+          title: 'Machine Hours',
           headerStyle: { backgroundColor: Colors.headerBg },
           headerTintColor: Colors.text,
         }}
       />
 
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.accent} />
-          <Text style={styles.loadingText}>Loading EPH reports...</Text>
-        </View>
-      ) : (
-        <>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.filterContainer}
-            contentContainerStyle={styles.filterContent}
-          >
-            {renderFilterButton('All', 'all', statusCounts.all)}
-            {renderFilterButton('Awaiting', 'sent', statusCounts.sent)}
-            {renderFilterButton('Reviewed', 'reviewed', statusCounts.reviewed)}
-            {renderFilterButton('Agreed', 'agreed', statusCounts.agreed)}
-            {renderFilterButton('Disputed', 'disputed', statusCounts.disputed)}
-          </ScrollView>
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'inbox' && styles.tabActive]}
+          onPress={() => setActiveTab('inbox')}
+        >
+          <Inbox size={20} color={activeTab === 'inbox' ? '#3B82F6' : Colors.textSecondary} />
+          <Text style={[styles.tabText, activeTab === 'inbox' && styles.tabTextActive]}>EPH Reports</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'report' && styles.tabActive]}
+          onPress={() => setActiveTab('report')}
+        >
+          <Send size={20} color={activeTab === 'report' ? '#3B82F6' : Colors.textSecondary} />
+          <Text style={[styles.tabText, activeTab === 'report' && styles.tabTextActive]}>EPH Approvals</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'payments' && styles.tabActive]}
+          onPress={() => setActiveTab('payments')}
+        >
+          <CreditCard size={20} color={activeTab === 'payments' ? '#3B82F6' : Colors.textSecondary} />
+          <Text style={[styles.tabText, activeTab === 'payments' && styles.tabTextActive]}>EPH Payments</Text>
+        </TouchableOpacity>
+      </View>
 
-          <ScrollView style={styles.content}>
-            {filteredReports.length === 0 ? (
-              <View style={styles.emptyContainer}>
-                <FileText size={64} color={Colors.textSecondary} />
-                <Text style={styles.emptyText}>No EPH reports sent</Text>
-                <Text style={styles.emptySubtext}>
-                  EPH reports you send to subcontractors will appear here
-                </Text>
-              </View>
-            ) : (
-              <View style={styles.reportsContainer}>
-                {filteredReports.map(report => renderReportCard(report))}
-              </View>
-            )}
-          </ScrollView>
-        </>
+      {activeTab === 'inbox' && (
+        loading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color={Colors.accent} />
+            <Text style={styles.loadingText}>Loading EPH reports...</Text>
+          </View>
+        ) : (
+          <>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.filterContainer}
+              contentContainerStyle={styles.filterContent}
+            >
+              {renderFilterButton('All', 'all', statusCounts.all)}
+              {renderFilterButton('Awaiting', 'sent', statusCounts.sent)}
+              {renderFilterButton('Reviewed', 'reviewed', statusCounts.reviewed)}
+              {renderFilterButton('Agreed', 'agreed', statusCounts.agreed)}
+              {renderFilterButton('Disputed', 'disputed', statusCounts.disputed)}
+            </ScrollView>
+
+            <ScrollView style={styles.content}>
+              {filteredReports.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <FileText size={64} color={Colors.textSecondary} />
+                  <Text style={styles.emptyText}>No EPH reports sent</Text>
+                  <Text style={styles.emptySubtext}>
+                    EPH reports you send to subcontractors will appear here
+                  </Text>
+                </View>
+              ) : (
+                <View style={styles.reportsContainer}>
+                  {filteredReports.map(report => renderReportCard(report))}
+                </View>
+              )}
+            </ScrollView>
+          </>
+        )
+      )}
+
+      {activeTab === 'report' && (
+        <ScrollView style={styles.content}>
+          <View style={styles.emptyContainer}>
+            <Send size={64} color={Colors.textSecondary} />
+            <Text style={styles.emptyText}>EPH Approvals</Text>
+            <Text style={styles.emptySubtext}>
+              Review and approve EPH reports from sites
+            </Text>
+          </View>
+        </ScrollView>
+      )}
+
+      {activeTab === 'payments' && (
+        <ScrollView style={styles.content}>
+          <View style={styles.emptyContainer}>
+            <CreditCard size={64} color={Colors.textSecondary} />
+            <Text style={styles.emptyText}>EPH Payments</Text>
+            <Text style={styles.emptySubtext}>
+              Process payments for agreed EPH reports
+            </Text>
+          </View>
+        </ScrollView>
       )}
 
       {detailsVisible && selectedReport && (
@@ -744,5 +796,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
+  },
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: Colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  tab: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 16,
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  tabActive: {
+    borderBottomColor: '#3B82F6',
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.textSecondary,
+  },
+  tabTextActive: {
+    color: '#3B82F6',
   },
 });
