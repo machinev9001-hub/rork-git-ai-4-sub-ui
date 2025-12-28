@@ -191,7 +191,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
     console.log('[RootLayout] Master:', masterAccount?.masterId);
     console.log('[RootLayout] Navigation attempted:', navigationAttempted.current);
     
-    const publicPaths = ['/login', '/master-signup', '/activate', '/setup-master-pin', '/setup-employee-pin', '/admin-pin-verify', '/admin-panel', '/company-selector', '/company-setup', '/master-company-profile', '/qr-scanner'];
+    const publicPaths = ['/login', '/master-signup', '/activate', '/setup-master-pin', '/setup-employee-pin', '/admin-pin-verify', '/admin-panel', '/company-selector', '/company-setup', '/qr-scanner'];
     const setupPaths = ['/setup-master-pin', '/setup-employee-pin'];
     
     if (!user && !masterAccount) {

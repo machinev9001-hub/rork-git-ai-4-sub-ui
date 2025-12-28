@@ -78,7 +78,7 @@ export default function MasterCompanyProfileScreen() {
           label: 'Billing & Accounts',
           description: 'Manage billing, invoices, and payments',
           icon: CreditCard,
-          route: '/company-billing',
+          route: '/billing-config',
         },
       ],
     },
@@ -106,8 +106,8 @@ export default function MasterCompanyProfileScreen() {
   const handleMenuItemPress = (item: MenuItem) => {
     if (item.vasRequired) {
       // Check if marketplace VAS is enabled
-      const hasMarketplaceVAS = user?.vasFeatures?.includes('advanced_integrations') || false;
-      if (!hasMarketplaceVAS && user?.accountType === 'free') {
+      const hasMarketplaceVAS = user?.vasFeatures?.includes('marketplace_access') || user?.accountType === 'enterprise';
+      if (!hasMarketplaceVAS) {
         Alert.alert(
           'Marketplace Access',
           'The Marketplace is a Value-Added Service. Would you like to enable it?',
@@ -210,7 +210,7 @@ export default function MasterCompanyProfileScreen() {
             <View style={styles.sectionContent}>
               {section.items.map((item, itemIndex) => {
                 const Icon = item.icon;
-                const isLocked = item.vasRequired && user?.accountType === 'free' && !user?.vasFeatures?.includes('advanced_integrations');
+                const isLocked = item.vasRequired && !(user?.vasFeatures?.includes('marketplace_access') || user?.accountType === 'enterprise');
                 
                 return (
                   <TouchableOpacity

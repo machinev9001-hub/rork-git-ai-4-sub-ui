@@ -6,7 +6,8 @@ export type VASFeatureId =
   | 'data_exports'
   | 'advanced_integrations'
   | 'custom_branding'
-  | 'priority_support';
+  | 'priority_support'
+  | 'marketplace_access'; // New VAS for marketplace
 
 export type VASFeature = {
   id: VASFeatureId;

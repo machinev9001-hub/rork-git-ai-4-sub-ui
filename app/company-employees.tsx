@@ -98,7 +98,7 @@ export default function CompanyEmployeesScreen() {
 
   const handleEmployeePress = (employee: Employee) => {
     router.push({
-      pathname: '/employee-detail',
+      pathname: '/onboarding-employee-detail',
       params: { employeeId: employee.id },
     });
   };
