@@ -25,8 +25,8 @@ export default function BillingMenuScreen() {
     },
     {
       id: 'man-hours',
-      title: 'Man Hours',
-      description: 'Manage operator hours, EPH reports and billing',
+      title: 'EMH (Estimated Man Hours)',
+      description: 'Manage operator hours, EMH reports and billing',
       icon: Clock,
       color: '#10b981',
       route: '/man-hours',

@@ -1654,6 +1654,140 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "subcontractorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "subcontractorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "verifiedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "verifiedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agreedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agreedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "timesheetType", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agreedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "timesheetType", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [],

@@ -8,16 +8,16 @@ import {
 } from 'react-native';
 import { FileText, ClipboardList } from 'lucide-react-native';
 
-type TabType = 'eph' | 'payments';
+type TabType = 'emh' | 'payments';
 
 export default function ManHoursScreen() {
-  const [activeTab, setActiveTab] = useState<TabType>('eph');
+  const [activeTab, setActiveTab] = useState<TabType>('emh');
 
   return (
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          headerTitle: 'Man Hours',
+          headerTitle: 'EMH (Estimated Man Hours)',
           headerStyle: {
             backgroundColor: '#1e3a8a',
           },
@@ -30,12 +30,12 @@ export default function ManHoursScreen() {
 
       <View style={styles.tabBar}>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'eph' && styles.tabActive]}
-          onPress={() => setActiveTab('eph')}
+          style={[styles.tab, activeTab === 'emh' && styles.tabActive]}
+          onPress={() => setActiveTab('emh')}
         >
-          <FileText size={20} color={activeTab === 'eph' ? '#1e3a8a' : '#64748b'} />
-          <Text style={[styles.tabText, activeTab === 'eph' && styles.tabTextActive]}>
-            EPH Report
+          <FileText size={20} color={activeTab === 'emh' ? '#1e3a8a' : '#64748b'} />
+          <Text style={[styles.tabText, activeTab === 'emh' && styles.tabTextActive]}>
+            EMH Report
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
@@ -49,17 +49,17 @@ export default function ManHoursScreen() {
         </TouchableOpacity>
       </View>
 
-      {activeTab === 'eph' ? (
+      {activeTab === 'emh' ? (
         <View style={styles.content}>
           <View style={styles.placeholder}>
             <FileText size={64} color="#94a3b8" />
-            <Text style={styles.placeholderTitle}>EPH Report - Man Hours</Text>
+            <Text style={styles.placeholderTitle}>EMH Report - Estimated Man Hours</Text>
             <Text style={styles.placeholderText}>
-              Generate and manage Equipment Per Hour reports for operator man hours.
+              Generate and manage Estimated Man Hours reports for operator labor hours.
               Select subcontractors, view operator timesheets, and process billing.
             </Text>
             <Text style={styles.placeholderNote}>
-              This functionality will follow the same pattern as Machine Hours EPH
+              This functionality follows the same pattern as Machine Hours EPH
             </Text>
           </View>
         </View>
@@ -67,13 +67,13 @@ export default function ManHoursScreen() {
         <View style={styles.content}>
           <View style={styles.placeholder}>
             <ClipboardList size={64} color="#94a3b8" />
-            <Text style={styles.placeholderTitle}>Process Payments - Man Hours</Text>
+            <Text style={styles.placeholderTitle}>Process Payments - Estimated Man Hours</Text>
             <Text style={styles.placeholderText}>
               Review approved man hour timesheets and process payments.
               View operator timesheets, generate reports, and export data.
             </Text>
             <Text style={styles.placeholderNote}>
-              This functionality will handle operator/worker timesheet processing
+              This functionality handles operator/worker timesheet processing
             </Text>
           </View>
         </View>
