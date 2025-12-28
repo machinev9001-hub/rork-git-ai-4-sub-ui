@@ -698,78 +698,7 @@ export default function OnboardingAssetDetailScreen() {
                 />
               </View>
 
-              {showOffHirePicker && (
-                <View style={styles.offHireDatePickerSection}>
-                  <Text style={styles.offHireDatePickerTitle}>Select Off-Hire Date</Text>
-                  <Text style={styles.offHireDatePickerDescription}>
-                    This date will be logged for final billing calculations and reporting
-                  </Text>
-                  <TouchableOpacity
-                    style={styles.dateButton}
-                    onPress={() => setOffHireDate(new Date())}
-                    disabled={isSaving}
-                  >
-                    <Text style={offHireDate ? styles.dateText : styles.dateTextPlaceholder}>
-                      {offHireDate ? offHireDate.toLocaleDateString() : 'Select date'}
-                    </Text>
-                  </TouchableOpacity>
-                  <View style={styles.offHireDateActions}>
-                    <TouchableOpacity
-                      style={styles.offHireCancelButton}
-                      onPress={() => {
-                        setShowOffHirePicker(false);
-                        setOffHireDate(undefined);
-                      }}
-                      disabled={isSaving}
-                    >
-                      <Text style={styles.offHireCancelButtonText}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[
-                        styles.offHireSubmitButton,
-                        !offHireDate && styles.offHireSubmitButtonDisabled,
-                      ]}
-                      onPress={handleOffHireDateSubmit}
-                      disabled={isSaving || !offHireDate}
-                    >
-                      {isSaving ? (
-                        <ActivityIndicator size="small" color="#fff" />
-                      ) : (
-                        <Text style={styles.offHireSubmitButtonText}>Submit</Text>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
 
-              {!showOffHirePicker && (
-                <TouchableOpacity
-                  style={styles.offHireButton}
-                  onPress={handleOffHireNotification}
-                  disabled={isSaving}
-                >
-                  <Calendar size={20} color="#fff" />
-                  <Text style={styles.offHireButtonText}>Off-Hire Notification</Text>
-                </TouchableOpacity>
-              )}
-
-              {asset.offHireDate && (
-                <View style={styles.offHireDateInfo}>
-                  <Text style={styles.offHireDateInfoLabel}>Off-Hire Date Logged:</Text>
-                  <Text style={styles.offHireDateInfoValue}>
-                    {new Date(asset.offHireDate).toLocaleDateString()}
-                  </Text>
-                  {asset.offHireTimestamp && (
-                    <Text style={styles.offHireDateInfoTimestamp}>
-                      Submitted on {new Date(
-                        typeof asset.offHireTimestamp === 'object' && 'toDate' in asset.offHireTimestamp
-                          ? asset.offHireTimestamp.toDate()
-                          : asset.offHireTimestamp
-                      ).toLocaleString()}
-                    </Text>
-                  )}
-                </View>
-              )}
             </View>
           )}
 
@@ -1030,6 +959,79 @@ export default function OnboardingAssetDetailScreen() {
                 </View>
               )}
             </>
+          )}
+
+          {showOffHirePicker && (
+            <View style={styles.offHireDatePickerSection}>
+              <Text style={styles.offHireDatePickerTitle}>Select Off-Hire Date</Text>
+              <Text style={styles.offHireDatePickerDescription}>
+                This date will be logged for final billing calculations and reporting
+              </Text>
+              <TouchableOpacity
+                style={styles.dateButton}
+                onPress={() => setOffHireDate(new Date())}
+                disabled={isSaving}
+              >
+                <Text style={offHireDate ? styles.dateText : styles.dateTextPlaceholder}>
+                  {offHireDate ? offHireDate.toLocaleDateString() : 'Select date'}
+                </Text>
+              </TouchableOpacity>
+              <View style={styles.offHireDateActions}>
+                <TouchableOpacity
+                  style={styles.offHireCancelButton}
+                  onPress={() => {
+                    setShowOffHirePicker(false);
+                    setOffHireDate(undefined);
+                  }}
+                  disabled={isSaving}
+                >
+                  <Text style={styles.offHireCancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.offHireSubmitButton,
+                    !offHireDate && styles.offHireSubmitButtonDisabled,
+                  ]}
+                  onPress={handleOffHireDateSubmit}
+                  disabled={isSaving || !offHireDate}
+                >
+                  {isSaving ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.offHireSubmitButtonText}>Submit</Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
+
+          {!showOffHirePicker && (
+            <TouchableOpacity
+              style={styles.offHireButton}
+              onPress={handleOffHireNotification}
+              disabled={isSaving}
+            >
+              <Calendar size={20} color="#fff" />
+              <Text style={styles.offHireButtonText}>OFF-HIRE Notification</Text>
+            </TouchableOpacity>
+          )}
+
+          {asset.offHireDate && (
+            <View style={styles.offHireDateInfo}>
+              <Text style={styles.offHireDateInfoLabel}>Off-Hire Date Logged:</Text>
+              <Text style={styles.offHireDateInfoValue}>
+                {new Date(asset.offHireDate).toLocaleDateString()}
+              </Text>
+              {asset.offHireTimestamp && (
+                <Text style={styles.offHireDateInfoTimestamp}>
+                  Submitted on {new Date(
+                    typeof asset.offHireTimestamp === 'object' && 'toDate' in asset.offHireTimestamp
+                      ? asset.offHireTimestamp.toDate()
+                      : asset.offHireTimestamp
+                  ).toLocaleString()}
+                </Text>
+              )}
+            </View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
@@ -1521,11 +1523,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#3b82f6',
-    paddingVertical: 14,
+    backgroundColor: '#ef4444',
+    paddingVertical: 16,
     paddingHorizontal: 20,
-    borderRadius: 8,
-    marginTop: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#dc2626',
   },
   offHireButtonText: {
     fontSize: 16,
@@ -1533,11 +1536,11 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   offHireDatePickerSection: {
-    backgroundColor: '#eff6ff',
-    borderRadius: 8,
+    backgroundColor: Colors.cardBg,
+    borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: '#bfdbfe',
+    borderColor: Colors.border,
     gap: 12,
   },
   offHireDatePickerTitle: {
