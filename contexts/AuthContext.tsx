@@ -809,6 +809,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           pin: storedPinHash,
           companyIds: Array.isArray(companyIdsArray) ? companyIdsArray : [],
           currentCompanyId: undefined, // Don't set to force company selection
+          accountType: data.accountType,
+          vasFeatures: data.vasFeatures || [],
           createdAt: data.createdAt,
         };
 
@@ -834,6 +836,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             pin: String(refreshedData.pin || '').trim(),
             companyIds: Array.isArray(companyIdsArray) ? companyIdsArray : [],
             currentCompanyId: undefined,
+            accountType: refreshedData.accountType,
+            vasFeatures: refreshedData.vasFeatures || [],
             createdAt: refreshedData.createdAt,
           };
         } else {
@@ -852,6 +856,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           currentCompanyId: foundMaster.currentCompanyId,
           pin: foundMaster.pin,
           masterAccountId: foundMaster.id,  // Self-reference for master accounts
+          accountType: foundMaster.accountType,  // Pass account type to user object
+          vasFeatures: foundMaster.vasFeatures,
           createdAt: foundMaster.createdAt,
           disabledMenus: [],
           isLocked: false
