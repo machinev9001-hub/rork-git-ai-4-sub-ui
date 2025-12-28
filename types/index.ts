@@ -679,6 +679,9 @@ export type PlantAsset = {
   ownerName?: string;
   ownerId?: string;
   ownerType: 'company' | 'subcontractor';
+  ownerMasterAccountId?: string;
+  ownerEmail?: string;
+  ownerContactName?: string;
   ownerProvince?: string;
   ownerAddress?: string;
   isCrossHire?: boolean;
