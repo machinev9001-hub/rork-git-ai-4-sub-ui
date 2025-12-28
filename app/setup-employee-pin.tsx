@@ -320,12 +320,13 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 16,
+    paddingBottom: 24,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 24,
   },
   iconContainer: {
     width: 96,
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
     color: '#cbd5e1',
   },
   form: {
-    gap: 20,
+    gap: 16,
   },
   inputContainer: {
     gap: 8,
@@ -410,10 +411,10 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#fff',
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 8,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -425,9 +426,9 @@ const styles = StyleSheet.create({
   },
   infoBox: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
-    marginTop: 8,
+    marginTop: 4,
   },
   infoText: {
     fontSize: 13,

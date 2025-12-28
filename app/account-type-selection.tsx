@@ -172,7 +172,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 8,
+    paddingBottom: 24,
   },
   backButton: {
     width: 40,
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 32,
+    marginBottom: 20,
   },
   title: {
     fontSize: 28,
@@ -199,13 +200,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   cards: {
-    gap: 16,
-    marginBottom: 24,
+    gap: 12,
+    marginBottom: 16,
   },
   card: {
     backgroundColor: '#fff',
     borderRadius: 16,
-    padding: 20,
+    padding: 16,
     borderWidth: 2,
     borderColor: 'transparent',
   },
@@ -272,10 +273,10 @@ const styles = StyleSheet.create({
   },
   continueButton: {
     backgroundColor: '#fff',
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   continueButtonDisabled: {
     opacity: 0.5,

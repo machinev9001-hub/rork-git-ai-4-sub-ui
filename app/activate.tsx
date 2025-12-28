@@ -224,7 +224,8 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 24,
-    paddingVertical: 16,
+    paddingTop: 8,
+    paddingBottom: 24,
   },
   backButton: {
     width: 40,
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 48,
+    marginBottom: 24,
   },
   iconContainer: {
     width: 96,
@@ -260,7 +261,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   form: {
-    gap: 20,
+    gap: 16,
   },
   inputContainer: {
     gap: 8,
@@ -308,10 +309,10 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#fff',
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 8,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -322,7 +323,7 @@ const styles = StyleSheet.create({
     color: '#1e3a8a',
   },
   helpContainer: {
-    marginTop: 24,
+    marginTop: 16,
     alignItems: 'center',
     gap: 4,
   },
