@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Key } from 'lucide-react-native';
-import { validateActivationCode } from '@/utils/activationCode';
+import { validateActivationCode, createFreeAccountActivationCode } from '@/utils/activationCode';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AccountType } from '@/types';
 
@@ -25,6 +25,7 @@ export default function ActivateScreen() {
   const [activationCode, setActivationCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [accountType, setAccountType] = useState<AccountType>('enterprise');
+  const [isGeneratingCode, setIsGeneratingCode] = useState(false);
 
   useEffect(() => {
     // Load the selected account type from storage
@@ -33,9 +34,35 @@ export default function ActivateScreen() {
         const storedType = await AsyncStorage.getItem(ACCOUNT_TYPE_STORAGE_KEY);
         if (storedType === 'free' || storedType === 'enterprise') {
           setAccountType(storedType);
+          
+          // Auto-generate activation code for free accounts
+          if (storedType === 'free') {
+            console.log('[Activate] Free account detected, auto-generating activation code...');
+            setIsGeneratingCode(true);
+            const result = await createFreeAccountActivationCode();
+            
+            if (result.success && result.code) {
+              console.log('[Activate] Auto-generated activation code:', result.code);
+              setActivationCode(result.code);
+            } else {
+              console.error('[Activate] Failed to generate activation code:', result.error);
+              Alert.alert(
+                'Error',
+                'Failed to generate activation code. Please try again.',
+                [
+                  {
+                    text: 'Retry',
+                    onPress: () => router.replace('/account-type-selection'),
+                  }
+                ]
+              );
+            }
+            setIsGeneratingCode(false);
+          }
         }
       } catch (error) {
         console.error('[Activate] Error loading account type:', error);
+        setIsGeneratingCode(false);
       }
     };
     loadAccountType();
@@ -117,35 +144,46 @@ export default function ActivateScreen() {
               <Text style={styles.subtitle}>
                 {accountType === 'enterprise' 
                   ? 'Enter the activation code to set up your Enterprise account'
-                  : 'Enter the activation code to set up your Free account'}
+                  : 'Your Free account activation code has been generated'}
               </Text>
             </View>
 
             <View style={styles.form}>
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Activation Code</Text>
-                <TextInput
-                  testID="activate-code-input"
-                  style={styles.input}
-                  placeholder="XXXX-XXXX-XXXX-XXXX"
-                  placeholderTextColor="#94a3b8"
-                  value={activationCode}
-                  onChangeText={(text) => setActivationCode(formatActivationCode(text))}
-                  autoCapitalize="characters"
-                  autoCorrect={false}
-                  maxLength={19}
-                  editable={!isLoading}
-                />
-                <Text style={styles.hint}>
-                  Enter the 16-character code provided by your administrator
-                </Text>
+                {isGeneratingCode ? (
+                  <View style={styles.generatingContainer}>
+                    <ActivityIndicator color="#1e3a8a" />
+                    <Text style={styles.generatingText}>Generating activation code...</Text>
+                  </View>
+                ) : (
+                  <>
+                    <TextInput
+                      testID="activate-code-input"
+                      style={[styles.input, accountType === 'free' && styles.inputReadOnly]}
+                      placeholder="XXXX-XXXX-XXXX-XXXX"
+                      placeholderTextColor="#94a3b8"
+                      value={activationCode}
+                      onChangeText={(text) => setActivationCode(formatActivationCode(text))}
+                      autoCapitalize="characters"
+                      autoCorrect={false}
+                      maxLength={19}
+                      editable={!isLoading && accountType === 'enterprise'}
+                    />
+                    <Text style={styles.hint}>
+                      {accountType === 'enterprise'
+                        ? 'Enter the 16-character code provided by your administrator'
+                        : 'Auto-generated activation code for your Free account'}
+                    </Text>
+                  </>
+                )}
               </View>
 
               <TouchableOpacity
                 testID="activate-button"
-                style={[styles.button, isLoading && styles.buttonDisabled]}
+                style={[styles.button, (isLoading || isGeneratingCode) && styles.buttonDisabled]}
                 onPress={handleActivate}
-                disabled={isLoading}
+                disabled={isLoading || isGeneratingCode}
               >
                 {isLoading ? (
                   <ActivityIndicator color="#1e3a8a" />
@@ -154,14 +192,16 @@ export default function ActivateScreen() {
                 )}
               </TouchableOpacity>
 
-              <View style={styles.helpContainer}>
-                <Text style={styles.helpText}>
-                  Don&apos;t have an activation code?
-                </Text>
-                <Text style={styles.helpText}>
-                  Contact your system administrator or support team.
-                </Text>
-              </View>
+              {accountType === 'enterprise' && (
+                <View style={styles.helpContainer}>
+                  <Text style={styles.helpText}>
+                    Don&apos;t have an activation code?
+                  </Text>
+                  <Text style={styles.helpText}>
+                    Contact your system administrator or support team.
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
         </KeyboardAvoidingView>
@@ -241,6 +281,24 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     letterSpacing: 2,
     textAlign: 'center',
+  },
+  inputReadOnly: {
+    backgroundColor: '#f1f5f9',
+    color: '#475569',
+  },
+  generatingContainer: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    paddingVertical: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 12,
+  },
+  generatingText: {
+    fontSize: 16,
+    color: '#1e3a8a',
+    fontWeight: '500' as const,
   },
   hint: {
     fontSize: 12,

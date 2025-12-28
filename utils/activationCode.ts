@@ -1,4 +1,4 @@
-import { collection, query, where, getDocs, updateDoc, doc, Timestamp } from 'firebase/firestore';
+import { collection, query, where, getDocs, updateDoc, doc, Timestamp, addDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { ActivationCode, ActivationValidationResult } from '@/types/activation';
 
@@ -128,4 +128,30 @@ export function generateActivationCode(): string {
   }).join('-');
   
   return code;
+}
+
+export async function createFreeAccountActivationCode(): Promise<{ success: boolean; code?: string; codeId?: string; error?: string }> {
+  try {
+    console.log('[ActivationCode] Creating free account activation code...');
+    
+    const code = generateActivationCode();
+    const activationCodesRef = collection(db, 'activation_codes');
+    
+    const docRef = await addDoc(activationCodesRef, {
+      code: code,
+      companyName: 'Free Account',
+      status: 'active',
+      expiryDate: null,
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+      maxRedemptions: 1,
+      currentRedemptions: 0,
+    });
+    
+    console.log('[ActivationCode] Free account activation code created:', code);
+    return { success: true, code, codeId: docRef.id };
+  } catch (error) {
+    console.error('[ActivationCode] Error creating free account activation code:', error);
+    return { success: false, error: 'Failed to create activation code' };
+  }
 }
