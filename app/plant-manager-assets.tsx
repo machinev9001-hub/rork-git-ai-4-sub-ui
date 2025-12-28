@@ -246,6 +246,15 @@ export default function PlantManagerAssetsScreen() {
     
     setShowOptionsModal(false);
     
+    if (selectedAsset.ownerType === 'subcontractor') {
+      Alert.alert(
+        'Cannot List Subcontractor Asset',
+        'Only company-owned assets from the master account can be listed on the VAS marketplace. Subcontractor assets cannot be listed.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    
     const isCurrentlyListed = selectedAsset.isAvailableForVAS || false;
     
     try {
