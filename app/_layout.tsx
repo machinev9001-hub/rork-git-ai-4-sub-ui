@@ -418,6 +418,8 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         <Stack.Screen name="company-selector" options={{ headerShown: false }} />
         <Stack.Screen name="company-setup" options={{ headerShown: false }} />
         <Stack.Screen name="master-signup" options={{ headerShown: false }} />
+        <Stack.Screen name="company-employees" />
+        <Stack.Screen name="company-assets" />
         <Stack.Screen name="master-menu-manager" />
         <Stack.Screen name="sub-menu-detail" />
         <Stack.Screen name="seed-menus" />
