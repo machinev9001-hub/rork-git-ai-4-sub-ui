@@ -215,7 +215,7 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.cardBg,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#202124',
+    color: Colors.text,
     textAlign: 'center' as const,
   },
 });
