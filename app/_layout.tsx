@@ -191,7 +191,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
     console.log('[RootLayout] Master:', masterAccount?.masterId);
     console.log('[RootLayout] Navigation attempted:', navigationAttempted.current);
     
-    const publicPaths = ['/login', '/master-signup', '/activate', '/setup-master-pin', '/setup-employee-pin', '/admin-pin-verify', '/admin-panel', '/company-selector', '/company-setup', '/qr-scanner'];
+    const publicPaths = ['/login', '/master-signup', '/activate', '/setup-master-pin', '/setup-employee-pin', '/admin-pin-verify', '/admin-panel', '/company-selector', '/company-setup', '/master-company-profile', '/qr-scanner'];
     const setupPaths = ['/setup-master-pin', '/setup-employee-pin'];
     
     if (!user && !masterAccount) {
@@ -220,12 +220,14 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       const hasCompanies = masterData?.companyIds && masterData.companyIds.length > 0;
       const hasSelectedCompany = !!masterData?.currentCompanyId;
       const hasSelectedSite = !!(user?.siteId && user?.siteName);
+      const canAccessMasterProfile = masterData?.canAccessMasterCompanyProfile ?? true; // Default true for master users
       
       console.log('[RootLayout] Master account state:');
       console.log('[RootLayout]   isMasterUser:', isMasterUser);
       console.log('[RootLayout]   hasCompanies:', hasCompanies, 'IDs:', masterData?.companyIds);
       console.log('[RootLayout]   hasSelectedCompany:', hasSelectedCompany, 'Current:', masterData?.currentCompanyId);
       console.log('[RootLayout]   hasSelectedSite:', hasSelectedSite, 'Site:', user?.siteName);
+      console.log('[RootLayout]   canAccessMasterProfile:', canAccessMasterProfile);
       
       if (!hasCompanies && currentPath !== '/company-setup' && !navigationAttempted.current) {
         console.log('[RootLayout] ✅ Master has no companies → Routing to /company-setup');
@@ -241,6 +243,14 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         return;
       }
       
+      // NEW: Route to Master Company Profile if canAccessMasterProfile is true and company is selected
+      if (canAccessMasterProfile && hasSelectedCompany && !hasSelectedSite && currentPath !== '/master-company-profile' && currentPath !== '/master-sites' && !publicPaths.includes(currentPath) && !navigationAttempted.current) {
+        console.log('[RootLayout] ✅ Master with company access → Routing to /master-company-profile');
+        navigationAttempted.current = true;
+        router.replace('/master-company-profile');
+        return;
+      }
+      
       if (hasSelectedCompany && hasSelectedSite && currentPath !== '/(tabs)' && !publicPaths.includes(currentPath) && !navigationAttempted.current && !currentPath.startsWith('/(tabs)')) {
         console.log('[RootLayout] ✅ Master has selected company and site → Routing to /(tabs)');
         navigationAttempted.current = true;
@@ -248,8 +258,8 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         return;
       }
       
-      if (hasSelectedCompany && !hasSelectedSite && currentPath !== '/master-sites' && !publicPaths.includes(currentPath) && !navigationAttempted.current) {
-        console.log('[RootLayout] ✅ Master account with selected company but no site → Routing to /master-sites');
+      if (hasSelectedCompany && !hasSelectedSite && !canAccessMasterProfile && currentPath !== '/master-sites' && !publicPaths.includes(currentPath) && !navigationAttempted.current) {
+        console.log('[RootLayout] ✅ Master account with selected company but no site and no master profile access → Routing to /master-sites');
         navigationAttempted.current = true;
         router.replace('/master-sites');
       }
@@ -368,6 +378,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         <Stack.Screen name="company-settings" />
         <Stack.Screen name="manage-users" />
         <Stack.Screen name="add-user" />
+        <Stack.Screen name="master-company-profile" options={{ headerShown: false }} />
         <Stack.Screen name="master-planner" />
         <Stack.Screen name="master-supervisor" />
         <Stack.Screen name="planner-task-requests" />

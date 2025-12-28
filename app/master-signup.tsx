@@ -20,9 +20,9 @@ import { useAuth } from '@/contexts/AuthContext';
 export default function MasterSignupScreen() {
   const { createMasterAccount } = useAuth();
   const [name, setName] = useState('');
-  const [masterId, setMasterId] = useState('3002');
-  const [pin, setPin] = useState('3002');
-  const [confirmPin, setConfirmPin] = useState('3002');
+  const [masterId, setMasterId] = useState('');
+  const [pin, setPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
   const [activationCode, setActivationCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
