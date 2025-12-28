@@ -2,6 +2,17 @@ export type EPHReportStatus = 'draft' | 'sent' | 'reviewed' | 'agreed' | 'disput
 
 export type EPHRecipientType = 'subcontractor' | 'free_user';
 
+export type LineItemDispute = {
+  assetId: string;
+  timesheetId: string;
+  date: string;
+  disputeNotes: string;
+  originalHours: number;
+  disputedHours?: number;
+  createdAt: any;
+  createdBy: string;
+};
+
 export type EPHReport = {
   id?: string;
   reportId: string;
@@ -34,6 +45,7 @@ export type EPHReport = {
   agreedAt?: any;
   agreedBy?: string;
   disputeNotes?: string;
+  lineItemDisputes?: LineItemDispute[];
   
   createdAt: any;
   updatedAt?: any;

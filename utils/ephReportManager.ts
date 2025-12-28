@@ -1,6 +1,6 @@
-import { collection, doc, setDoc, getDocs, query, where, orderBy, updateDoc, Timestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, getDocs, getDoc, query, where, orderBy, updateDoc, Timestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { EPHReport, EPHRecipientType } from '@/types/ephReport';
+import { EPHReport, EPHRecipientType, LineItemDispute } from '@/types/ephReport';
 import { PlantAsset } from '@/types';
 
 export type AssetOwnerInfo = {
@@ -174,7 +174,8 @@ export async function approveEPHReport(
 export async function disputeEPHReport(
   reportId: string,
   userId: string,
-  notes: string
+  notes: string,
+  lineItemDisputes?: LineItemDispute[]
 ): Promise<void> {
   console.log('[ephReportManager] Disputing EPH report:', reportId);
 
@@ -183,10 +184,27 @@ export async function disputeEPHReport(
     reviewedAt: Timestamp.now(),
     reviewedBy: userId,
     disputeNotes: notes,
+    lineItemDisputes: lineItemDisputes || [],
     updatedAt: Timestamp.now(),
   });
 
   console.log('[ephReportManager] EPH report disputed');
+}
+
+export async function getEPHReportDetails(
+  reportId: string
+): Promise<EPHReport | null> {
+  console.log('[ephReportManager] Fetching EPH report details:', reportId);
+
+  const docRef = doc(db, 'ephReports', reportId);
+  const snapshot = await getDoc(docRef);
+
+  if (!snapshot.exists()) {
+    console.log('[ephReportManager] Report not found');
+    return null;
+  }
+
+  return { id: snapshot.id, ...snapshot.data() } as EPHReport;
 }
 
 export async function markEPHAsReviewed(
