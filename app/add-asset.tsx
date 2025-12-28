@@ -81,11 +81,21 @@ export default function AddAssetScreen() {
   const [dryRate, setDryRate] = useState('');
   const [wetRate, setWetRate] = useState('');
   const [dailyRate, setDailyRate] = useState('');
+  
+  // Company-level creation and marketplace support
+  const [internalAllocationEnabled, setInternalAllocationEnabled] = useState(true);
+  const [marketplaceVisibilityEnabled, setMarketplaceVisibilityEnabled] = useState(false);
+  
+  // Detect if creating from company level (no site selected)
+  const isCompanyLevelCreation = !user?.siteId && user?.currentCompanyId;
 
   // Load subcontractors, operators, plant types, and generate next Site ID on mount
   useEffect(() => {
     loadDropdownData();
-    generateNextSiteId();
+    // Only generate site ID for site-level creation
+    if (!isCompanyLevelCreation) {
+      generateNextSiteId();
+    }
     loadOwnerOptions();
     loadPlantTypes();
   }, [user?.masterAccountId, user?.siteId]);
@@ -410,9 +420,18 @@ export default function AddAssetScreen() {
       return;
     }
 
-    if (!user?.siteId || !user?.masterAccountId) {
-      Alert.alert('Error', 'Missing site or account information');
-      return;
+    // Company-level creation: only requires companyId
+    // Site-level creation: requires both siteId and companyId
+    if (isCompanyLevelCreation) {
+      if (!user?.currentCompanyId || !user?.masterAccountId) {
+        Alert.alert('Error', 'Missing company or account information');
+        return;
+      }
+    } else {
+      if (!user?.siteId || !user?.masterAccountId) {
+        Alert.alert('Error', 'Missing site or account information');
+        return;
+      }
     }
 
     if (!type.trim()) {
@@ -420,19 +439,21 @@ export default function AddAssetScreen() {
       return;
     }
 
-    if (!location.trim()) {
+    // Location (site ID) is only required for site-level creation
+    if (!isCompanyLevelCreation && !location.trim()) {
       Alert.alert('Validation Error', 'Please enter site ID');
       return;
     }
 
     setIsSaving(true);
     console.log('[AddAsset] Starting save operation');
+    console.log('[AddAsset] Company-level creation:', isCompanyLevelCreation);
 
     try {
       const assetData: any = {
         assetId: assetId.trim() || `asset-${Date.now()}`,
         type: type.trim(),
-        location: location.trim(),
+        location: isCompanyLevelCreation ? null : location.trim(), // Optional for company-level
         assignedJob: assignedJob.trim() || null,
         plantNumber: plantNumber.trim() || null,
         registrationNumber: registrationNumber.trim() || null,
@@ -443,10 +464,13 @@ export default function AddAssetScreen() {
         crossHireName: isCrossHire ? crossHireName.trim() : null,
         currentOperator: currentOperator.trim() || null,
         currentOperatorId: currentOperatorId || null,
-        siteId: user.siteId,
+        siteId: user.siteId || null, // Optional for company-level creation
         masterAccountId: user.masterAccountId,
-        companyId: user.currentCompanyId || null,
-        allocationStatus: 'UNALLOCATED',
+        companyId: user.currentCompanyId, // Required for both modes
+        allocationStatus: isCompanyLevelCreation ? 'UNALLOCATED' : 'UNALLOCATED',
+        // Marketplace fields (company-level only)
+        internalAllocationEnabled: isCompanyLevelCreation ? internalAllocationEnabled : true,
+        marketplaceVisibilityEnabled: isCompanyLevelCreation ? marketplaceVisibilityEnabled : false,
         inductionStatus,
         inductionNotes: inductionNotes.trim(),
         attachments,
@@ -1292,6 +1316,70 @@ export default function AddAssetScreen() {
             </View>
           )}
 
+          {/* Marketplace Configuration - Only shown for company-level creation */}
+          {isCompanyLevelCreation && (
+            <TouchableOpacity
+              style={styles.expandableCard}
+              onPress={() => setIsPlantRatesExpanded(!isPlantRatesExpanded)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.expandableHeader}>
+                <Text style={styles.expandableTitle}>Marketplace & Allocation</Text>
+                {isPlantRatesExpanded ? (
+                  <ChevronUp size={20} color="#64748b" />
+                ) : (
+                  <ChevronDown size={20} color="#64748b" />
+                )}
+              </View>
+            </TouchableOpacity>
+          )}
+
+          {isCompanyLevelCreation && isPlantRatesExpanded && (
+            <View style={styles.expandableContent}>
+              <View style={styles.switchRow}>
+                <View style={styles.switchLabel}>
+                  <Text style={styles.switchLabelText}>Internal Allocation</Text>
+                  <Text style={styles.switchLabelHint}>
+                    Allow allocation to company's own sites
+                  </Text>
+                </View>
+                <Switch
+                  value={internalAllocationEnabled}
+                  onValueChange={setInternalAllocationEnabled}
+                  trackColor={{ false: '#e2e8f0', true: '#10b981' }}
+                  thumbColor={internalAllocationEnabled ? '#fff' : '#f4f3f4'}
+                  ios_backgroundColor="#e2e8f0"
+                  disabled={isSaving}
+                />
+              </View>
+
+              <View style={styles.switchRow}>
+                <View style={styles.switchLabel}>
+                  <Text style={styles.switchLabelText}>Marketplace Visibility</Text>
+                  <Text style={styles.switchLabelHint}>
+                    List asset in marketplace for cross-company hire (VAS required)
+                  </Text>
+                </View>
+                <Switch
+                  value={marketplaceVisibilityEnabled}
+                  onValueChange={setMarketplaceVisibilityEnabled}
+                  trackColor={{ false: '#e2e8f0', true: '#10b981' }}
+                  thumbColor={marketplaceVisibilityEnabled ? '#fff' : '#f4f3f4'}
+                  ios_backgroundColor="#e2e8f0"
+                  disabled={isSaving}
+                />
+              </View>
+
+              {marketplaceVisibilityEnabled && (
+                <View style={styles.vasNotice}>
+                  <Text style={styles.vasNoticeText}>
+                    📌 Marketplace visibility requires the Marketplace Access VAS feature
+                  </Text>
+                </View>
+              )}
+            </View>
+          )}
+
           <View style={styles.noteSection}>
             <Text style={styles.noteText}>* Required fields</Text>
             <Text style={styles.noteText}>
@@ -1817,5 +1905,39 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#854d0e',
     fontWeight: '600' as const,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    gap: 16,
+  },
+  switchLabel: {
+    flex: 1,
+    gap: 4,
+  },
+  switchLabelText: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#1e293b',
+  },
+  switchLabelHint: {
+    fontSize: 13,
+    color: '#64748b',
+    lineHeight: 18,
+  },
+  vasNotice: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#dbeafe',
+    marginTop: 8,
+  },
+  vasNoticeText: {
+    fontSize: 13,
+    color: '#1e40af',
+    lineHeight: 18,
   },
 });
