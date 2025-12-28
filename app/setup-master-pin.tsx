@@ -12,10 +12,10 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Shield, Eye, EyeOff } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '@/contexts/AuthContext';
+import { AppTheme } from '@/constants/colors';
 
 const ACTIVATION_STORAGE_KEY = '@activation_data';
 
@@ -169,13 +169,10 @@ export default function SetupMasterPinScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <LinearGradient
-        colors={['#1e3a8a', '#3b82f6', '#60a5fa']}
-        style={styles.gradient}
-      >
+      <View style={styles.mainContainer}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -183,7 +180,7 @@ export default function SetupMasterPinScreen() {
           <View style={styles.content}>
             <View style={styles.header}>
               <View style={styles.iconContainer}>
-                <Shield size={48} color="#fff" strokeWidth={2} />
+                <Shield size={48} color={AppTheme.accent} strokeWidth={2} />
               </View>
               <Text style={styles.title}>Setup Master Account</Text>
               <Text style={styles.subtitle}>
@@ -205,7 +202,7 @@ export default function SetupMasterPinScreen() {
                   testID="setup-name-input"
                   style={styles.input}
                   placeholder="Enter your full name"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -219,7 +216,7 @@ export default function SetupMasterPinScreen() {
                   testID="setup-master-id-input"
                   style={styles.input}
                   placeholder="Enter master user ID"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={masterId}
                   onChangeText={setMasterId}
                   autoCapitalize="none"
@@ -238,7 +235,7 @@ export default function SetupMasterPinScreen() {
                     testID="setup-pin-input"
                     style={styles.passwordInput}
                     placeholder="Enter 4-6 digit PIN"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={AppTheme.textSecondary}
                     value={pin}
                     onChangeText={setPin}
                     secureTextEntry={!showPin}
@@ -251,9 +248,9 @@ export default function SetupMasterPinScreen() {
                     onPress={() => setShowPin(!showPin)}
                   >
                     {showPin ? (
-                      <EyeOff size={20} color="#64748b" />
+                      <EyeOff size={20} color={AppTheme.textSecondary} />
                     ) : (
-                      <Eye size={20} color="#64748b" />
+                      <Eye size={20} color={AppTheme.textSecondary} />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -269,7 +266,7 @@ export default function SetupMasterPinScreen() {
                     testID="setup-confirm-pin-input"
                     style={styles.passwordInput}
                     placeholder="Re-enter PIN to confirm"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={AppTheme.textSecondary}
                     value={confirmPin}
                     onChangeText={setConfirmPin}
                     secureTextEntry={!showConfirmPin}
@@ -282,9 +279,9 @@ export default function SetupMasterPinScreen() {
                     onPress={() => setShowConfirmPin(!showConfirmPin)}
                   >
                     {showConfirmPin ? (
-                      <EyeOff size={20} color="#64748b" />
+                      <EyeOff size={20} color={AppTheme.textSecondary} />
                     ) : (
-                      <Eye size={20} color="#64748b" />
+                      <Eye size={20} color={AppTheme.textSecondary} />
                     )}
                   </TouchableOpacity>
                 </View>
@@ -300,7 +297,7 @@ export default function SetupMasterPinScreen() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#1e3a8a" />
+                  <ActivityIndicator color={AppTheme.background} />
                 ) : (
                   <Text style={styles.buttonText}>Create Master Account</Text>
                 )}
@@ -308,7 +305,7 @@ export default function SetupMasterPinScreen() {
             </View>
           </View>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -316,10 +313,11 @@ export default function SetupMasterPinScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: AppTheme.background,
   },
-  gradient: {
+  mainContainer: {
     flex: 1,
+    backgroundColor: AppTheme.background,
   },
   keyboardView: {
     flex: 1,
@@ -328,6 +326,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingVertical: 16,
+    paddingBottom: 40,
     justifyContent: 'center',
   },
   header: {
@@ -337,36 +336,40 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 96,
     height: 96,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: AppTheme.surface,
     borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    borderWidth: 2,
+    borderColor: AppTheme.accent,
   },
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: AppTheme.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
   companyBadge: {
     marginTop: 12,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: AppTheme.surface,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: AppTheme.accent,
   },
   companyBadgeText: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: AppTheme.accent,
   },
   form: {
     gap: 20,
@@ -377,42 +380,46 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: AppTheme.text,
     marginLeft: 4,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.cardBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1e293b',
+    color: AppTheme.text,
+    borderWidth: 1,
+    borderColor: AppTheme.border,
   },
   passwordContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.cardBg,
     borderRadius: 12,
     paddingRight: 12,
+    borderWidth: 1,
+    borderColor: AppTheme.border,
   },
   passwordInput: {
     flex: 1,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1e293b',
+    color: AppTheme.text,
   },
   eyeButton: {
     padding: 8,
   },
   hint: {
     fontSize: 12,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     marginLeft: 4,
     marginTop: 4,
   },
   button: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.accent,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -424,6 +431,6 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1e3a8a',
+    color: AppTheme.background,
   },
 });
