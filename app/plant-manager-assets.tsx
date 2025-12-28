@@ -188,8 +188,7 @@ export default function PlantManagerAssetsScreen() {
         collection(db, 'employees'),
         where('masterAccountId', '==', user.masterAccountId),
         where('siteId', '==', user.siteId),
-        where('role', '==', 'Operator'),
-        where('archived', '!=', true)
+        where('role', '==', 'Operator')
       );
       
       const snapshot = await getDocs(operatorsQuery);
@@ -202,6 +201,7 @@ export default function PlantManagerAssetsScreen() {
       setOperators(operatorsList);
     } catch (error) {
       console.error('[PlantManagerAssets] Error loading operators:', error);
+      Alert.alert('Error', 'Failed to load operators. Please try again.');
     }
   }, [user]);
 
