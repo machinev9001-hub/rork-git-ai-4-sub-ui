@@ -1538,6 +1538,15 @@
       "collectionGroup": "agreedTimesheets",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agreedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "originalTimesheetId", "order": "ASCENDING" }
       ]
     },
