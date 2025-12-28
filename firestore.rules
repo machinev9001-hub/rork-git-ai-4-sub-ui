@@ -3,6 +3,48 @@ service cloud.firestore {
   match /databases/{database}/documents {
     
     // ============================================================================
+    // HELPER FUNCTIONS
+    // ============================================================================
+    
+    function getAccountType(masterAccountId) {
+      let masterDoc = get(/databases/$(database)/documents/masterAccounts/$(masterAccountId));
+      return masterDoc.data.accountType;
+    }
+    
+    function getVASFeatures(masterAccountId) {
+      let masterDoc = get(/databases/$(database)/documents/masterAccounts/$(masterAccountId));
+      return masterDoc.data.vasFeatures != null ? masterDoc.data.vasFeatures : [];
+    }
+    
+    function isEnterprise(masterAccountId) {
+      return getAccountType(masterAccountId) == 'enterprise';
+    }
+    
+    function hasVASFeature(masterAccountId, featureId) {
+      return getVASFeatures(masterAccountId).hasAny([featureId]);
+    }
+    
+    function canAccessReporting(masterAccountId) {
+      return isEnterprise(masterAccountId) || hasVASFeature(masterAccountId, 'reporting');
+    }
+    
+    function canAccessDataExports(masterAccountId) {
+      return isEnterprise(masterAccountId) || hasVASFeature(masterAccountId, 'data_exports');
+    }
+    
+    function canAccessAnalytics(masterAccountId) {
+      return isEnterprise(masterAccountId) || hasVASFeature(masterAccountId, 'analytics');
+    }
+    
+    function canAccessAdvancedIntegrations(masterAccountId) {
+      return isEnterprise(masterAccountId) || hasVASFeature(masterAccountId, 'advanced_integrations');
+    }
+    
+    function hasBasicAccess(masterAccountId) {
+      return masterAccountId != null && masterAccountId != '';
+    }
+    
+    // ============================================================================
     // CRITICAL: LOGIN COLLECTIONS
     // These collections must allow unauthenticated read for login to work
     // Your app uses custom auth (not Firebase Auth), so login queries happen
@@ -14,7 +56,11 @@ service cloud.firestore {
       allow read: if true;
       // Create allowed for activation (new master account signup)
       allow create: if true;
-      allow update, delete: if false;
+      // Allow master account to update their own account type and VAS features
+      allow update: if request.resource.data.keys().hasOnly(['accountType', 'vasFeatures', 'currentCompanyId', 'updatedAt'])
+                    || request.resource.data.keys().hasOnly(['vasFeatures', 'updatedAt'])
+                    || request.resource.data.keys().hasOnly(['currentCompanyId', 'updatedAt']);
+      allow delete: if false;
     }
     
     match /users/{userId} {
@@ -164,19 +210,37 @@ service cloud.firestore {
     }
     
     match /agreedTimesheets/{timesheetId} {
-      allow read, write: if true;
+      // Accounts feature - require enterprise or reporting VAS
+      allow read: if hasBasicAccess(resource.data.masterAccountId) &&
+                     canAccessReporting(resource.data.masterAccountId);
+      allow write: if hasBasicAccess(request.resource.data.masterAccountId) &&
+                      canAccessReporting(request.resource.data.masterAccountId);
     }
     
     match /pendingTimesheetEdits/{editId} {
-      allow read, write: if true;
+      // Accounts feature - require enterprise or reporting VAS
+      allow read: if hasBasicAccess(resource.data.masterAccountId) &&
+                     canAccessReporting(resource.data.masterAccountId);
+      allow write: if hasBasicAccess(request.resource.data.masterAccountId) &&
+                      canAccessReporting(request.resource.data.masterAccountId);
     }
     
     match /ephAgreements/{agreementId} {
-      allow read, write: if true;
+      // Accounts feature - require enterprise or reporting VAS
+      allow read: if hasBasicAccess(resource.data.masterAccountId) &&
+                     canAccessReporting(resource.data.masterAccountId);
+      allow write: if hasBasicAccess(request.resource.data.masterAccountId) &&
+                      canAccessReporting(request.resource.data.masterAccountId);
     }
     
     match /exportJobs/{jobId} {
-      allow read, write: if true;
+      // Only enterprise or users with data_exports VAS can create/read export jobs
+      allow read: if hasBasicAccess(resource.data.masterAccountId) &&
+                     canAccessDataExports(resource.data.masterAccountId);
+      allow create: if hasBasicAccess(request.resource.data.masterAccountId) &&
+                      canAccessDataExports(request.resource.data.masterAccountId);
+      allow update, delete: if hasBasicAccess(resource.data.masterAccountId) &&
+                              canAccessDataExports(resource.data.masterAccountId);
     }
     
     match /dailyDiaries/{diaryId} {
@@ -228,11 +292,23 @@ service cloud.firestore {
     }
     
     match /progressReports/{reportId} {
-      allow read, write: if true;
+      // Only enterprise or users with reporting VAS can access progress reports
+      allow read: if hasBasicAccess(resource.data.masterAccountId) &&
+                     canAccessReporting(resource.data.masterAccountId);
+      allow create: if hasBasicAccess(request.resource.data.masterAccountId) &&
+                      canAccessReporting(request.resource.data.masterAccountId);
+      allow update, delete: if hasBasicAccess(resource.data.masterAccountId) &&
+                              canAccessReporting(resource.data.masterAccountId);
     }
     
     match /boqProgress/{progressId} {
-      allow read, write: if true;
+      // Only enterprise or users with analytics VAS can access BOQ progress
+      allow read: if hasBasicAccess(resource.data.masterAccountId) &&
+                     canAccessAnalytics(resource.data.masterAccountId);
+      allow create: if hasBasicAccess(request.resource.data.masterAccountId) &&
+                      canAccessAnalytics(request.resource.data.masterAccountId);
+      allow update, delete: if hasBasicAccess(resource.data.masterAccountId) &&
+                              canAccessAnalytics(resource.data.masterAccountId);
     }
     
     match /systemConfig/{configId} {
