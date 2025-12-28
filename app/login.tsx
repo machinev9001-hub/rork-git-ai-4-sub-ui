@@ -180,8 +180,8 @@ export default function LoginScreen() {
                 <LogIn size={48} color="#fff" strokeWidth={2} />
               </View>
             </TouchableOpacity>
-            <Text style={styles.appTitle}>Machine App</Text>
-            <Text style={styles.appSubtitle}>Construction Management System</Text>
+            <Text style={styles.appTitle}>Machine</Text>
+            <Text style={styles.appSubtitle}>Business Management and Tracking</Text>
             {isOffline && (
               <View style={styles.offlineBadge}>
                 <Text style={styles.offlineText}>Offline Mode</Text>
@@ -193,7 +193,7 @@ export default function LoginScreen() {
             <Text style={styles.formTitle}>Sign In</Text>
             
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>ID / Master ID</Text>
+              <Text style={styles.label}>ID Number</Text>
               <TextInput
                 testID="login-user-id-input"
                 style={styles.input}
@@ -209,7 +209,7 @@ export default function LoginScreen() {
                 editable={!isLoading}
               />
               <Text style={styles.hint}>
-                Enter your ID number, Master ID, or assigned login ID
+                Enter your National ID number
               </Text>
             </View>
 
@@ -318,10 +318,6 @@ export default function LoginScreen() {
               <UserPlus size={18} color="#fff" />
               <Text style={styles.activateButtonText}>Create New Account</Text>
             </TouchableOpacity>
-            
-            <Text style={styles.footerHint}>
-              Use this if you&apos;re setting up Machine App for your company for the first time
-            </Text>
             
             <Text style={styles.version}>Machine App V1.0.0</Text>
           </View>
