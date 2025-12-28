@@ -103,6 +103,16 @@ export default function CompanyEmployeesScreen() {
     });
   };
 
+  const handleManageSites = (employee: Employee) => {
+    router.push({
+      pathname: '/employee-site-linking',
+      params: {
+        employeeId: employee.id,
+        employeeName: employee.name,
+      },
+    });
+  };
+
   const filteredEmployees = employees.filter((emp) =>
     emp.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     emp.role.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -120,30 +130,39 @@ export default function CompanyEmployeesScreen() {
   };
 
   const renderEmployee = ({ item }: { item: Employee }) => (
-    <TouchableOpacity
-      style={styles.employeeCard}
-      onPress={() => handleEmployeePress(item)}
-    >
-      <View style={styles.employeeIcon}>
-        <UserCircle size={40} color="#3b82f6" />
-      </View>
-      <View style={styles.employeeInfo}>
-        <Text style={styles.employeeName}>{item.name}</Text>
-        <Text style={styles.employeeRole}>{item.role}</Text>
-        <View style={styles.employeeMetaRow}>
-          {item.employeeIdNumber && (
-            <Text style={styles.employeeMeta}>ID: {item.employeeIdNumber}</Text>
-          )}
-          {item.accessScope && (
-            <>
-              <Text style={styles.employeeMetaDivider}>•</Text>
-              <Text style={styles.employeeMeta}>{renderAccessScope(item.accessScope)}</Text>
-            </>
-          )}
+    <View style={styles.employeeCardContainer}>
+      <TouchableOpacity
+        style={styles.employeeCard}
+        onPress={() => handleEmployeePress(item)}
+      >
+        <View style={styles.employeeIcon}>
+          <UserCircle size={40} color="#3b82f6" />
         </View>
-      </View>
-      <ChevronRight size={20} color="#94a3b8" />
-    </TouchableOpacity>
+        <View style={styles.employeeInfo}>
+          <Text style={styles.employeeName}>{item.name}</Text>
+          <Text style={styles.employeeRole}>{item.role}</Text>
+          <View style={styles.employeeMetaRow}>
+            {item.employeeIdNumber && (
+              <Text style={styles.employeeMeta}>ID: {item.employeeIdNumber}</Text>
+            )}
+            {item.accessScope && (
+              <>
+                <Text style={styles.employeeMetaDivider}>•</Text>
+                <Text style={styles.employeeMeta}>{renderAccessScope(item.accessScope)}</Text>
+              </>
+            )}
+          </View>
+        </View>
+        <ChevronRight size={20} color="#94a3b8" />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.manageSitesButton}
+        onPress={() => handleManageSites(item)}
+      >
+        <Building2 size={16} color="#3b82f6" />
+        <Text style={styles.manageSitesText}>Manage Sites</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   if (isLoading) {
@@ -391,5 +410,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: '#fff',
+  },
+  employeeCardContainer: {
+    gap: 8,
+  },
+  manageSitesButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#eff6ff',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dbeafe',
+  },
+  manageSitesText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#3b82f6',
   },
 });

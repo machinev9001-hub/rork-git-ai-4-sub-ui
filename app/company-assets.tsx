@@ -11,7 +11,7 @@ import {
   TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Plus, Package, Search, Building2, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, Plus, Package, Search, Building2, ChevronRight, MapPin } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -111,6 +111,16 @@ export default function CompanyAssetsScreen() {
     });
   };
 
+  const handleAllocateAsset = (asset: PlantAsset) => {
+    router.push({
+      pathname: '/asset-allocation',
+      params: {
+        assetId: asset.id,
+        assetName: asset.type + (asset.plantNumber ? ` #${asset.plantNumber}` : ''),
+      },
+    });
+  };
+
   const filteredAssets = assets.filter((asset) =>
     asset.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
     asset.plantNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -135,37 +145,46 @@ export default function CompanyAssetsScreen() {
   };
 
   const renderAsset = ({ item }: { item: PlantAsset }) => (
-    <TouchableOpacity
-      style={styles.assetCard}
-      onPress={() => handleAssetPress(item)}
-    >
-      <View style={styles.assetIcon}>
-        <Package size={40} color="#3b82f6" />
-      </View>
-      <View style={styles.assetInfo}>
-        <Text style={styles.assetType}>{item.type}</Text>
-        <View style={styles.assetMetaRow}>
-          {item.plantNumber && (
-            <Text style={styles.assetMeta}>Plant #{item.plantNumber}</Text>
-          )}
-          {item.registrationNumber && (
-            <>
-              {item.plantNumber && <Text style={styles.assetMetaDivider}>•</Text>}
-              <Text style={styles.assetMeta}>Reg: {item.registrationNumber}</Text>
-            </>
-          )}
+    <View style={styles.assetCardContainer}>
+      <TouchableOpacity
+        style={styles.assetCard}
+        onPress={() => handleAssetPress(item)}
+      >
+        <View style={styles.assetIcon}>
+          <Package size={40} color="#3b82f6" />
         </View>
-        <View style={styles.assetBottomRow}>
-          {renderAllocationStatus(item.allocationStatus, item.siteId)}
-          {item.marketplaceVisibilityEnabled && (
-            <View style={styles.marketplaceBadge}>
-              <Text style={styles.marketplaceBadgeText}>Marketplace</Text>
-            </View>
-          )}
+        <View style={styles.assetInfo}>
+          <Text style={styles.assetType}>{item.type}</Text>
+          <View style={styles.assetMetaRow}>
+            {item.plantNumber && (
+              <Text style={styles.assetMeta}>Plant #{item.plantNumber}</Text>
+            )}
+            {item.registrationNumber && (
+              <>
+                {item.plantNumber && <Text style={styles.assetMetaDivider}>•</Text>}
+                <Text style={styles.assetMeta}>Reg: {item.registrationNumber}</Text>
+              </>
+            )}
+          </View>
+          <View style={styles.assetBottomRow}>
+            {renderAllocationStatus(item.allocationStatus, item.siteId)}
+            {item.marketplaceVisibilityEnabled && (
+              <View style={styles.marketplaceBadge}>
+                <Text style={styles.marketplaceBadgeText}>Marketplace</Text>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-      <ChevronRight size={20} color="#94a3b8" />
-    </TouchableOpacity>
+        <ChevronRight size={20} color="#94a3b8" />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.allocateButton}
+        onPress={() => handleAllocateAsset(item)}
+      >
+        <MapPin size={16} color="#3b82f6" />
+        <Text style={styles.allocateButtonText}>Allocate to Site</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   if (isLoading) {
@@ -437,5 +456,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: '#fff',
+  },
+  assetCardContainer: {
+    gap: 8,
+  },
+  allocateButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    backgroundColor: '#eff6ff',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dbeafe',
+  },
+  allocateButtonText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: '#3b82f6',
   },
 });
