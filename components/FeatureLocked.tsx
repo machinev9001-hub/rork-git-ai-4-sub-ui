@@ -31,10 +31,12 @@ export function FeatureLockedBadge({
 
   const iconSize = size === 'small' ? 12 : size === 'medium' ? 16 : 20;
   const fontSize = size === 'small' ? 10 : size === 'medium' ? 12 : 14;
+  
+  const sizeStyle = size === 'small' ? styles.badgeSmall : size === 'medium' ? styles.badgeMedium : styles.badgeLarge;
 
   return (
     <View style={styles.container}>
-      <View style={[styles.badge, styles[`badge${size.charAt(0).toUpperCase() + size.slice(1)}` as keyof typeof styles]]}>
+      <View style={[styles.badge, sizeStyle]}>
         <Lock size={iconSize} color="#f59e0b" strokeWidth={2} />
         <Text style={[styles.text, { fontSize }]}>Locked</Text>
       </View>
