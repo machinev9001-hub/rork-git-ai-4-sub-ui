@@ -1,13 +1,15 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, Info } from 'lucide-react-native';
+import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, Info, CreditCard } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
+import { useAccountType } from '@/utils/hooks/useFeatureFlags';
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const accountType = useAccountType();
   const [isControlSystemsExpanded, setIsControlSystemsExpanded] = useState(false);
   const [isReportsExpanded, setIsReportsExpanded] = useState(false);
   const [isAssetManagementExpanded, setIsAssetManagementExpanded] = useState(false);
@@ -57,6 +59,46 @@ export default function SettingsScreen() {
       <View style={[styles.headerBorder, { backgroundColor: roleAccentColor }]} />
       
       <ScrollView style={styles.content}>
+        {/* Account Type Section - Show for all users */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Account</Text>
+          
+          <View style={styles.menuCard}>
+            <View style={styles.accountTypeCard}>
+              <View style={styles.accountTypeHeader}>
+                <Text style={styles.accountTypeLabel}>Account Type</Text>
+                <View style={[
+                  styles.accountTypeBadge,
+                  accountType === 'enterprise' ? styles.accountTypeBadgeEnterprise : styles.accountTypeBadgeFree
+                ]}>
+                  <Text style={[
+                    styles.accountTypeBadgeText,
+                    accountType === 'enterprise' ? styles.accountTypeBadgeTextEnterprise : styles.accountTypeBadgeTextFree
+                  ]}>
+                    {accountType === 'enterprise' ? 'Enterprise' : 'Free'}
+                  </Text>
+                </View>
+              </View>
+              {accountType === 'free' && (
+                <TouchableOpacity 
+                  style={styles.vasManagementButton}
+                  onPress={() => router.push('/vas-management' as any)}
+                >
+                  <View style={styles.menuButtonContent}>
+                    <View style={styles.menuIcon}>
+                      <CreditCard size={24} color="#8b5cf6" />
+                    </View>
+                    <View style={styles.menuContent}>
+                      <Text style={styles.menuTitle}>Value-Added Services</Text>
+                      <Text style={styles.menuDescription}>Manage your subscriptions and upgrades</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+
         {!isMasterOrPlanner && (
           <View style={styles.profileHeader}>
             <View style={styles.profileIconContainer}>
@@ -800,6 +842,48 @@ const styles = StyleSheet.create({
   },
   developerToolsSpacer: {
     height: 12,
+  },
+  accountTypeCard: {
+    padding: 16,
+  },
+  accountTypeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  accountTypeLabel: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#000000',
+  },
+  accountTypeBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  accountTypeBadgeEnterprise: {
+    backgroundColor: '#dbeafe',
+  },
+  accountTypeBadgeFree: {
+    backgroundColor: '#fef3c7',
+  },
+  accountTypeBadgeText: {
+    fontSize: 12,
+    fontWeight: '600' as const,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  accountTypeBadgeTextEnterprise: {
+    color: '#1e40af',
+  },
+  accountTypeBadgeTextFree: {
+    color: '#92400e',
+  },
+  vasManagementButton: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: Colors.border,
   },
 
 });

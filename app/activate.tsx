@@ -1,5 +1,5 @@
 import { Stack, router } from 'expo-router';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,12 +16,30 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Key } from 'lucide-react-native';
 import { validateActivationCode } from '@/utils/activationCode';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { AccountType } from '@/types';
 
 const ACTIVATION_STORAGE_KEY = '@activation_data';
+const ACCOUNT_TYPE_STORAGE_KEY = '@selected_account_type';
 
 export default function ActivateScreen() {
   const [activationCode, setActivationCode] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [accountType, setAccountType] = useState<AccountType>('enterprise');
+
+  useEffect(() => {
+    // Load the selected account type from storage
+    const loadAccountType = async () => {
+      try {
+        const storedType = await AsyncStorage.getItem(ACCOUNT_TYPE_STORAGE_KEY);
+        if (storedType === 'free' || storedType === 'enterprise') {
+          setAccountType(storedType);
+        }
+      } catch (error) {
+        console.error('[Activate] Error loading account type:', error);
+      }
+    };
+    loadAccountType();
+  }, []);
 
   const formatActivationCode = (text: string) => {
     const cleaned = text.replace(/[^A-Z0-9]/gi, '').toUpperCase();
@@ -57,6 +75,7 @@ export default function ActivateScreen() {
         code: result.activationCode?.code,
         companyName: result.activationCode?.companyName,
         companyId: result.activationCode?.companyId,
+        accountType: accountType, // Store the account type
         validatedAt: new Date().toISOString(),
       }));
 
@@ -96,7 +115,9 @@ export default function ActivateScreen() {
               </View>
               <Text style={styles.title}>Activate Your Account</Text>
               <Text style={styles.subtitle}>
-                Enter the activation code provided to you to get started
+                {accountType === 'enterprise' 
+                  ? 'Enter the activation code to set up your Enterprise account'
+                  : 'Enter the activation code to set up your Free account'}
               </Text>
             </View>
 

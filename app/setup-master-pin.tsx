@@ -121,7 +121,8 @@ export default function SetupMasterPinScreen() {
         name.trim(),
         masterId.trim(),
         pin.trim(),
-        activationData.code
+        activationData.code,
+        activationData.accountType // Pass the account type from activation data
       );
 
       console.log('[SetupMasterPin] createMasterAccount result:', result);

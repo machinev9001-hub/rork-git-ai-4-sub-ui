@@ -11,6 +11,7 @@ import { getCachedEmployeeWithUser } from '@/utils/employeeCache';
 import { OFFLINE_CONFIG } from '@/constants/colors';
 import { hashPin, verifyPin } from '@/utils/pinSecurity';
 import { validateActivationCode, markActivationCodeAsRedeemed } from '@/utils/activationCode';
+import { AccountType, VASFeatureId } from '@/types';
 
 export type UserRole = 
   | 'master'
@@ -36,6 +37,8 @@ export type MasterAccount = {
   pin: string;
   companyIds: string[];
   currentCompanyId?: string;
+  accountType?: AccountType;
+  vasFeatures?: VASFeatureId[];
   createdAt: any;
 };
 
@@ -54,6 +57,8 @@ export type User = {
   siteName?: string;
   pin?: string;
   masterAccountId?: string;
+  accountType?: AccountType;
+  vasFeatures?: VASFeatureId[];
   createdAt: any;
   disabledMenus?: string[];
   isLocked?: boolean;
@@ -277,6 +282,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             pin: userData.pin || '',
             companyIds: userData.companyIds || [],
             currentCompanyId: userData.currentCompanyId,
+            accountType: userData.accountType,
+            vasFeatures: userData.vasFeatures || [],
             createdAt: userData.createdAt
           };
           setMasterAccount(masterData);
@@ -535,12 +542,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     name: string,
     masterId: string,
     pin: string,
-    activationCode: string
+    activationCode: string,
+    accountType?: AccountType
   ): Promise<{ success: boolean; error?: string; masterAccount?: MasterAccount }> => {
     try {
       console.log('[Auth] Creating master account...');
       console.log('[Auth]   masterId:', masterId);
       console.log('[Auth]   activationCode:', activationCode);
+      console.log('[Auth]   accountType:', accountType);
       
       const codeValidation = await validateActivationCode(activationCode);
       if (!codeValidation.isValid) {
@@ -579,6 +588,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             companyId: codeValidation.activationCode?.companyId,
             companyName: codeValidation.activationCode?.companyName,
             companyIds: [],
+            accountType: accountType || 'enterprise', // Default to enterprise for backward compatibility
+            vasFeatures: [], // Initialize empty VAS features
             createdAt: serverTimestamp(),
           });
 
@@ -609,6 +620,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         name,
         pin: pinHash,
         companyIds: [],
+        accountType: accountType || 'enterprise',
+        vasFeatures: [],
         createdAt: serverTimestamp(),
       };
 
