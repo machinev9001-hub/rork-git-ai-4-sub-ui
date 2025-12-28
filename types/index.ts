@@ -697,8 +697,14 @@ export type PlantAsset = {
   allocatedPvArea?: string;
   allocatedBlockNumber?: string;
   allocationDate?: any;
+  isAvailableForVAS?: boolean;
   breakdownStatus?: boolean;
+  breakdownStartDate?: string;
+  breakdownEndDate?: string | null;
   breakdownTimestamp?: any;
+  breakdownLoggedBy?: string;
+  breakdownReactivatedBy?: string;
+  breakdownReactivatedAt?: any;
   inductionStatus: boolean;
   inductionDate?: any;
   onboardingDate?: any;
@@ -717,7 +723,6 @@ export type PlantAsset = {
   archived?: boolean;
   archivedAt?: any;
   archivedBy?: string;
-  isAvailableForVAS?: boolean;
   availability?: 'available' | 'allocated' | 'maintenance';
   createdAt: any;
   updatedAt?: any;
