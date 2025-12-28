@@ -180,14 +180,15 @@ export default function PlantManagerAssetsScreen() {
     }
   }, [user]);
 
-  const loadOperators = useCallback(async () => {
-    if (!user?.masterAccountId || !user?.siteId) return;
+  const loadOperators = useCallback(async (companyId: string) => {
+    if (!user?.masterAccountId) return;
 
     try {
+      console.log('[PlantManagerAssets] Loading operators for company:', companyId);
       const operatorsQuery = query(
         collection(db, 'employees'),
         where('masterAccountId', '==', user.masterAccountId),
-        where('siteId', '==', user.siteId),
+        where('companyId', '==', companyId),
         where('role', '==', 'Operator')
       );
       
@@ -197,7 +198,7 @@ export default function PlantManagerAssetsScreen() {
         ...doc.data()
       } as Employee));
       
-      console.log('[PlantManagerAssets] Loaded operators:', operatorsList.length);
+      console.log('[PlantManagerAssets] Loaded', operatorsList.length, 'operators for company');
       setOperators(operatorsList);
     } catch (error) {
       console.error('[PlantManagerAssets] Error loading operators:', error);
@@ -209,8 +210,7 @@ export default function PlantManagerAssetsScreen() {
     useCallback(() => {
       loadAssets();
       loadPvBlocks();
-      loadOperators();
-    }, [loadAssets, loadPvBlocks, loadOperators])
+    }, [loadAssets, loadPvBlocks])
   );
 
   const handleSearch = useCallback((text: string) => {
@@ -375,7 +375,12 @@ export default function PlantManagerAssetsScreen() {
   };
 
   const handleAssignOperatorOption = () => {
+    if (!selectedAsset?.companyId) {
+      Alert.alert('Error', 'Plant asset does not have a company assigned.');
+      return;
+    }
     setShowOptionsModal(false);
+    loadOperators(selectedAsset.companyId);
     setShowOperatorModal(true);
     if (selectedAsset?.currentOperatorId) {
       setSelectedOperatorId(selectedAsset.currentOperatorId);
