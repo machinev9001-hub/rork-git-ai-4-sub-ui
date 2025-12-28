@@ -660,7 +660,7 @@ export default function PlantManagerAssetsScreen() {
             >
               <Package size={22} color="#3b82f6" />
               <Text style={styles.optionText}>
-                {selectedAsset?.isAvailableForVAS ? 'Remove from VAS' : 'List on VAS Marketplace'}
+                {selectedAsset?.isAvailableForVAS ? 'Remove from Marketplace' : 'List on Marketplace'}
               </Text>
             </TouchableOpacity>
 
