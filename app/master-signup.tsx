@@ -61,6 +61,12 @@ export default function MasterSignupScreen() {
     console.log('[MasterSignup] Starting master account creation...');
 
     try {
+      console.log('[MasterSignup] Calling createMasterAccount with:', {
+        name: name.trim(),
+        masterId: masterId.trim(),
+        activationCode: activationCode.trim().substring(0, 4) + '***'
+      });
+
       const result = await createMasterAccount(
         name.trim(),
         masterId.trim(),
@@ -79,11 +85,19 @@ export default function MasterSignupScreen() {
       
       console.log('[MasterSignup] ❌ Failed:', result.error);
       setIsLoading(false);
-      Alert.alert('Error', result.error || 'Failed to create account');
-    } catch (error) {
+      Alert.alert('Account Creation Failed', result.error || 'Failed to create account. Please check your activation code and try again.');
+    } catch (error: any) {
       console.error('[MasterSignup] ❌ Exception:', error);
+      console.error('[MasterSignup] ❌ Error details:', {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack?.substring(0, 200)
+      });
       setIsLoading(false);
-      Alert.alert('Error', 'An unexpected error occurred');
+      Alert.alert(
+        'Error',
+        error?.message || 'An unexpected error occurred. Please check your internet connection and try again.'
+      );
     }
   };
 
