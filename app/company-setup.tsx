@@ -104,6 +104,7 @@ export default function CompanySetupScreen() {
         vatNumber: vatNumber.trim(),
         industrySector: industrySector,
         status: 'Active',
+        accountType: masterAccount?.accountType || 'enterprise',
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         createdBy: creatorId,

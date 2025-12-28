@@ -78,6 +78,7 @@ export type Company = {
   vatNumber: string;
   industrySector: string;
   status: 'Active' | 'Inactive' | 'Archived';
+  accountType: AccountType;
   createdAt: any;
   updatedAt?: any;
   createdBy: string;

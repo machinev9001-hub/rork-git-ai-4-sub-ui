@@ -141,6 +141,7 @@ export default function CompanySelectorScreen() {
           vatNumber: data.vatNumber,
           industrySector: data.industrySector || '',
           status: data.status || 'Active',
+          accountType: data.accountType || 'enterprise',
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
           createdBy: data.createdBy,
