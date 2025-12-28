@@ -432,9 +432,9 @@ export type Employee = {
   email?: string;
   employeeIdNumber?: string;
   citizenshipCountry?: string;
-  siteId: string;
+  siteId: string; // Deprecated - kept for backward compatibility. Use EmployeeSite linking table instead
   masterAccountId: string;
-  companyId?: string;
+  companyId?: string; // Company-level ownership - single source of truth
   type?: 'employee' | 'subcontractor';
   subcontractorCompany?: string;
   employerName?: string;
@@ -442,6 +442,7 @@ export type Employee = {
   employerType: 'company' | 'subcontractor';
   isCrossHire?: boolean;
   crossHireName?: string;
+  hasMasterAccess?: boolean; // Toggle for Master Company Management access
   inductionStatus: boolean;
   inductionDate?: any;
   inductionNotes?: string;
@@ -450,6 +451,28 @@ export type Employee = {
   licenseExpiryDate?: any;
   competencyExpiryDate?: any;
   pdpExpiryDate?: any;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+/**
+ * EmployeeSite - Junction table for company-level employees and site assignments
+ * Employees are created once at company level, then linked to sites via this table
+ */
+export type EmployeeSite = {
+  id?: string;
+  employeeId: string;
+  employeeName: string;
+  siteId: string;
+  siteName: string;
+  companyId: string;
+  masterAccountId: string;
+  role?: string; // Site-specific role (can override employee's default role)
+  linkedAt: any;
+  linkedBy: string;
+  unlinkedAt?: any;
+  unlinkedBy?: string;
+  isActive: boolean;
   createdAt: any;
   updatedAt?: any;
 };
