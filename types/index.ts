@@ -711,9 +711,9 @@ export type PlantAsset = {
   crossHireName?: string;
   salaryPayer?: string;
   operatorHistory?: OperatorHistory[];
-  siteId?: string | null;
+  siteId?: string | null; // Deprecated - kept for backward compatibility. Use AssetSite linking table instead
   masterAccountId: string;
-  companyId?: string;
+  companyId?: string; // Company-level ownership - single source of truth
   allocationStatus: AllocationStatus;
   currentAllocation?: CurrentAllocation;
   allocationHistory?: AllocationHistoryEntry[];
@@ -740,9 +740,35 @@ export type PlantAsset = {
   archived?: boolean;
   archivedAt?: any;
   archivedBy?: string;
-  isAvailableForVAS?: boolean;
-  availability?: 'available' | 'allocated' | 'maintenance';
+  isAvailableForMarketplace?: boolean; // VAS-controlled marketplace visibility toggle
+  marketplaceVisibility?: 'internal' | 'marketplace' | 'both'; // Visibility control
+  availability?: 'available' | 'allocated' | 'maintenance'; // Real-time status for marketplace
   createdAt: any;
+  updatedAt?: any;
+};
+
+/**
+ * AssetSite - Junction table for company-level assets and site allocations
+ * Assets are created once at company level, then allocated to sites via this table
+ */
+export type AssetSite = {
+  id?: string;
+  assetId: string;
+  assetName: string; // Asset type or identifier
+  assetType: string;
+  siteId: string;
+  siteName: string;
+  companyId: string;
+  masterAccountId: string;
+  allocatedAt: any;
+  allocatedBy: string;
+  deallocatedAt?: any;
+  deallocatedBy?: string;
+  isActive: boolean; // true = currently allocated, false = deallocated
+  allocationNotes?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
   updatedAt?: any;
 };
 
