@@ -93,6 +93,9 @@ export default function CompanySetupScreen() {
     try {
       console.log('[CompanySetup] Saving to database...');
       
+      const accountType = masterAccount?.accountType || user?.accountType || 'enterprise';
+      console.log('[CompanySetup] Creating company with account type:', accountType);
+      
       const companyRef = await addDoc(collection(db, 'companies'), {
         legalEntityName: legalEntityName.trim(),
         alias: alias.trim(),
@@ -104,7 +107,7 @@ export default function CompanySetupScreen() {
         vatNumber: vatNumber.trim(),
         industrySector: industrySector,
         status: 'Active',
-        accountType: masterAccount?.accountType || 'enterprise',
+        accountType: accountType,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         createdBy: creatorId,
