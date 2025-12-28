@@ -442,6 +442,9 @@ export type Employee = {
   employerType: 'company' | 'subcontractor';
   isCrossHire?: boolean;
   crossHireName?: string;
+  allocatedPvArea?: string;
+  allocatedBlockNumber?: string;
+  areaAllocationDate?: any;
   inductionStatus: boolean;
   inductionDate?: any;
   inductionNotes?: string;
