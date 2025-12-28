@@ -8,29 +8,13 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Wrench, Clock, DollarSign } from 'lucide-react-native';
+import { DollarSign } from 'lucide-react-native';
 
 export default function BillingMenuScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const menuItems = [
-    {
-      id: 'machine-hours',
-      title: 'Machine Hours',
-      description: 'Manage plant asset hours, EPH reports and billing',
-      icon: Wrench,
-      color: '#3b82f6',
-      route: '/machine-hours',
-    },
-    {
-      id: 'man-hours',
-      title: 'EMH (Estimated Man Hours)',
-      description: 'Manage operator hours, EMH reports and billing',
-      icon: Clock,
-      color: '#10b981',
-      route: '/man-hours',
-    },
     {
       id: 'billing-config',
       title: 'Billing Configuration',
