@@ -271,6 +271,14 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "plantAssets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
         { "fieldPath": "siteId", "order": "ASCENDING" },
         { "fieldPath": "location", "order": "DESCENDING" }
       ]
