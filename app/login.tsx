@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LogIn, UserPlus, ScanLine } from 'lucide-react-native';
@@ -172,9 +173,11 @@ export default function LoginScreen() {
               }}
               style={styles.logoPlaceholder}
             >
-              <View style={styles.logoCircle}>
-                <LogIn size={48} color={Colors.accent} strokeWidth={2} />
-              </View>
+              <Image
+                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/s6lvruiuuld79970m1b5b' }}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
             <Text style={styles.appTitle}>Machine</Text>
             <Text style={styles.appSubtitle}>Business Management and Tracking</Text>
@@ -340,15 +343,9 @@ const styles = StyleSheet.create({
   logoPlaceholder: {
     marginBottom: 16,
   },
-  logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: Colors.surface,
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    borderWidth: 3,
-    borderColor: Colors.accent,
+  logoImage: {
+    width: 120,
+    height: 120,
   },
   accentBar: {
     width: 60,
