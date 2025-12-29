@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DollarSign, Settings, Wrench } from 'lucide-react-native';
+import { DollarSign } from 'lucide-react-native';
 
 export default function BillingMenuScreen() {
   const insets = useSafeAreaInsets();
@@ -16,28 +16,12 @@ export default function BillingMenuScreen() {
 
   const menuItems = [
     {
-      id: 'configuration',
-      title: 'Configuration',
-      description: 'Billing rules & rates (EPH + EMH)',
-      icon: Settings,
-      color: '#0ea5e9',
-      route: '/billing-configuration',
-    },
-    {
       id: 'billing-config',
-      title: 'Billing Config',
-      description: 'Legacy screen (includes EPH tabs/workflow)',
-      icon: Wrench,
-      color: '#64748b',
-      route: '/billing-config',
-    },
-    {
-      id: 'eph',
-      title: 'EPH (Estimated Plant Hours)',
-      description: 'Reports, approvals, payments (machine hours)',
+      title: 'Billing Configuration',
+      description: 'Configure billing rules and rates for all hour types',
       icon: DollarSign,
       color: '#f59e0b',
-      route: '/eph-inbox',
+      route: '/billing-config',
     },
   ];
 
