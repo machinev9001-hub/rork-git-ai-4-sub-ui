@@ -456,6 +456,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         <Stack.Screen name="chat" />
         <Stack.Screen name="archived-checklist-detail" />
         <Stack.Screen name="billing-config" />
+        <Stack.Screen name="dumbass" />
         <Stack.Screen name="accounts" options={{ headerShown: false }} />
         <Stack.Screen name="account-info" />
         <Stack.Screen name="debug-info" />

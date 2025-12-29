@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DollarSign, Clock, Users } from 'lucide-react-native';
+import { DollarSign, Clock, Users, AlertTriangle } from 'lucide-react-native';
 
 export default function BillingMenuScreen() {
   const insets = useSafeAreaInsets();
@@ -38,6 +38,14 @@ export default function BillingMenuScreen() {
       icon: Users,
       color: '#22c55e',
       route: '/emh-menu',
+    },
+    {
+      id: 'dumbass',
+      title: 'Dumbass',
+      description: 'New menu item',
+      icon: AlertTriangle,
+      color: '#ef4444',
+      route: '/dumbass',
     },
   ];
 
