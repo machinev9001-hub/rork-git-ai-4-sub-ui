@@ -21,7 +21,7 @@ export default function BillingMenuScreen() {
       description: 'Reports, approvals, and payments for machine hours',
       icon: Clock,
       color: '#0ea5e9',
-      route: '/eph-menu',
+      route: '/billing-config',
     },
     {
       id: 'emh',
