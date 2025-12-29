@@ -203,6 +203,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const lastActivityTime = useRef<number>(Date.now());
   const inactivityTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasInitialized = useRef(false);
+  const isMounted = useRef(false);
 
   const loadUserFromStorage = useCallback(async () => {
     
@@ -372,6 +373,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, [user, logout]);
 
   useEffect(() => {
+    isMounted.current = true;
+    
     if (hasInitialized.current) {
       console.log('[Auth] Already initialized, skipping');
       return;
@@ -383,6 +386,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     
     // FORCE COMPLETE IMMEDIATELY - no waiting
     const forceComplete = () => {
+      if (!isMounted.current) {
+        console.log('[Auth] Component unmounted, skipping state update');
+        return;
+      }
       console.log('[Auth] Force completing initialization');
       setIsLoading(false);
       setAuthInitializing(false);
@@ -390,6 +397,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     
     // Ultra-aggressive timeout - complete in 500ms max
     const emergencyTimeout = setTimeout(() => {
+      if (!isMounted.current) {
+        console.log('[Auth] Component unmounted, skipping emergency timeout state update');
+        return;
+      }
       console.error('[Auth] 🚨 EMERGENCY TIMEOUT (500ms) - Force completing');
       setUser(null);
       setMasterAccount(null);
@@ -409,6 +420,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       });
     
     return () => {
+      isMounted.current = false;
       clearTimeout(emergencyTimeout);
     };
   }, [loadUserFromStorage]);
@@ -443,6 +455,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         if (listenerTimeout) {
           clearTimeout(listenerTimeout);
           listenerTimeout = null;
+        }
+        
+        if (!isMounted.current) {
+          console.log('[Auth] Component unmounted, skipping listener state update');
+          return;
         }
         
         if (!docSnap.exists()) {
