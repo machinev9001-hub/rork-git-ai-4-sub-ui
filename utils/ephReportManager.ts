@@ -125,8 +125,9 @@ export async function getEPHReportsForRecipient(
     console.log('[ephReportManager] Found', reports.length, 'EPH reports');
     return reports;
   } catch (error: any) {
-    if (error?.message?.includes('index')) {
-      console.warn('[ephReportManager] Index not found, falling back to simple query');
+    const errorStr = String(error?.message || error?.code || error || '');
+    if (errorStr.includes('index') || errorStr.includes('Index') || error?.code === 'failed-precondition') {
+      console.warn('[ephReportManager] Index issue for recipient, falling back to simple query');
       const q = query(
         collection(db, 'ephReports'),
         where('recipientMasterAccountId', '==', recipientMasterAccountId)
@@ -175,8 +176,9 @@ export async function getEPHReportsForSender(
     console.log('[ephReportManager] Found', reports.length, 'EPH reports');
     return reports;
   } catch (error: any) {
-    if (error?.message?.includes('index')) {
-      console.warn('[ephReportManager] Index not found, falling back to simple query');
+    const errorStr = String(error?.message || error?.code || error || '');
+    if (errorStr.includes('index') || errorStr.includes('Index') || error?.code === 'failed-precondition') {
+      console.warn('[ephReportManager] Index issue for sender, falling back to simple query');
       const q = query(
         collection(db, 'ephReports'),
         where('senderMasterAccountId', '==', senderMasterAccountId)
