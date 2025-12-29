@@ -365,6 +365,9 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
             color: '#FFFFFF',
           },
           headerTitleAlign: 'left',
+          contentStyle: {
+            backgroundColor: '#000000',
+          },
         }}
       >
         <Stack.Screen name="login" options={{ headerShown: false }} />

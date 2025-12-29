@@ -271,40 +271,46 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         // Update last activity time
         await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString());
         
-        // Set user state
-        setUser(userData);
-        
-        // If it's a master account, also set masterAccount state
-        if (userData.role === 'master' && userData.masterAccountId) {
-          const masterData: MasterAccount = {
-            id: userData.masterAccountId,
-            masterId: userData.userId,
-            name: userData.name,
-            pin: userData.pin || '',
-            companyIds: userData.companyIds || [],
-            currentCompanyId: userData.currentCompanyId,
-            accountType: userData.accountType,
-            vasFeatures: userData.vasFeatures || [],
-            createdAt: userData.createdAt
-          };
-          setMasterAccount(masterData);
+        // Set user state only if still mounted
+        if (isMounted.current) {
+          setUser(userData);
+          
+          // If it's a master account, also set masterAccount state
+          if (userData.role === 'master' && userData.masterAccountId) {
+            const masterData: MasterAccount = {
+              id: userData.masterAccountId,
+              masterId: userData.userId,
+              name: userData.name,
+              pin: userData.pin || '',
+              companyIds: userData.companyIds || [],
+              currentCompanyId: userData.currentCompanyId,
+              accountType: userData.accountType,
+              vasFeatures: userData.vasFeatures || [],
+              createdAt: userData.createdAt
+            };
+            setMasterAccount(masterData);
+          }
+          
+          console.log('[Auth] Session restored successfully');
+          setIsLoading(false);
+          setAuthInitializing(false);
         }
-        
-        console.log('[Auth] Session restored successfully');
-        setIsLoading(false);
-        setAuthInitializing(false);
       } else {
+        if (isMounted.current) {
+          setUser(null);
+          setMasterAccount(null);
+          setIsLoading(false);
+          setAuthInitializing(false);
+        }
+      }
+    } catch (error) {
+      console.error('[Auth] Load error:', error);
+      if (isMounted.current) {
         setUser(null);
         setMasterAccount(null);
         setIsLoading(false);
         setAuthInitializing(false);
       }
-    } catch (error) {
-      console.error('[Auth] Load error:', error);
-      setUser(null);
-      setMasterAccount(null);
-      setIsLoading(false);
-      setAuthInitializing(false);
     }
   }, []);
 
@@ -464,7 +470,9 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         
         if (!docSnap.exists()) {
           console.log('[Auth] User document deleted, logging out');
-          await logout();
+          if (isMounted.current) {
+            await logout();
+          }
           return;
         }
 
@@ -482,8 +490,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         console.log('[Auth] Real-time update - disabledMenus:', updatedUserData.disabledMenus);
         
         await AsyncStorage.setItem(STORAGE_KEYS.LAST_KNOWN_USER, JSON.stringify(updatedUserData));
-        setUser(updatedUserData);
-        console.log('[Auth] User data updated from real-time listener');
+        if (isMounted.current) {
+          setUser(updatedUserData);
+          console.log('[Auth] User data updated from real-time listener');
+        }
       },
       (error: any) => {
         hasReceivedFirstSnapshot = true;
