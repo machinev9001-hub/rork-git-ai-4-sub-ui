@@ -1,3 +1,4 @@
+// Ensure Colors is always defined and immutable
 export const Colors = {
   background: "#000000",
   text: "#FFFFFF",
@@ -39,6 +40,7 @@ export type ThemeColors = {
   infoText: string;
 };
 
+// Ensure AppTheme is always defined and immutable
 export const AppTheme: ThemeColors = {
   background: '#000000',
   text: '#FFFFFF',

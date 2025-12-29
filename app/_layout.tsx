@@ -174,6 +174,9 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       return;
     }
     
+    // Use a flag to prevent navigation after unmount
+    let isActive = true;
+    
     const currentUserId = user?.userId || masterAccount?.masterId || null;
     const currentUserRole = user?.role || null;
     
@@ -194,18 +197,33 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
     const publicPaths = ['/login', '/master-signup', '/activate', '/setup-master-pin', '/setup-employee-pin', '/admin-pin-verify', '/admin-panel', '/company-selector', '/company-setup', '/qr-scanner'];
     const setupPaths = ['/setup-master-pin', '/setup-employee-pin'];
     
+    // Defer all navigation to next tick to prevent state updates during render
+    const performNavigation = (destination: string) => {
+      if (!isActive) return;
+      navigationAttempted.current = true;
+      setTimeout(() => {
+        if (!isActive) return;
+        try {
+          router.replace(destination as any);
+          console.log('[RootLayout] Navigation to', destination, 'completed');
+        } catch (error) {
+          console.error('[RootLayout] Navigation error:', error);
+          navigationAttempted.current = false;
+        }
+      }, 0);
+    };
+    
     if (!user && !masterAccount) {
       if (!publicPaths.includes(currentPath) && !navigationAttempted.current) {
         console.log('[RootLayout] No user, redirecting to login from:', currentPath);
-        navigationAttempted.current = true;
-        router.replace('/login');
+        performNavigation('/login');
       }
-      return;
+      return () => { isActive = false; };
     }
     
     if ((user || masterAccount) && setupPaths.includes(currentPath)) {
       console.log('[RootLayout] User on setup path, not interfering');
-      return;
+      return () => { isActive = false; };
     }
     
     if ((user || masterAccount) && publicPaths.includes(currentPath)) {
@@ -231,41 +249,36 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       
       if (!hasCompanies && currentPath !== '/company-setup' && !navigationAttempted.current) {
         console.log('[RootLayout] ✅ Master has no companies → Routing to /company-setup');
-        navigationAttempted.current = true;
-        router.replace('/company-setup');
-        return;
+        performNavigation('/company-setup');
+        return () => { isActive = false; };
       }
       
       if (hasCompanies && !hasSelectedCompany && currentPath !== '/company-selector' && !navigationAttempted.current) {
         console.log('[RootLayout] ✅ Master has companies but none selected → Routing to /company-selector');
-        navigationAttempted.current = true;
-        router.replace('/company-selector');
-        return;
+        performNavigation('/company-selector');
+        return () => { isActive = false; };
       }
       
       if (hasSelectedCompany && hasSelectedSite && currentPath !== '/(tabs)' && !publicPaths.includes(currentPath) && !navigationAttempted.current && !currentPath.startsWith('/(tabs)')) {
         console.log('[RootLayout] ✅ Master has selected company and site → Routing to /(tabs)');
-        navigationAttempted.current = true;
-        router.replace('/(tabs)');
-        return;
+        performNavigation('/(tabs)');
+        return () => { isActive = false; };
       }
       
       if (hasSelectedCompany && !hasSelectedSite && !publicPaths.includes(currentPath) && !navigationAttempted.current) {
         if (isFreeAccount) {
           console.log('[RootLayout] ✅ Free account with selected company → Routing to /plant-asset-marketplace');
           if (currentPath !== '/plant-asset-marketplace') {
-            navigationAttempted.current = true;
-            router.replace('/plant-asset-marketplace');
+            performNavigation('/plant-asset-marketplace');
           }
         } else {
           console.log('[RootLayout] ✅ Enterprise master with selected company but no site → Routing to /master-sites');
           if (currentPath !== '/master-sites') {
-            navigationAttempted.current = true;
-            router.replace('/master-sites');
+            performNavigation('/master-sites');
           }
         }
       }
-      return;
+      return () => { isActive = false; };
     }
     
     if (user) {
@@ -278,7 +291,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       if (currentPath === '/qr-scanner') {
         console.log('[RootLayout] ⏸️  User is on QR scanner screen, BLOCKING all auto-navigation');
         qrLoginInProgress.current = true;
-        return;
+        return () => { isActive = false; };
       }
       
       if (qrLoginInProgress.current && currentPath !== '/qr-scanner') {
@@ -288,32 +301,23 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       
       if (hasCompanies && !hasSelectedCompany && currentPath !== '/company-selector' && !navigationAttempted.current) {
         console.log('[RootLayout] ✅ User has companies but none selected → Routing to /company-selector');
-        navigationAttempted.current = true;
-        router.replace('/company-selector');
-        return;
+        performNavigation('/company-selector');
+        return () => { isActive = false; };
       }
       
       if (publicPaths.includes(currentPath) && !navigationAttempted.current && !qrLoginInProgress.current) {
         console.log('[RootLayout] ✅ User logged in from public path, routing to home screen');
         console.log('[RootLayout]   User ID:', user.userId, 'Role:', user.role);
-        navigationAttempted.current = true;
         
         const isOperator = isOperatorRole(user.role);
         const destination = isManagementUser ? '/(tabs)' : isOperator ? '/operator-home' : '/employee-timesheet';
         
         console.log('[RootLayout] Is management role:', isManagementUser, '(role:', user.role, ') Routing to:', destination);
-        
-        setTimeout(() => {
-          try {
-            router.replace(destination as any);
-            console.log('[RootLayout] Navigation completed');
-          } catch (error) {
-            console.error('[RootLayout] Navigation error:', error);
-            navigationAttempted.current = false;
-          }
-        }, 50);
+        performNavigation(destination);
       }
     }
+    
+    return () => { isActive = false; };
   }, [user, masterAccount, isLoading, authInitializing, pathname]);
 
   if (isLoading || authInitializing) {
