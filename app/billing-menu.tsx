@@ -17,8 +17,8 @@ export default function BillingMenuScreen() {
   const menuItems = [
     {
       id: 'billing-config',
-      title: 'Billing Configuration',
-      description: 'Configure billing rules and rates for all hour types',
+      title: 'EPH (Estimated Plant Hours)',
+      description: 'Configure billing rules and rates for plant hours',
       icon: DollarSign,
       color: '#f59e0b',
       route: '/billing-config',
