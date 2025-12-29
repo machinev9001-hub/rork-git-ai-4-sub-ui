@@ -103,49 +103,26 @@ export async function getEPHReportsForRecipient(
 ): Promise<EPHReport[]> {
   console.log('[ephReportManager] Fetching EPH reports for recipient:', recipientMasterAccountId);
 
-  try {
-    let q = query(
+  let q = query(
+    collection(db, 'ephReports'),
+    where('recipientMasterAccountId', '==', recipientMasterAccountId),
+    orderBy('createdAt', 'desc')
+  );
+
+  if (status) {
+    q = query(
       collection(db, 'ephReports'),
       where('recipientMasterAccountId', '==', recipientMasterAccountId),
+      where('status', '==', status),
       orderBy('createdAt', 'desc')
     );
-
-    if (status) {
-      q = query(
-        collection(db, 'ephReports'),
-        where('recipientMasterAccountId', '==', recipientMasterAccountId),
-        where('status', '==', status),
-        orderBy('createdAt', 'desc')
-      );
-    }
-
-    const snapshot = await getDocs(q);
-    const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EPHReport));
-    
-    console.log('[ephReportManager] Found', reports.length, 'EPH reports');
-    return reports;
-  } catch (error: any) {
-    const errorStr = String(error?.message || error?.code || error || '');
-    if (errorStr.includes('index') || errorStr.includes('Index') || error?.code === 'failed-precondition') {
-      console.warn('[ephReportManager] Index issue for recipient, falling back to simple query');
-      const q = query(
-        collection(db, 'ephReports'),
-        where('recipientMasterAccountId', '==', recipientMasterAccountId)
-      );
-      const snapshot = await getDocs(q);
-      const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EPHReport));
-      reports.sort((a, b) => {
-        const aTime = a.createdAt?.seconds || 0;
-        const bTime = b.createdAt?.seconds || 0;
-        return bTime - aTime;
-      });
-      if (status) {
-        return reports.filter(r => r.status === status);
-      }
-      return reports;
-    }
-    throw error;
   }
+
+  const snapshot = await getDocs(q);
+  const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EPHReport));
+  
+  console.log('[ephReportManager] Found', reports.length, 'EPH reports');
+  return reports;
 }
 
 export async function getEPHReportsForSender(
@@ -154,49 +131,26 @@ export async function getEPHReportsForSender(
 ): Promise<EPHReport[]> {
   console.log('[ephReportManager] Fetching EPH reports for sender:', senderMasterAccountId);
 
-  try {
-    let q = query(
+  let q = query(
+    collection(db, 'ephReports'),
+    where('senderMasterAccountId', '==', senderMasterAccountId),
+    orderBy('sentAt', 'desc')
+  );
+
+  if (status) {
+    q = query(
       collection(db, 'ephReports'),
       where('senderMasterAccountId', '==', senderMasterAccountId),
+      where('status', '==', status),
       orderBy('sentAt', 'desc')
     );
-
-    if (status) {
-      q = query(
-        collection(db, 'ephReports'),
-        where('senderMasterAccountId', '==', senderMasterAccountId),
-        where('status', '==', status),
-        orderBy('sentAt', 'desc')
-      );
-    }
-
-    const snapshot = await getDocs(q);
-    const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EPHReport));
-    
-    console.log('[ephReportManager] Found', reports.length, 'EPH reports');
-    return reports;
-  } catch (error: any) {
-    const errorStr = String(error?.message || error?.code || error || '');
-    if (errorStr.includes('index') || errorStr.includes('Index') || error?.code === 'failed-precondition') {
-      console.warn('[ephReportManager] Index issue for sender, falling back to simple query');
-      const q = query(
-        collection(db, 'ephReports'),
-        where('senderMasterAccountId', '==', senderMasterAccountId)
-      );
-      const snapshot = await getDocs(q);
-      const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EPHReport));
-      reports.sort((a, b) => {
-        const aTime = a.sentAt?.seconds || 0;
-        const bTime = b.sentAt?.seconds || 0;
-        return bTime - aTime;
-      });
-      if (status) {
-        return reports.filter(r => r.status === status);
-      }
-      return reports;
-    }
-    throw error;
   }
+
+  const snapshot = await getDocs(q);
+  const reports = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as EPHReport));
+  
+  console.log('[ephReportManager] Found', reports.length, 'EPH reports');
+  return reports;
 }
 
 export async function approveEPHReport(

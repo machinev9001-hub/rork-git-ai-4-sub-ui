@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DollarSign, Wrench } from 'lucide-react-native';
+import { DollarSign } from 'lucide-react-native';
 
 export default function BillingMenuScreen() {
   const insets = useSafeAreaInsets();
@@ -22,14 +22,6 @@ export default function BillingMenuScreen() {
       icon: DollarSign,
       color: '#f59e0b',
       route: '/billing-config',
-    },
-    {
-      id: 'eph',
-      title: 'Estimated Plant hours (EPH)',
-      description: 'Manage equipment and plant hour reports, approvals, and payments',
-      icon: Wrench,
-      color: '#3b82f6',
-      route: '/eph-inbox',
     },
   ];
 

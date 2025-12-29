@@ -130,9 +130,9 @@ export async function getAgreedTimesheetsByDateRange(
   const agreedTimesheetsQuery = query(
     collection(db, 'agreedTimesheets'),
     where('masterAccountId', '==', masterAccountId),
-    where('status', '==', 'approved_for_billing'),
     where('date', '>=', startDate),
-    where('date', '<=', endDate)
+    where('date', '<=', endDate),
+    where('status', '==', 'approved_for_billing')
   );
 
   const querySnapshot = await getDocs(agreedTimesheetsQuery);

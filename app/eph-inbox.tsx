@@ -7,252 +7,54 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
-  Platform,
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, Calendar, Package, CheckCircle, AlertCircle, Clock, MessageSquare, X, Inbox, Send, CreditCard, ChevronDown, ChevronUp, CalendarDays, CheckSquare, Square } from 'lucide-react-native';
+import { FileText, Calendar, DollarSign, Package, CheckCircle, AlertCircle, Clock, MessageSquare, X, Inbox, Send, CreditCard } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
-import { getPendingAgreementsByMasterAccount, PendingAgreement } from '@/utils/pendingAgreementManager';
-import { getAgreedTimesheetsByDateRange } from '@/utils/agreedTimesheetManager';
-
+import { getEPHReportsForSender } from '@/utils/ephReportManager';
+import { EPHReport } from '@/types/ephReport';
 import { collection, getDocs, query, where, orderBy as firestoreOrderBy } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { PlantAsset, Subcontractor } from '@/types';
-import { BillableHoursResult } from '@/utils/billableHoursCalculator';
-import ReportGenerationModal from '@/components/accounts/ReportGenerationModal';
-import SendConfirmationModal from '@/components/accounts/SendConfirmationModal';
-import { generateTimesheetPDF, downloadTimesheetPDF, emailTimesheetPDF } from '@/utils/timesheetPdfGenerator';
-import { sendEPHToSubcontractor } from '@/utils/ephEmailService';
 
-type FilterStatus = 'all' | 'pending_subcontractor_review' | 'subcontractor_responded' | 'agreed' | 'rejected';
+type FilterStatus = 'all' | 'sent' | 'reviewed' | 'agreed' | 'disputed';
 type TabType = 'inbox' | 'report' | 'payments';
-
-type TimesheetEntry = {
-  id: string;
-  date: string;
-  openHours: string;
-  closeHours: string;
-  totalHours: number;
-  operatorName: string;
-  isRainDay: boolean;
-  isStrikeDay: boolean;
-  isBreakdown: boolean;
-  isPublicHoliday: boolean;
-  notes?: string;
-  hasOriginalEntry?: boolean;
-  adjustedBy?: string;
-  isAdjustment?: boolean;
-};
-
-type EPHRecord = {
-  assetId: string;
-  assetType: string;
-  plantNumber?: string;
-  registrationNumber?: string;
-  rate: number;
-  rateType: 'wet' | 'dry';
-  totalActualHours: number;
-  totalBillableHours: number;
-  estimatedCost: number;
-  actualNormalHours: number;
-  actualSaturdayHours: number;
-  actualSundayHours: number;
-  actualPublicHolidayHours: number;
-  actualRainDayHours: number;
-  billableNormalHours: number;
-  billableSaturdayHours: number;
-  billableSundayHours: number;
-  billablePublicHolidayHours: number;
-  billableRainDayHours: number;
-  rawTimesheets: TimesheetEntry[];
-  billingResultsByDate?: Map<string, BillableHoursResult>;
-};
-
-
 
 export default function MachineHoursScreen() {
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [reports, setReports] = useState<PendingAgreement[]>([]);
-  const [filteredReports, setFilteredReports] = useState<PendingAgreement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState<EPHReport[]>([]);
+  const [filteredReports, setFilteredReports] = useState<EPHReport[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
-  const [selectedReport, setSelectedReport] = useState<PendingAgreement | null>(null);
+  const [selectedReport, setSelectedReport] = useState<EPHReport | null>(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [detailedTimesheets, setDetailedTimesheets] = useState<any[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
-  const [reportsLoading, setReportsLoading] = useState(true);
-  
-  const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
-  const [selectedSubcontractor, setSelectedSubcontractor] = useState<string | null>(null);
-  const [, setPlantAssets] = useState<PlantAsset[]>([]);
-  const [ephData, setEphData] = useState<EPHRecord[]>([]);
-  const [, setEphTimesheets] = useState<Map<string, TimesheetEntry[]>>(new Map());
-  const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
-  const [selectedAssetIds, setSelectedAssetIds] = useState<Set<string>>(new Set());
-  const [reportModalVisible, setReportModalVisible] = useState(false);
-  const [sendModalVisible, setSendModalVisible] = useState(false);
-  const [startDate, setStartDate] = useState<Date>(() => {
-    const d = new Date(); d.setDate(1); return d;
-  });
-  const [endDate, setEndDate] = useState<Date>(new Date());
-
-
-
-  const loadSubcontractors = useCallback(async () => {
-    if (!user?.masterAccountId || !user?.siteId) return;
-    try {
-      const q = query(
-        collection(db, 'subcontractors'),
-        where('masterAccountId', '==', user.masterAccountId),
-        where('siteId', '==', user.siteId),
-        where('status', '==', 'Active'),
-        firestoreOrderBy('name')
-      );
-      const snapshot = await getDocs(q);
-      const subs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Subcontractor));
-      setSubcontractors(subs);
-    } catch (error) {
-      console.error('[EPH] Error loading subcontractors:', error);
-    }
-  }, [user?.masterAccountId, user?.siteId]);
-
-  const generateEPHReport = useCallback(async (assets: PlantAsset[], _subcontractorId: string) => {
-    try {
-      console.log('[EPH] Generating EPH report for', assets.length, 'assets');
-      const startDateStr = startDate.toISOString().split('T')[0];
-      const endDateStr = endDate.toISOString().split('T')[0];
-      
-      const agreedTimesheets = await getAgreedTimesheetsByDateRange(
-        user?.masterAccountId || '',
-        startDateStr,
-        endDateStr
-      );
-      console.log('[EPH] Found', agreedTimesheets.length, 'agreed timesheets');
-      
-      const assetTimesheetsMap = new Map<string, any[]>();
-      agreedTimesheets.forEach(ts => {
-        if (ts.assetId && ts.timesheetType === 'plant_asset') {
-          const existing = assetTimesheetsMap.get(ts.assetId) || [];
-          existing.push(ts);
-          assetTimesheetsMap.set(ts.assetId, existing);
-        }
-      });
-      
-      const ephRecords: EPHRecord[] = assets.map((asset) => {
-        const assetTimesheets = assetTimesheetsMap.get(asset.assetId) || [];
-        console.log('[EPH] Asset', asset.assetId, 'has', assetTimesheets.length, 'agreed timesheets');
-        
-        const rawEntries: TimesheetEntry[] = assetTimesheets.map(ts => ({
-          id: ts.id,
-          date: ts.date,
-          openHours: String(ts.originalOpenHours || 0),
-          closeHours: String(ts.originalCloseHours || 0),
-          totalHours: ts.agreedHours || ts.originalHours || 0,
-          operatorName: ts.operatorName || 'Unknown',
-          isRainDay: ts.isRainDay || false,
-          isStrikeDay: false,
-          isBreakdown: ts.isBreakdown || false,
-          isPublicHoliday: ts.isPublicHoliday || false,
-          notes: ts.adminNotes || ts.originalNotes,
-          hasOriginalEntry: false,
-          adjustedBy: ts.agreedByRole,
-          isAdjustment: false,
-        }));
-        
-        setEphTimesheets(prev => { const m = new Map(prev); m.set(asset.assetId, rawEntries); return m; });
-        
-        let actualNormalHours = 0, actualSaturdayHours = 0, actualSundayHours = 0, actualPublicHolidayHours = 0, actualRainDayHours = 0;
-        let billableNormalHours = 0, billableSaturdayHours = 0, billableSundayHours = 0, billablePublicHolidayHours = 0, billableRainDayHours = 0;
-        const billingResultsByDate = new Map<string, BillableHoursResult>();
-        
-        assetTimesheets.forEach((ts) => {
-          const actualHours = ts.agreedHours || ts.originalHours || 0;
-          const storedBillableHours = ts.billableHours || actualHours;
-          const date = new Date(ts.date);
-          const dayOfWeek = date.getDay();
-          
-          const billingResult: BillableHoursResult = {
-            actualHours: actualHours,
-            billableHours: storedBillableHours,
-            appliedRule: ts.billingRule || 'stored',
-            minimumApplied: 0,
-            notes: '',
-          };
-          billingResultsByDate.set(ts.date, billingResult);
-          
-          if (ts.isRainDay) { actualRainDayHours += actualHours; billableRainDayHours += storedBillableHours; }
-          else if (ts.isPublicHoliday) { actualPublicHolidayHours += actualHours; billablePublicHolidayHours += storedBillableHours; }
-          else if (dayOfWeek === 6) { actualSaturdayHours += actualHours; billableSaturdayHours += storedBillableHours; }
-          else if (dayOfWeek === 0) { actualSundayHours += actualHours; billableSundayHours += storedBillableHours; }
-          else { actualNormalHours += actualHours; billableNormalHours += storedBillableHours; }
-        });
-        
-        const rate = asset.dryRate || asset.wetRate || 0;
-        const totalActualHours = actualNormalHours + actualSaturdayHours + actualSundayHours + actualPublicHolidayHours + actualRainDayHours;
-        const totalBillableHours = billableNormalHours + billableSaturdayHours + billableSundayHours + billablePublicHolidayHours + billableRainDayHours;
-        
-        return {
-          assetId: asset.assetId, assetType: asset.type, plantNumber: asset.plantNumber, registrationNumber: asset.registrationNumber,
-          rate, rateType: (asset.dryRate ? 'dry' : 'wet') as 'wet' | 'dry',
-          totalActualHours, totalBillableHours, estimatedCost: totalBillableHours * rate,
-          actualNormalHours, actualSaturdayHours, actualSundayHours, actualPublicHolidayHours, actualRainDayHours,
-          billableNormalHours, billableSaturdayHours, billableSundayHours, billablePublicHolidayHours, billableRainDayHours,
-          rawTimesheets: rawEntries, billingResultsByDate,
-        };
-      });
-      
-      setEphData(ephRecords);
-      console.log('[EPH] Generated', ephRecords.length, 'EPH records');
-    } catch (error) {
-      console.error('[EPH] Error generating EPH report:', error);
-      Alert.alert('Error', 'Failed to generate EPH report. Please try again.');
-    }
-  }, [startDate, endDate, user?.masterAccountId]);
-
-  const loadPlantAssets = useCallback(async (subcontractorId: string) => {
-    setLoading(true);
-    try {
-      const q = query(
-        collection(db, 'plantAssets'),
-        where('masterAccountId', '==', user?.masterAccountId),
-        where('siteId', '==', user?.siteId),
-        where('ownerId', '==', subcontractorId),
-        where('ownerType', '==', 'subcontractor')
-      );
-      const snapshot = await getDocs(q);
-      const assets = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PlantAsset));
-      setPlantAssets(assets);
-      if (assets.length > 0) await generateEPHReport(assets, subcontractorId);
-      else setEphData([]);
-    } catch (error) {
-      console.error('[EPH] Error loading plant assets:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, [generateEPHReport, user?.masterAccountId, user?.siteId]);
 
   const loadEPHReports = useCallback(async () => {
     if (!user?.masterAccountId) return;
+
     try {
-      setReportsLoading(true);
-      const fetchedReports = await getPendingAgreementsByMasterAccount(user.masterAccountId);
+      setLoading(true);
+      console.log('[EPH Inbox] Loading sent reports for:', user.masterAccountId);
+      const fetchedReports = await getEPHReportsForSender(user.masterAccountId);
       setReports(fetchedReports);
-      console.log('[EPH Inbox] Loaded', fetchedReports.length, 'pending agreements');
+      console.log('[EPH Inbox] Loaded', fetchedReports.length, 'sent reports');
     } catch (error) {
       console.error('[EPH Inbox] Error loading reports:', error);
       Alert.alert('Error', 'Failed to load EPH reports');
     } finally {
-      setReportsLoading(false);
+      setLoading(false);
     }
   }, [user?.masterAccountId]);
 
   useEffect(() => {
-    loadSubcontractors();
-    if (user?.masterAccountId) loadEPHReports();
-  }, [user?.masterAccountId, loadEPHReports, loadSubcontractors]);
+    if (user?.masterAccountId) {
+      loadEPHReports();
+    }
+  }, [user?.masterAccountId, loadEPHReports]);
 
   useEffect(() => {
     if (filterStatus === 'all') {
@@ -262,44 +64,47 @@ export default function MachineHoursScreen() {
     }
   }, [filterStatus, reports]);
 
-  const handleViewDetails = async (report: PendingAgreement) => {
+  const handleViewDetails = async (report: EPHReport) => {
     setSelectedReport(report);
     setLoadingDetails(true);
     setDetailsVisible(true);
 
     try {
-      console.log('[EPH Inbox] Loading timesheet details for agreement:', report.id);
+      console.log('[EPH Inbox] Loading timesheet details for report:', report.id);
       const timesheets: any[] = [];
 
-      const agreedTimesheets = await getAgreedTimesheetsByDateRange(
-        report.masterAccountId,
-        report.dateRange.from,
-        report.dateRange.to
-      );
-      
-      agreedTimesheets.forEach(ts => {
-        if (ts.assetId === report.assetId && ts.timesheetType === 'plant_asset') {
+      for (const assetId of report.assetIds) {
+        console.log('[EPH Inbox] Fetching timesheets for asset:', assetId);
+        const q = query(
+          collection(db, 'plantAssetTimesheets'),
+          where('assetId', '==', assetId),
+          where('date', '>=', report.dateRangeFrom),
+          where('date', '<=', report.dateRangeTo),
+          firestoreOrderBy('date', 'desc')
+        );
+
+        const snapshot = await getDocs(q);
+        snapshot.docs.forEach(doc => {
+          const data = doc.data();
           timesheets.push({
-            id: ts.id,
-            assetId: ts.assetId,
-            assetType: ts.assetType || report.assetType || 'Plant Asset',
-            plantNumber: report.plantNumber || '',
-            registrationNumber: report.registrationNumber || '',
-            date: ts.date,
-            totalHours: ts.agreedHours || ts.originalHours || 0,
-            openHours: String(ts.originalOpenHours || '00:00'),
-            closeHours: String(ts.originalCloseHours || '00:00'),
-            operatorName: ts.operatorName || 'Unknown',
-            isBreakdown: ts.isBreakdown || false,
-            isRainDay: ts.isRainDay || false,
-            isStrikeDay: false,
-            isPublicHoliday: ts.isPublicHoliday || false,
-            notes: ts.adminNotes || ts.originalNotes || '',
-            billableHours: ts.billableHours,
-            billingRule: ts.billingRule,
+            id: doc.id,
+            assetId: data.assetId,
+            assetType: data.assetType,
+            plantNumber: data.plantNumber,
+            registrationNumber: data.registrationNumber,
+            date: data.date,
+            totalHours: data.totalHours || 0,
+            openHours: data.openHours || '00:00',
+            closeHours: data.closeHours || data.closingHours || '00:00',
+            operatorName: data.operatorName || 'Unknown',
+            isBreakdown: data.isBreakdown || false,
+            isRainDay: data.isRainDay || false,
+            isStrikeDay: data.isStrikeDay || false,
+            isPublicHoliday: data.isPublicHoliday || false,
+            notes: data.notes || data.adminNotes || data.billingNotes || '',
           });
-        }
-      });
+        });
+      }
 
       console.log('[EPH Inbox] Loaded', timesheets.length, 'timesheet entries');
       setDetailedTimesheets(timesheets);
@@ -311,198 +116,41 @@ export default function MachineHoursScreen() {
     }
   };
 
-  const getStatusColor = (status: PendingAgreement['status']): string => {
+  const getStatusColor = (status: EPHReport['status']): string => {
     switch (status) {
-      case 'pending_subcontractor_review': return '#F59E0B';
-      case 'subcontractor_responded': return '#3B82F6';
-      case 'admin_final_review': return '#8B5CF6';
+      case 'sent': return '#F59E0B';
+      case 'reviewed': return '#3B82F6';
       case 'agreed': return '#10B981';
-      case 'rejected': return '#EF4444';
+      case 'disputed': return '#EF4444';
       default: return '#64748B';
     }
   };
 
-  const getStatusIcon = (status: PendingAgreement['status']) => {
+  const getStatusIcon = (status: EPHReport['status']) => {
     const color = getStatusColor(status);
     switch (status) {
-      case 'pending_subcontractor_review': return <Clock size={20} color={color} />;
-      case 'subcontractor_responded': return <FileText size={20} color={color} />;
-      case 'admin_final_review': return <FileText size={20} color={color} />;
+      case 'sent': return <Clock size={20} color={color} />;
+      case 'reviewed': return <FileText size={20} color={color} />;
       case 'agreed': return <CheckCircle size={20} color={color} />;
-      case 'rejected': return <AlertCircle size={20} color={color} />;
+      case 'disputed': return <AlertCircle size={20} color={color} />;
       default: return <FileText size={20} color={color} />;
     }
   };
 
-  const getStatusLabel = (status: PendingAgreement['status']): string => {
+  const getStatusLabel = (status: EPHReport['status']): string => {
     switch (status) {
-      case 'pending_subcontractor_review': return 'Awaiting Review';
-      case 'subcontractor_responded': return 'Response Received';
-      case 'admin_final_review': return 'Final Review';
+      case 'sent': return 'Awaiting Review';
+      case 'reviewed': return 'Reviewed';
       case 'agreed': return 'Agreed';
-      case 'rejected': return 'Rejected';
+      case 'disputed': return 'Disputed';
       default: return status;
     }
   };
 
-  const formatDateStr = (dateStr: string): string => {
+  const formatDate = (dateStr: string): string => {
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
   };
-
-  const formatDate = (date: Date): string => {
-    return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-  };
-
-  const toggleCardExpansion = (assetId: string) => {
-    setExpandedCards(prev => { const s = new Set(prev); if (s.has(assetId)) s.delete(assetId); else s.add(assetId); return s; });
-  };
-
-  const toggleAssetSelection = (assetId: string) => {
-    setSelectedAssetIds(prev => { const s = new Set(prev); if (s.has(assetId)) s.delete(assetId); else s.add(assetId); return s; });
-  };
-
-  const handleGeneratePDF = async (options: { scope: 'all' | 'selected'; deliveryMethod: 'download' | 'email'; recipientEmail?: string }) => {
-    if (!selectedSubcontractor) { Alert.alert('Error', 'No subcontractor selected'); return; }
-    const selectedAssets = options.scope === 'selected' ? ephData.filter(r => selectedAssetIds.has(r.assetId)) : ephData;
-    if (selectedAssets.length === 0) { Alert.alert('Error', 'No assets to include'); return; }
-    try {
-      const subcontractor = subcontractors.find(s => s.id === selectedSubcontractor);
-      const groups = selectedAssets.map(record => {
-        const entries = record.rawTimesheets.map(ts => {
-          const billingResult = record.billingResultsByDate?.get(ts.date);
-          const billableHours = billingResult?.billableHours ?? ts.totalHours;
-          const totalCost = billableHours * record.rate;
-          return {
-            id: ts.id,
-            date: ts.date,
-            operatorName: ts.operatorName,
-            operatorId: ts.operatorName,
-            verified: true,
-            verifiedAt: new Date().toISOString(),
-            verifiedBy: 'system',
-            masterAccountId: user?.masterAccountId || '',
-            siteId: user?.siteId || '',
-            type: 'plant_hours' as const,
-            openHours: parseFloat(ts.openHours) || 0,
-            closeHours: parseFloat(ts.closeHours) || 0,
-            totalHours: ts.totalHours,
-            actualHours: ts.totalHours,
-            billableHours: billableHours,
-            assetRate: record.rate,
-            totalCost: totalCost,
-            isBreakdown: ts.isBreakdown,
-            inclementWeather: ts.isRainDay,
-            isRainDay: ts.isRainDay,
-            isStrikeDay: ts.isStrikeDay,
-            isPublicHoliday: ts.isPublicHoliday,
-            hasAttachment: false,
-            assetId: record.assetId,
-            assetType: record.assetType,
-            plantNumber: record.plantNumber,
-            registrationNumber: record.registrationNumber,
-            ownerId: selectedSubcontractor,
-            ownerType: 'subcontractor' as const,
-            ownerName: subcontractor?.name,
-            notes: ts.notes,
-            location: user?.siteId,
-          };
-        });
-
-        const dateGroups = entries.map(entry => ({
-          date: entry.date,
-          operatorEntry: entry,
-          plantManagerEntry: undefined,
-          adminEntry: undefined,
-          subcontractorEntry: undefined,
-        }));
-
-        return {
-          key: record.assetId,
-          title: record.assetType,
-          subtitle: record.plantNumber || record.registrationNumber || record.assetId,
-          entries,
-          dateGroups,
-        };
-      });
-      console.log('[EPH PDF] Generating PDF with', groups.length, 'groups');
-      groups.forEach(g => console.log('[EPH PDF] Group:', g.title, g.subtitle, 'entries:', g.entries.length, 'dateGroups:', g.dateGroups.length));
-      const { uri, fileName } = await generateTimesheetPDF({ groups, reportType: 'plant', subcontractorName: subcontractor?.name, dateRange: { from: startDate, to: endDate }, selectedOnly: options.scope === 'selected', selectedGroups: options.scope === 'selected' ? new Set(selectedAssets.map(r => r.assetId)) : undefined });
-      if (options.deliveryMethod === 'email') { await emailTimesheetPDF(uri, fileName, { recipientEmail: options.recipientEmail, subject: `EPH Report - ${subcontractor?.name}`, body: 'Please find attached the EPH report.' }); Alert.alert('Success', 'Email composer opened'); }
-      else { await downloadTimesheetPDF(uri, fileName); Alert.alert('Success', 'Report downloaded'); }
-    } catch (error) { console.error('[PDF] Error:', error); Alert.alert('Error', 'Failed to generate report'); }
-  };
-
-  const handleSendToSubcontractor = async (recipientEmail: string, message: string) => {
-    if (!selectedSubcontractor || !user) { Alert.alert('Error', 'Missing info'); return; }
-    try {
-      const selectedAssets = Array.from(selectedAssetIds).map(id => ephData.find(r => r.assetId === id)).filter(Boolean) as EPHRecord[];
-      const totalHours = selectedAssets.reduce((sum, a) => sum + a.totalBillableHours, 0);
-      const subcontractor = subcontractors.find(s => s.id === selectedSubcontractor);
-      
-      const groups = selectedAssets.map(record => {
-        const entries = record.rawTimesheets.map(ts => {
-          const billingResult = record.billingResultsByDate?.get(ts.date);
-          const billableHours = billingResult?.billableHours ?? ts.totalHours;
-          const totalCost = billableHours * record.rate;
-          return {
-            id: ts.id,
-            date: ts.date,
-            operatorName: ts.operatorName,
-            operatorId: ts.operatorName,
-            verified: true,
-            verifiedAt: new Date().toISOString(),
-            verifiedBy: 'system',
-            masterAccountId: user?.masterAccountId || '',
-            siteId: user?.siteId || '',
-            type: 'plant_hours' as const,
-            openHours: parseFloat(ts.openHours) || 0,
-            closeHours: parseFloat(ts.closeHours) || 0,
-            totalHours: ts.totalHours,
-            actualHours: ts.totalHours,
-            billableHours: billableHours,
-            assetRate: record.rate,
-            totalCost: totalCost,
-            isBreakdown: ts.isBreakdown,
-            inclementWeather: ts.isRainDay,
-            isRainDay: ts.isRainDay,
-            isStrikeDay: ts.isStrikeDay,
-            isPublicHoliday: ts.isPublicHoliday,
-            hasAttachment: false,
-            assetId: record.assetId,
-            assetType: record.assetType,
-            plantNumber: record.plantNumber,
-            registrationNumber: record.registrationNumber,
-            ownerId: selectedSubcontractor,
-            ownerType: 'subcontractor' as const,
-            ownerName: subcontractor?.name,
-            notes: ts.notes,
-            location: user?.siteId,
-          };
-        });
-        const dateGroups = entries.map(entry => ({
-          date: entry.date,
-          operatorEntry: entry,
-          plantManagerEntry: undefined,
-          adminEntry: undefined,
-          subcontractorEntry: undefined,
-        }));
-        return {
-          key: record.assetId,
-          title: record.assetType,
-          subtitle: record.plantNumber || record.registrationNumber || record.assetId,
-          entries,
-          dateGroups,
-        };
-      });
-      
-      const { uri, fileName } = await generateTimesheetPDF({ groups, reportType: 'plant', subcontractorName: subcontractor?.name, dateRange: { from: startDate, to: endDate }, selectedOnly: true, selectedGroups: new Set(selectedAssets.map(r => r.assetId)) });
-      await sendEPHToSubcontractor({ recipientEmail, message, pdfUri: uri, pdfFileName: fileName, subcontractorName: subcontractor?.name || 'Unknown', dateRange: { from: startDate, to: endDate }, assetCount: selectedAssets.length, totalHours, companyName: user.companyName || 'Your Company' });
-      Alert.alert('Success', 'EPH report sent');
-    } catch (error) { console.error('[EPH] Error:', error); throw error; }
-  };
-
-  const handleDirectApprove = async () => { Alert.alert('Info', 'Direct approval coming soon'); };
 
   const renderFilterButton = (label: string, status: FilterStatus, count: number) => {
     const isActive = filterStatus === status;
@@ -518,18 +166,15 @@ export default function MachineHoursScreen() {
     );
   };
 
-  const renderReportCard = (report: PendingAgreement) => {
-    const adminHours = report.adminEditedVersion?.hours;
-    const subHours = report.subcontractorSuggestedVersion?.hours;
-    
+  const renderReportCard = (report: EPHReport) => {
     return (
       <View key={report.id} style={styles.reportCard}>
         <View style={styles.reportHeader}>
           <View style={styles.reportHeaderLeft}>
             <FileText size={24} color="#3B82F6" />
             <View style={styles.reportHeaderText}>
-              <Text style={styles.reportCompany}>To: {report.subcontractorName}</Text>
-              <Text style={styles.reportSite}>{report.assetType} - {report.plantNumber || report.registrationNumber || report.assetId}</Text>
+              <Text style={styles.reportCompany}>To: {report.recipientName}</Text>
+              <Text style={styles.reportSite}>{report.siteName || 'Unknown Site'}</Text>
             </View>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(report.status)}20` }]}>
@@ -545,44 +190,40 @@ export default function MachineHoursScreen() {
             <Calendar size={16} color={Colors.textSecondary} />
             <Text style={styles.reportInfoLabel}>Period:</Text>
             <Text style={styles.reportInfoValue}>
-              {formatDateStr(report.dateRange.from)} - {formatDateStr(report.dateRange.to)}
+              {formatDate(report.dateRangeFrom)} - {formatDate(report.dateRangeTo)}
             </Text>
           </View>
 
           <View style={styles.reportInfoRow}>
             <Package size={16} color={Colors.textSecondary} />
-            <Text style={styles.reportInfoLabel}>Asset:</Text>
-            <Text style={styles.reportInfoValue}>{report.assetType}</Text>
+            <Text style={styles.reportInfoLabel}>Assets:</Text>
+            <Text style={styles.reportInfoValue}>{report.totalAssets}</Text>
           </View>
 
-          {adminHours !== undefined && (
-            <View style={styles.reportInfoRow}>
-              <Clock size={16} color={Colors.textSecondary} />
-              <Text style={styles.reportInfoLabel}>Admin Hours:</Text>
-              <Text style={styles.reportInfoValue}>{adminHours.toFixed(1)}h</Text>
-            </View>
-          )}
+          <View style={styles.reportInfoRow}>
+            <Clock size={16} color={Colors.textSecondary} />
+            <Text style={styles.reportInfoLabel}>Total Hours:</Text>
+            <Text style={styles.reportInfoValue}>{report.totalHours.toFixed(1)}h</Text>
+          </View>
 
-          {subHours !== undefined && (
-            <View style={styles.reportInfoRow}>
-              <Clock size={16} color="#10B981" />
-              <Text style={styles.reportInfoLabel}>Sub Response:</Text>
-              <Text style={[styles.reportInfoValue, { color: '#10B981' }]}>{subHours.toFixed(1)}h</Text>
-            </View>
-          )}
+          <View style={styles.reportInfoRow}>
+            <DollarSign size={16} color={Colors.textSecondary} />
+            <Text style={styles.reportInfoLabel}>Total Cost:</Text>
+            <Text style={styles.reportCost}>R{report.totalCost.toFixed(2)}</Text>
+          </View>
         </View>
 
-        {report.adminEditedVersion?.notes && (
+        {report.message && (
           <View style={styles.messageBox}>
             <MessageSquare size={14} color={Colors.textSecondary} />
-            <Text style={styles.messageText}>{report.adminEditedVersion.notes}</Text>
+            <Text style={styles.messageText}>{report.message}</Text>
           </View>
         )}
 
-        {report.subcontractorSuggestedVersion?.notes && (
+        {report.disputeNotes && (
           <View style={styles.disputeBox}>
             <AlertCircle size={14} color="#EF4444" />
-            <Text style={styles.disputeText}>{report.subcontractorSuggestedVersion.notes}</Text>
+            <Text style={styles.disputeText}>{report.disputeNotes}</Text>
           </View>
         )}
 
@@ -596,7 +237,7 @@ export default function MachineHoursScreen() {
 
         <View style={styles.reportFooter}>
           <Text style={styles.reportFooterText}>
-            Sent: {report.sentToSubcontractorAt ? new Date(report.sentToSubcontractorAt.seconds * 1000).toLocaleDateString('en-GB') : 'Unknown'}
+            Sent: {report.sentAt ? new Date(report.sentAt.seconds * 1000).toLocaleDateString('en-GB') : 'Unknown'}
           </Text>
           {report.agreedAt && (
             <Text style={styles.reportFooterText}>
@@ -610,10 +251,10 @@ export default function MachineHoursScreen() {
 
   const statusCounts = {
     all: reports.length,
-    pending_subcontractor_review: reports.filter(r => r.status === 'pending_subcontractor_review').length,
-    subcontractor_responded: reports.filter(r => r.status === 'subcontractor_responded').length,
+    sent: reports.filter(r => r.status === 'sent').length,
+    reviewed: reports.filter(r => r.status === 'reviewed').length,
     agreed: reports.filter(r => r.status === 'agreed').length,
-    rejected: reports.filter(r => r.status === 'rejected').length,
+    disputed: reports.filter(r => r.status === 'disputed').length,
   };
 
   return (
@@ -651,113 +292,7 @@ export default function MachineHoursScreen() {
       </View>
 
       {activeTab === 'inbox' && (
-        <ScrollView style={styles.content}>
-          <View style={styles.generationContainer}>
-            <View style={styles.selectorSection}>
-              <Text style={styles.selectorLabel}>Select Subcontractor:</Text>
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.subList}>
-                {subcontractors.map(sub => (
-                  <TouchableOpacity key={sub.id} style={[styles.subButton, selectedSubcontractor === sub.id && styles.subButtonActive]} onPress={() => { setSelectedSubcontractor(sub.id!); loadPlantAssets(sub.id!); }}>
-                    <Text style={[styles.subButtonText, selectedSubcontractor === sub.id && styles.subButtonTextActive]}>{sub.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-
-            <View style={styles.dateRangeSection}>
-              <View style={styles.dateRangeHeader}>
-                <CalendarDays size={20} color="#1e3a8a" />
-                <Text style={styles.dateRangeTitle}>Billing Period</Text>
-              </View>
-              <View style={styles.datePickersRow}>
-                <View style={styles.datePickerBlock}>
-                  <Text style={styles.datePickerLabel}>Start Date</Text>
-                  {Platform.OS === 'web' ? (
-                    <input type="date" value={startDate.toISOString().split('T')[0]} onChange={(e: any) => setStartDate(new Date(e.target.value))} style={{ height: 44, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, paddingLeft: 12, paddingRight: 12, fontSize: 14 }} />
-                  ) : (
-                    <TouchableOpacity style={styles.dateButton}><Calendar size={18} color="#64748b" /><Text style={styles.dateButtonText}>{formatDate(startDate)}</Text></TouchableOpacity>
-                  )}
-                </View>
-                <View style={styles.datePickerBlock}>
-                  <Text style={styles.datePickerLabel}>End Date</Text>
-                  {Platform.OS === 'web' ? (
-                    <input type="date" value={endDate.toISOString().split('T')[0]} onChange={(e: any) => setEndDate(new Date(e.target.value))} style={{ height: 44, borderWidth: 1, borderColor: '#e2e8f0', borderRadius: 8, paddingLeft: 12, paddingRight: 12, fontSize: 14 }} />
-                  ) : (
-                    <TouchableOpacity style={styles.dateButton}><Calendar size={18} color="#64748b" /><Text style={styles.dateButtonText}>{formatDate(endDate)}</Text></TouchableOpacity>
-                  )}
-                </View>
-              </View>
-              {selectedSubcontractor && (
-                <View style={styles.generateButtonsRow}>
-                  <TouchableOpacity style={[styles.genButton, styles.genButtonPrimary]} onPress={() => setReportModalVisible(true)}>
-                    <FileText size={18} color="#fff" /><Text style={styles.genButtonText}>Generate All</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.genButton, styles.genButtonSecondary, selectedAssetIds.size === 0 && styles.genButtonDisabled]} onPress={() => { if (selectedAssetIds.size > 0) setReportModalVisible(true); else Alert.alert('Select assets first'); }} disabled={selectedAssetIds.size === 0}>
-                    <CheckSquare size={18} color={selectedAssetIds.size === 0 ? '#94a3b8' : '#1e3a8a'} /><Text style={[styles.genButtonTextSec, selectedAssetIds.size === 0 && styles.genButtonTextDisabled]}>Selected ({selectedAssetIds.size})</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={[styles.genButton, styles.sendButton, selectedAssetIds.size === 0 && styles.genButtonDisabled]} onPress={() => { if (selectedAssetIds.size > 0) setSendModalVisible(true); else Alert.alert('Select assets first'); }} disabled={selectedAssetIds.size === 0}>
-                    <Send size={18} color={selectedAssetIds.size === 0 ? '#94a3b8' : '#10b981'} /><Text style={[styles.sendButtonText, selectedAssetIds.size === 0 && styles.genButtonTextDisabled]}>Send</Text>
-                  </TouchableOpacity>
-                </View>
-              )}
-            </View>
-
-            {loading ? (
-              <View style={styles.loadingContainer}><ActivityIndicator size="large" color={Colors.accent} /><Text style={styles.loadingText}>Loading assets...</Text></View>
-            ) : ephData.length > 0 ? (
-              <View style={styles.ephList}>
-                {ephData.map(item => {
-                  const isExpanded = expandedCards.has(item.assetId);
-                  const isSelected = selectedAssetIds.has(item.assetId);
-                  return (
-                    <View key={item.assetId} style={styles.ephCard}>
-                      <TouchableOpacity style={styles.ephCardHeader} onPress={() => toggleCardExpansion(item.assetId)}>
-                        <TouchableOpacity onPress={() => toggleAssetSelection(item.assetId)} style={styles.checkbox}>
-                          {isSelected ? <CheckSquare size={24} color="#1e3a8a" /> : <Square size={24} color="#94a3b8" />}
-                        </TouchableOpacity>
-                        <View style={styles.ephHeaderLeft}>
-                          <Text style={styles.ephAssetType}>{item.assetType}</Text>
-                          <Text style={styles.ephAssetNumber}>{item.plantNumber || item.registrationNumber || item.assetId}</Text>
-                        </View>
-                        {isExpanded ? <ChevronUp size={24} color="#64748b" /> : <ChevronDown size={24} color="#64748b" />}
-                      </TouchableOpacity>
-                      <View style={styles.ephMinimalInfo}>
-                        <View style={styles.ephInfoRow}><Text style={styles.ephInfoLabel}>Rate:</Text><View style={styles.ephRateContainer}><Text style={styles.ephRateBadge}>{item.rateType.toUpperCase()}</Text><Text style={styles.ephInfoValue}>R{item.rate.toFixed(2)}/hr</Text></View></View>
-                        <View style={styles.ephDivider} />
-                        <View style={styles.ephInfoRow}><Text style={styles.ephInfoLabel}>Actual Hours:</Text><Text style={styles.ephInfoValue}>{item.totalActualHours.toFixed(1)}h</Text></View>
-                        <View style={styles.ephInfoRow}><Text style={styles.ephTotalLabel}>Billable Hours:</Text><Text style={styles.ephTotalValue}>{item.totalBillableHours.toFixed(1)}h</Text></View>
-                        <View style={styles.ephInfoRow}><Text style={styles.ephTotalLabel}>Total Cost:</Text><Text style={styles.ephCostValue}>R{item.estimatedCost.toFixed(2)}</Text></View>
-                      </View>
-                      {isExpanded && (
-                        <View style={styles.ephExpandedContent}>
-                          <View style={styles.ephDivider} />
-                          <Text style={styles.ephBreakdownTitle}>Hours Breakdown</Text>
-                          <View style={styles.ephGrid}>
-                            <View style={styles.ephGridHeader}><Text style={styles.ephGridHeaderLabel}>Day Type</Text><Text style={styles.ephGridHeaderValue}>Actual</Text><Text style={styles.ephGridHeaderValue}>Billable</Text></View>
-                            <View style={styles.ephRow}><Text style={styles.ephLabel}>Weekdays:</Text><Text style={styles.ephValueActual}>{item.actualNormalHours.toFixed(1)}h</Text><Text style={styles.ephValueBillable}>{item.billableNormalHours.toFixed(1)}h</Text></View>
-                            <View style={styles.ephRow}><Text style={styles.ephLabel}>Saturday:</Text><Text style={styles.ephValueActual}>{item.actualSaturdayHours.toFixed(1)}h</Text><Text style={styles.ephValueBillable}>{item.billableSaturdayHours.toFixed(1)}h</Text></View>
-                            <View style={styles.ephRow}><Text style={styles.ephLabel}>Sunday:</Text><Text style={styles.ephValueActual}>{item.actualSundayHours.toFixed(1)}h</Text><Text style={styles.ephValueBillable}>{item.billableSundayHours.toFixed(1)}h</Text></View>
-                            <View style={styles.ephRow}><Text style={styles.ephLabel}>Public Holidays:</Text><Text style={styles.ephValueActual}>{item.actualPublicHolidayHours.toFixed(1)}h</Text><Text style={styles.ephValueBillable}>{item.billablePublicHolidayHours.toFixed(1)}h</Text></View>
-                            <View style={styles.ephRow}><Text style={styles.ephLabel}>Rain Days:</Text><Text style={styles.ephValueActual}>{item.actualRainDayHours.toFixed(1)}h</Text><Text style={styles.ephValueBillable}>{item.billableRainDayHours.toFixed(1)}h</Text></View>
-                            <View style={[styles.ephRow, styles.ephTotalRow]}><Text style={[styles.ephLabel, styles.ephTotalLabelBold]}>TOTALS:</Text><Text style={styles.ephValueActualTotal}>{item.totalActualHours.toFixed(1)}h</Text><Text style={styles.ephValueBillableTotal}>{item.totalBillableHours.toFixed(1)}h</Text></View>
-                          </View>
-                        </View>
-                      )}
-                    </View>
-                  );
-                })}
-              </View>
-            ) : selectedSubcontractor ? (
-              <View style={styles.emptyContainer}><Package size={64} color={Colors.textSecondary} /><Text style={styles.emptyText}>No plant assets found</Text><Text style={styles.emptySubtext}>This subcontractor has no plant assets registered</Text></View>
-            ) : (
-              <View style={styles.emptyContainer}><FileText size={64} color={Colors.textSecondary} /><Text style={styles.emptyText}>Select a Subcontractor</Text><Text style={styles.emptySubtext}>Choose a subcontractor above to generate EPH reports</Text></View>
-            )}
-          </View>
-        </ScrollView>
-      )}
-
-      {activeTab === 'report' && (
-        reportsLoading ? (
+        loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.accent} />
             <Text style={styles.loadingText}>Loading EPH reports...</Text>
@@ -771,19 +306,19 @@ export default function MachineHoursScreen() {
               contentContainerStyle={styles.filterContent}
             >
               {renderFilterButton('All', 'all', statusCounts.all)}
-              {renderFilterButton('Awaiting', 'pending_subcontractor_review', statusCounts.pending_subcontractor_review)}
-              {renderFilterButton('Responded', 'subcontractor_responded', statusCounts.subcontractor_responded)}
+              {renderFilterButton('Awaiting', 'sent', statusCounts.sent)}
+              {renderFilterButton('Reviewed', 'reviewed', statusCounts.reviewed)}
               {renderFilterButton('Agreed', 'agreed', statusCounts.agreed)}
-              {renderFilterButton('Rejected', 'rejected', statusCounts.rejected)}
+              {renderFilterButton('Disputed', 'disputed', statusCounts.disputed)}
             </ScrollView>
 
             <ScrollView style={styles.content}>
               {filteredReports.length === 0 ? (
                 <View style={styles.emptyContainer}>
-                  <Send size={64} color={Colors.textSecondary} />
-                  <Text style={styles.emptyText}>No EPH reports awaiting approval</Text>
+                  <FileText size={64} color={Colors.textSecondary} />
+                  <Text style={styles.emptyText}>No EPH reports sent</Text>
                   <Text style={styles.emptySubtext}>
-                    EPH reports sent to subcontractors will appear here for review and approval
+                    EPH reports you send to subcontractors will appear here
                   </Text>
                 </View>
               ) : (
@@ -794,6 +329,18 @@ export default function MachineHoursScreen() {
             </ScrollView>
           </>
         )
+      )}
+
+      {activeTab === 'report' && (
+        <ScrollView style={styles.content}>
+          <View style={styles.emptyContainer}>
+            <Send size={64} color={Colors.textSecondary} />
+            <Text style={styles.emptyText}>EPH Approvals</Text>
+            <Text style={styles.emptySubtext}>
+              Review and approve EPH reports from sites
+            </Text>
+          </View>
+        </ScrollView>
       )}
 
       {activeTab === 'payments' && (
@@ -814,7 +361,7 @@ export default function MachineHoursScreen() {
             <View style={styles.detailsHeader}>
               <View>
                 <Text style={styles.detailsTitle}>EPH Report Details</Text>
-                <Text style={styles.detailsSubtitle}>Sent to: {selectedReport.subcontractorName}</Text>
+                <Text style={styles.detailsSubtitle}>Sent to: {selectedReport.recipientName}</Text>
               </View>
               <TouchableOpacity
                 onPress={() => {
@@ -836,11 +383,9 @@ export default function MachineHoursScreen() {
             ) : (
               <ScrollView style={styles.detailsContent}>
                 <View style={styles.detailsSummary}>
-                  <Text style={styles.summaryLabel}>Asset: {selectedReport.assetType}</Text>
-                  <Text style={styles.summaryLabel}>Period: {selectedReport.dateRange.from} - {selectedReport.dateRange.to}</Text>
-                  {selectedReport.adminEditedVersion && (
-                    <Text style={styles.summaryLabel}>Admin Hours: {selectedReport.adminEditedVersion.hours.toFixed(1)}h</Text>
-                  )}
+                  <Text style={styles.summaryLabel}>Total Hours: {selectedReport.totalHours.toFixed(1)}h</Text>
+                  <Text style={styles.summaryLabel}>Total Cost: R{selectedReport.totalCost.toFixed(2)}</Text>
+                  <Text style={styles.summaryLabel}>Assets: {selectedReport.totalAssets}</Text>
                 </View>
 
                 {detailedTimesheets.length === 0 ? (
@@ -914,24 +459,6 @@ export default function MachineHoursScreen() {
           </View>
         </View>
       )}
-      <ReportGenerationModal
-        visible={reportModalVisible}
-        onClose={() => setReportModalVisible(false)}
-        onGenerate={handleGeneratePDF}
-        hasSelection={selectedAssetIds.size > 0}
-        selectedCount={selectedAssetIds.size}
-        totalCount={ephData.length}
-      />
-
-      <SendConfirmationModal
-        visible={sendModalVisible}
-        onClose={() => setSendModalVisible(false)}
-        onSend={handleSendToSubcontractor}
-        onDirectApprove={handleDirectApprove}
-        subcontractorName={subcontractors.find(s => s.id === selectedSubcontractor)?.name || 'Unknown'}
-        assetCount={selectedAssetIds.size}
-        dateRange={{ from: startDate, to: endDate }}
-      />
     </SafeAreaView>
   );
 }
@@ -1296,316 +823,5 @@ const styles = StyleSheet.create({
   },
   tabTextActive: {
     color: '#3B82F6',
-  },
-  generationContainer: {
-    padding: 16,
-  },
-  selectorSection: {
-    marginBottom: 16,
-  },
-  selectorLabel: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    marginBottom: 12,
-  },
-  subList: {
-    flexDirection: 'row',
-  },
-  subButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    backgroundColor: Colors.cardBg,
-    marginRight: 8,
-  },
-  subButtonActive: {
-    backgroundColor: '#1e3a8a',
-    borderColor: '#1e3a8a',
-  },
-  subButtonText: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  subButtonTextActive: {
-    color: '#ffffff',
-  },
-  dateRangeSection: {
-    backgroundColor: Colors.cardBg,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-  },
-  dateRangeHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-    gap: 8,
-  },
-  dateRangeTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: Colors.text,
-  },
-  datePickersRow: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  datePickerBlock: {
-    flex: 1,
-  },
-  datePickerLabel: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    marginBottom: 8,
-  },
-  dateButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    height: 44,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: Colors.cardBg,
-  },
-  dateButtonText: {
-    fontSize: 14,
-    color: Colors.text,
-    fontWeight: '500' as const,
-  },
-  generateButtonsRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 16,
-  },
-  genButton: {
-    flex: 1,
-    minWidth: 100,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-  },
-  genButtonPrimary: {
-    backgroundColor: '#1e3a8a',
-  },
-  genButtonSecondary: {
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: '#1e3a8a',
-  },
-  genButtonDisabled: {
-    backgroundColor: Colors.surface,
-    borderColor: Colors.border,
-  },
-  genButtonText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: '#ffffff',
-  },
-  genButtonTextSec: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: '#1e3a8a',
-  },
-  genButtonTextDisabled: {
-    color: Colors.textSecondary,
-  },
-  sendButton: {
-    backgroundColor: Colors.cardBg,
-    borderWidth: 1,
-    borderColor: '#10b981',
-  },
-  sendButtonText: {
-    fontSize: 13,
-    fontWeight: '600' as const,
-    color: '#10b981',
-  },
-  ephList: {
-    gap: 16,
-  },
-  ephCard: {
-    backgroundColor: Colors.cardBg,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  ephCardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 12,
-    marginBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-    gap: 12,
-  },
-  checkbox: {
-    paddingRight: 8,
-  },
-  ephHeaderLeft: {
-    flex: 1,
-  },
-  ephAssetType: {
-    fontSize: 16,
-    fontWeight: '700' as const,
-    color: Colors.text,
-    marginBottom: 2,
-  },
-  ephAssetNumber: {
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  ephMinimalInfo: {
-    gap: 8,
-  },
-  ephInfoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  ephInfoLabel: {
-    fontSize: 14,
-    fontWeight: '500' as const,
-    color: Colors.textSecondary,
-  },
-  ephInfoValue: {
-    fontSize: 14,
-    fontWeight: '700' as const,
-    color: '#3B82F6',
-  },
-  ephRateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  ephRateBadge: {
-    fontSize: 10,
-    fontWeight: '700' as const,
-    color: '#ffffff',
-    backgroundColor: '#3b82f6',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
-  },
-  ephDivider: {
-    height: 1,
-    backgroundColor: Colors.border,
-    marginVertical: 8,
-  },
-  ephTotalLabel: {
-    fontSize: 14,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-  },
-  ephTotalValue: {
-    fontSize: 14,
-    fontWeight: '700' as const,
-    color: '#3B82F6',
-  },
-  ephCostValue: {
-    fontSize: 15,
-    fontWeight: '700' as const,
-    color: '#10B981',
-  },
-  ephExpandedContent: {
-    marginTop: 8,
-  },
-  ephBreakdownTitle: {
-    fontSize: 12,
-    fontWeight: '600' as const,
-    color: Colors.textSecondary,
-    marginBottom: 12,
-    textTransform: 'uppercase' as const,
-    letterSpacing: 0.5,
-  },
-  ephGrid: {
-    gap: 6,
-  },
-  ephGridHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingBottom: 8,
-    marginBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
-  },
-  ephGridHeaderLabel: {
-    flex: 1,
-    fontSize: 10,
-    fontWeight: '700' as const,
-    color: Colors.textSecondary,
-    textTransform: 'uppercase' as const,
-  },
-  ephGridHeaderValue: {
-    width: 60,
-    fontSize: 10,
-    fontWeight: '700' as const,
-    color: Colors.textSecondary,
-    textTransform: 'uppercase' as const,
-    textAlign: 'right' as const,
-  },
-  ephRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  ephLabel: {
-    flex: 1,
-    fontSize: 13,
-    color: Colors.textSecondary,
-  },
-  ephValueActual: {
-    width: 60,
-    fontSize: 13,
-    fontWeight: '500' as const,
-    color: Colors.textSecondary,
-    textAlign: 'right' as const,
-  },
-  ephValueBillable: {
-    width: 60,
-    fontSize: 13,
-    fontWeight: '700' as const,
-    color: '#10b981',
-    textAlign: 'right' as const,
-  },
-  ephTotalRow: {
-    marginTop: 8,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: Colors.border,
-  },
-  ephTotalLabelBold: {
-    fontWeight: '700' as const,
-    color: Colors.text,
-  },
-  ephValueActualTotal: {
-    width: 60,
-    fontSize: 13,
-    fontWeight: '700' as const,
-    color: Colors.text,
-    textAlign: 'right' as const,
-  },
-  ephValueBillableTotal: {
-    width: 60,
-    fontSize: 14,
-    fontWeight: '700' as const,
-    color: '#10b981',
-    textAlign: 'right' as const,
   },
 });

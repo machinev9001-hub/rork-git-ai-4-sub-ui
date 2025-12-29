@@ -1797,40 +1797,6 @@
         { "fieldPath": "timesheetType", "order": "ASCENDING" },
         { "fieldPath": "date", "order": "ASCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "ephReports",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "senderMasterAccountId", "order": "ASCENDING" },
-        { "fieldPath": "sentAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "ephReports",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "senderMasterAccountId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "sentAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "ephReports",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "recipientMasterAccountId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "ephReports",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "recipientMasterAccountId", "order": "ASCENDING" },
-        { "fieldPath": "status", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
     }
   ],
   "fieldOverrides": [],
