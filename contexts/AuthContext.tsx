@@ -242,9 +242,11 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             console.log('[Auth] Session expired due to inactivity, clearing...');
             await AsyncStorage.removeItem(STORAGE_KEYS.USER);
             await AsyncStorage.removeItem(STORAGE_KEYS.LAST_ACTIVITY);
-            setUser(null);
-            setMasterAccount(null);
-            setIsLoading(false);
+            if (isMounted.current) {
+              setUser(null);
+              setMasterAccount(null);
+              setIsLoading(false);
+            }
             return;
           }
         }
