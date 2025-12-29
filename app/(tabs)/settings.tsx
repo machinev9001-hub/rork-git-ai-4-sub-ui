@@ -494,14 +494,14 @@ export default function SettingsScreen() {
                     <View style={styles.subMenuCard}>
                       <TouchableOpacity 
                         style={styles.subMenuItem}
-                        onPress={() => router.push('/billing-config' as any)}
+                        onPress={() => router.push('/billing-menu' as any)}
                       >
                         <View style={styles.subMenuIcon}>
                           <FileText size={20} color="#f59e0b" />
                         </View>
                         <View style={styles.subMenuContent}>
-                          <Text style={styles.subMenuTitle}>Billing</Text>
-                          <Text style={styles.subMenuDescription}>Configure billing settings</Text>
+                          <Text style={styles.subMenuTitle}>Billing Management</Text>
+                          <Text style={styles.subMenuDescription}>Manage machine hours, man hours, and billing</Text>
                         </View>
                       </TouchableOpacity>
                     </View>
@@ -731,7 +731,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 32,
     paddingHorizontal: 16,
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
@@ -739,7 +739,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Colors.surface,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -780,7 +780,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   menuCard: {
-    backgroundColor: Colors.cardBg,
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -834,7 +834,7 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
   },
   subMenuCard: {
-    backgroundColor: Colors.cardBg,
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     marginTop: 8,
     shadowColor: '#000',
@@ -852,7 +852,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: Colors.surface,
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -863,7 +863,7 @@ const styles = StyleSheet.create({
   subMenuTitle: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#000000',
+    color: '#1E1E1E',
     marginBottom: 2,
   },
   subMenuDescription: {
@@ -874,7 +874,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: Colors.surface,
+    backgroundColor: '#F5F5F5',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -885,7 +885,7 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#000000',
+    color: '#1E1E1E',
     marginBottom: 2,
   },
   menuDescription: {
@@ -937,7 +937,7 @@ const styles = StyleSheet.create({
   accountTypeLabel: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#000000',
+    color: '#1E1E1E',
   },
   accountTypeBadge: {
     paddingHorizontal: 12,

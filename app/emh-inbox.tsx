@@ -10,41 +10,41 @@ import {
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, Calendar, DollarSign, Package, CheckCircle, AlertCircle, Clock, MessageSquare, X, Inbox, Send, CreditCard } from 'lucide-react-native';
+import { FileText, Calendar, DollarSign, Users, CheckCircle, AlertCircle, Clock, MessageSquare, X, Inbox, Send, CreditCard } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
-import { getEPHReportsForSender } from '@/utils/ephReportManager';
-import { EPHReport } from '@/types/ephReport';
+import { getEMHReportsForSender } from '@/utils/emhReportManager';
+import { EMHReport } from '@/types/emhReport';
 import { collection, getDocs, query, where, orderBy as firestoreOrderBy } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 
 type FilterStatus = 'all' | 'sent' | 'reviewed' | 'agreed' | 'disputed';
 type TabType = 'inbox' | 'report' | 'payments';
 
-export default function MachineHoursScreen() {
+export default function ManHoursScreen() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [reports, setReports] = useState<EPHReport[]>([]);
-  const [filteredReports, setFilteredReports] = useState<EPHReport[]>([]);
+  const [reports, setReports] = useState<EMHReport[]>([]);
+  const [filteredReports, setFilteredReports] = useState<EMHReport[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
-  const [selectedReport, setSelectedReport] = useState<EPHReport | null>(null);
+  const [selectedReport, setSelectedReport] = useState<EMHReport | null>(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [detailedTimesheets, setDetailedTimesheets] = useState<any[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
 
-  const loadEPHReports = useCallback(async () => {
+  const loadEMHReports = useCallback(async () => {
     if (!user?.masterAccountId) return;
 
     try {
       setLoading(true);
-      console.log('[EPH Inbox] Loading sent reports for:', user.masterAccountId);
-      const fetchedReports = await getEPHReportsForSender(user.masterAccountId);
+      console.log('[EMH Inbox] Loading sent reports for:', user.masterAccountId);
+      const fetchedReports = await getEMHReportsForSender(user.masterAccountId);
       setReports(fetchedReports);
-      console.log('[EPH Inbox] Loaded', fetchedReports.length, 'sent reports');
+      console.log('[EMH Inbox] Loaded', fetchedReports.length, 'sent reports');
     } catch (error) {
-      console.error('[EPH Inbox] Error loading reports:', error);
-      Alert.alert('Error', 'Failed to load EPH reports');
+      console.error('[EMH Inbox] Error loading reports:', error);
+      Alert.alert('Error', 'Failed to load EMH reports');
     } finally {
       setLoading(false);
     }
@@ -52,9 +52,9 @@ export default function MachineHoursScreen() {
 
   useEffect(() => {
     if (user?.masterAccountId) {
-      loadEPHReports();
+      loadEMHReports();
     }
-  }, [user?.masterAccountId, loadEPHReports]);
+  }, [user?.masterAccountId, loadEMHReports]);
 
   useEffect(() => {
     if (filterStatus === 'all') {
@@ -64,20 +64,20 @@ export default function MachineHoursScreen() {
     }
   }, [filterStatus, reports]);
 
-  const handleViewDetails = async (report: EPHReport) => {
+  const handleViewDetails = async (report: EMHReport) => {
     setSelectedReport(report);
     setLoadingDetails(true);
     setDetailsVisible(true);
 
     try {
-      console.log('[EPH Inbox] Loading timesheet details for report:', report.id);
+      console.log('[EMH Inbox] Loading timesheet details for report:', report.id);
       const timesheets: any[] = [];
 
-      for (const assetId of report.assetIds) {
-        console.log('[EPH Inbox] Fetching timesheets for asset:', assetId);
+      for (const employeeId of report.employeeIds) {
+        console.log('[EMH Inbox] Fetching timesheets for employee:', employeeId);
         const q = query(
-          collection(db, 'plantAssetTimesheets'),
-          where('assetId', '==', assetId),
+          collection(db, 'employeeTimesheets'),
+          where('employeeId', '==', employeeId),
           where('date', '>=', report.dateRangeFrom),
           where('date', '<=', report.dateRangeTo),
           firestoreOrderBy('date', 'desc')
@@ -88,16 +88,14 @@ export default function MachineHoursScreen() {
           const data = doc.data();
           timesheets.push({
             id: doc.id,
-            assetId: data.assetId,
-            assetType: data.assetType,
-            plantNumber: data.plantNumber,
-            registrationNumber: data.registrationNumber,
+            employeeId: data.employeeId,
+            employeeName: data.employeeName || 'Unknown',
+            employeeRole: data.employeeRole || 'Worker',
             date: data.date,
             totalHours: data.totalHours || 0,
-            openHours: data.openHours || '00:00',
-            closeHours: data.closeHours || data.closingHours || '00:00',
-            operatorName: data.operatorName || 'Unknown',
-            isBreakdown: data.isBreakdown || false,
+            regularHours: data.regularHours || 0,
+            overtimeHours: data.overtimeHours || 0,
+            isAbsent: data.isAbsent || false,
             isRainDay: data.isRainDay || false,
             isStrikeDay: data.isStrikeDay || false,
             isPublicHoliday: data.isPublicHoliday || false,
@@ -106,17 +104,17 @@ export default function MachineHoursScreen() {
         });
       }
 
-      console.log('[EPH Inbox] Loaded', timesheets.length, 'timesheet entries');
+      console.log('[EMH Inbox] Loaded', timesheets.length, 'timesheet entries');
       setDetailedTimesheets(timesheets);
     } catch (error) {
-      console.error('[EPH Inbox] Error loading timesheet details:', error);
+      console.error('[EMH Inbox] Error loading timesheet details:', error);
       Alert.alert('Error', 'Failed to load timesheet details');
     } finally {
       setLoadingDetails(false);
     }
   };
 
-  const getStatusColor = (status: EPHReport['status']): string => {
+  const getStatusColor = (status: EMHReport['status']): string => {
     switch (status) {
       case 'sent': return '#F59E0B';
       case 'reviewed': return '#3B82F6';
@@ -126,7 +124,7 @@ export default function MachineHoursScreen() {
     }
   };
 
-  const getStatusIcon = (status: EPHReport['status']) => {
+  const getStatusIcon = (status: EMHReport['status']) => {
     const color = getStatusColor(status);
     switch (status) {
       case 'sent': return <Clock size={20} color={color} />;
@@ -137,7 +135,7 @@ export default function MachineHoursScreen() {
     }
   };
 
-  const getStatusLabel = (status: EPHReport['status']): string => {
+  const getStatusLabel = (status: EMHReport['status']): string => {
     switch (status) {
       case 'sent': return 'Awaiting Review';
       case 'reviewed': return 'Reviewed';
@@ -166,7 +164,7 @@ export default function MachineHoursScreen() {
     );
   };
 
-  const renderReportCard = (report: EPHReport) => {
+  const renderReportCard = (report: EMHReport) => {
     return (
       <View key={report.id} style={styles.reportCard}>
         <View style={styles.reportHeader}>
@@ -195,9 +193,9 @@ export default function MachineHoursScreen() {
           </View>
 
           <View style={styles.reportInfoRow}>
-            <Package size={16} color={Colors.textSecondary} />
-            <Text style={styles.reportInfoLabel}>Assets:</Text>
-            <Text style={styles.reportInfoValue}>{report.totalAssets}</Text>
+            <Users size={16} color={Colors.textSecondary} />
+            <Text style={styles.reportInfoLabel}>Employees:</Text>
+            <Text style={styles.reportInfoValue}>{report.totalEmployees}</Text>
           </View>
 
           <View style={styles.reportInfoRow}>
@@ -261,7 +259,7 @@ export default function MachineHoursScreen() {
     <SafeAreaView style={styles.container} edges={['bottom']}>
       <Stack.Screen
         options={{
-          title: 'Machine Hours',
+          title: 'Man Hours',
           headerStyle: { backgroundColor: Colors.headerBg },
           headerTintColor: Colors.text,
         }}
@@ -273,21 +271,21 @@ export default function MachineHoursScreen() {
           onPress={() => setActiveTab('inbox')}
         >
           <Inbox size={20} color={activeTab === 'inbox' ? '#3B82F6' : Colors.textSecondary} />
-          <Text style={[styles.tabText, activeTab === 'inbox' && styles.tabTextActive]}>EPH Reports</Text>
+          <Text style={[styles.tabText, activeTab === 'inbox' && styles.tabTextActive]}>EMH Reports</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'report' && styles.tabActive]}
           onPress={() => setActiveTab('report')}
         >
           <Send size={20} color={activeTab === 'report' ? '#3B82F6' : Colors.textSecondary} />
-          <Text style={[styles.tabText, activeTab === 'report' && styles.tabTextActive]}>EPH Approvals</Text>
+          <Text style={[styles.tabText, activeTab === 'report' && styles.tabTextActive]}>EMH Approvals</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'payments' && styles.tabActive]}
           onPress={() => setActiveTab('payments')}
         >
           <CreditCard size={20} color={activeTab === 'payments' ? '#3B82F6' : Colors.textSecondary} />
-          <Text style={[styles.tabText, activeTab === 'payments' && styles.tabTextActive]}>EPH Payments</Text>
+          <Text style={[styles.tabText, activeTab === 'payments' && styles.tabTextActive]}>EMH Payments</Text>
         </TouchableOpacity>
       </View>
 
@@ -295,7 +293,7 @@ export default function MachineHoursScreen() {
         loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color={Colors.accent} />
-            <Text style={styles.loadingText}>Loading EPH reports...</Text>
+            <Text style={styles.loadingText}>Loading EMH reports...</Text>
           </View>
         ) : (
           <>
@@ -316,9 +314,9 @@ export default function MachineHoursScreen() {
               {filteredReports.length === 0 ? (
                 <View style={styles.emptyContainer}>
                   <FileText size={64} color={Colors.textSecondary} />
-                  <Text style={styles.emptyText}>No EPH reports sent</Text>
+                  <Text style={styles.emptyText}>No EMH reports sent</Text>
                   <Text style={styles.emptySubtext}>
-                    EPH reports you send to subcontractors will appear here
+                    EMH reports you send to subcontractors will appear here
                   </Text>
                 </View>
               ) : (
@@ -335,9 +333,9 @@ export default function MachineHoursScreen() {
         <ScrollView style={styles.content}>
           <View style={styles.emptyContainer}>
             <Send size={64} color={Colors.textSecondary} />
-            <Text style={styles.emptyText}>EPH Approvals</Text>
+            <Text style={styles.emptyText}>EMH Approvals</Text>
             <Text style={styles.emptySubtext}>
-              Review and approve EPH reports from sites
+              Review and approve EMH reports from sites
             </Text>
           </View>
         </ScrollView>
@@ -347,9 +345,9 @@ export default function MachineHoursScreen() {
         <ScrollView style={styles.content}>
           <View style={styles.emptyContainer}>
             <CreditCard size={64} color={Colors.textSecondary} />
-            <Text style={styles.emptyText}>EPH Payments</Text>
+            <Text style={styles.emptyText}>EMH Payments</Text>
             <Text style={styles.emptySubtext}>
-              Process payments for agreed EPH reports
+              Process payments for agreed EMH reports
             </Text>
           </View>
         </ScrollView>
@@ -360,7 +358,7 @@ export default function MachineHoursScreen() {
           <View style={styles.detailsModalContent}>
             <View style={styles.detailsHeader}>
               <View>
-                <Text style={styles.detailsTitle}>EPH Report Details</Text>
+                <Text style={styles.detailsTitle}>EMH Report Details</Text>
                 <Text style={styles.detailsSubtitle}>Sent to: {selectedReport.recipientName}</Text>
               </View>
               <TouchableOpacity
@@ -385,7 +383,7 @@ export default function MachineHoursScreen() {
                 <View style={styles.detailsSummary}>
                   <Text style={styles.summaryLabel}>Total Hours: {selectedReport.totalHours.toFixed(1)}h</Text>
                   <Text style={styles.summaryLabel}>Total Cost: R{selectedReport.totalCost.toFixed(2)}</Text>
-                  <Text style={styles.summaryLabel}>Assets: {selectedReport.totalAssets}</Text>
+                  <Text style={styles.summaryLabel}>Employees: {selectedReport.totalEmployees}</Text>
                 </View>
 
                 {detailedTimesheets.length === 0 ? (
@@ -397,7 +395,7 @@ export default function MachineHoursScreen() {
                         <View style={styles.timesheetHeader}>
                           <View style={styles.timesheetHeaderLeft}>
                             <Text style={styles.timesheetAsset}>
-                              {timesheet.assetType} - {timesheet.plantNumber || timesheet.registrationNumber}
+                              {timesheet.employeeName} - {timesheet.employeeRole}
                             </Text>
                             <Text style={styles.timesheetDate}>{timesheet.date}</Text>
                           </View>
@@ -405,25 +403,25 @@ export default function MachineHoursScreen() {
 
                         <View style={styles.timesheetDetails}>
                           <View style={styles.timesheetRow}>
-                            <Text style={styles.timesheetLabel}>Operator:</Text>
-                            <Text style={styles.timesheetValue}>{timesheet.operatorName}</Text>
-                          </View>
-                          <View style={styles.timesheetRow}>
-                            <Text style={styles.timesheetLabel}>Hours:</Text>
+                            <Text style={styles.timesheetLabel}>Total Hours:</Text>
                             <Text style={styles.timesheetValue}>{timesheet.totalHours}h</Text>
                           </View>
                           <View style={styles.timesheetRow}>
-                            <Text style={styles.timesheetLabel}>Open/Close:</Text>
-                            <Text style={styles.timesheetValue}>
-                              {timesheet.openHours} - {timesheet.closeHours}
-                            </Text>
+                            <Text style={styles.timesheetLabel}>Regular Hours:</Text>
+                            <Text style={styles.timesheetValue}>{timesheet.regularHours}h</Text>
                           </View>
+                          {timesheet.overtimeHours > 0 && (
+                            <View style={styles.timesheetRow}>
+                              <Text style={styles.timesheetLabel}>Overtime:</Text>
+                              <Text style={styles.timesheetValue}>{timesheet.overtimeHours}h</Text>
+                            </View>
+                          )}
 
-                          {(timesheet.isBreakdown || timesheet.isRainDay || timesheet.isStrikeDay || timesheet.isPublicHoliday) && (
+                          {(timesheet.isAbsent || timesheet.isRainDay || timesheet.isStrikeDay || timesheet.isPublicHoliday) && (
                             <View style={styles.conditionsRow}>
-                              {timesheet.isBreakdown && (
+                              {timesheet.isAbsent && (
                                 <View style={styles.conditionBadge}>
-                                  <Text style={styles.conditionText}>Breakdown</Text>
+                                  <Text style={styles.conditionText}>Absent</Text>
                                 </View>
                               )}
                               {timesheet.isRainDay && (

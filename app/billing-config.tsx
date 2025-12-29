@@ -1,4 +1,4 @@
-import { Stack, useFocusEffect } from 'expo-router';
+import { Stack, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   StyleSheet,
@@ -55,7 +55,7 @@ type BillingConfig = {
   };
 };
 
-type TabType = 'config' | 'eph' | 'timesheets';
+type TabType = 'eph' | 'timesheets';
 type TimesheetsSubTab = 'machine' | 'man';
 type ConfigSubTab = 'machine' | 'man';
 
@@ -496,7 +496,9 @@ const getEffectiveEntriesForBilling = (entries: TimesheetEntry[]): TimesheetEntr
 export default function BillingConfigScreen() {
   const insets = useSafeAreaInsets();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabType>('config');
+  const params = useLocalSearchParams();
+  const initialTab = (params.tab as TabType) || 'eph';
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab);
   const [subcontractors, setSubcontractors] = useState<Subcontractor[]>([]);
   const [selectedSubcontractor, setSelectedSubcontractor] = useState<string | null>(null);
   const [plantAssets, setPlantAssets] = useState<PlantAsset[]>([]);
@@ -2874,7 +2876,7 @@ export default function BillingConfigScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          headerTitle: () => <HeaderTitleWithSync title="Billing Management" />,
+          headerTitle: () => <HeaderTitleWithSync title="EPH" />,
           headerStyle: {
             backgroundColor: '#1e3a8a',
           },
@@ -2882,25 +2884,11 @@ export default function BillingConfigScreen() {
           headerTitleStyle: {
             fontWeight: '600' as const,
           },
-          headerRight: () => activeTab === 'config' ? (
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Save size={20} color="#ffffff" />
-              <Text style={styles.saveButtonText}>Save</Text>
-            </TouchableOpacity>
-          ) : null,
+          headerRight: () => null,
         }}
       />
 
       <View style={styles.tabBar}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'config' && styles.tabActive]}
-          onPress={() => setActiveTab('config')}
-        >
-          <DollarSign size={20} color={activeTab === 'config' ? '#1e3a8a' : '#64748b'} />
-          <Text style={[styles.tabText, activeTab === 'config' && styles.tabTextActive]}>
-            Billing Config
-          </Text>
-        </TouchableOpacity>
         <TouchableOpacity
           style={[styles.tab, activeTab === 'eph' && styles.tabActive]}
           onPress={() => setActiveTab('eph')}
@@ -2921,31 +2909,7 @@ export default function BillingConfigScreen() {
         </TouchableOpacity>
       </View>
 
-      {activeTab === 'config' ? (
-        <View style={styles.configMainContainer}>
-          <View style={styles.configSubTabBar}>
-            <TouchableOpacity
-              style={[styles.configSubTab, configSubTab === 'machine' && styles.configSubTabActive]}
-              onPress={() => setConfigSubTab('machine')}
-            >
-              <Wrench size={18} color={configSubTab === 'machine' ? '#1e3a8a' : '#64748b'} />
-              <Text style={[styles.configSubTabText, configSubTab === 'machine' && styles.configSubTabTextActive]}>
-                Machine Hours
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.configSubTab, configSubTab === 'man' && styles.configSubTabActive]}
-              onPress={() => setConfigSubTab('man')}
-            >
-              <Clock size={18} color={configSubTab === 'man' ? '#1e3a8a' : '#64748b'} />
-              <Text style={[styles.configSubTabText, configSubTab === 'man' && styles.configSubTabTextActive]}>
-                Man Hours
-              </Text>
-            </TouchableOpacity>
-          </View>
-          {configSubTab === 'machine' ? renderMachineHoursConfig() : renderManHoursConfig()}
-        </View>
-      ) : activeTab === 'timesheets' ? (
+      {activeTab === 'timesheets' ? (
         <View style={styles.timesheetsMainContainer}>
           <View style={styles.timesheetsSubTabBar}>
             <TouchableOpacity

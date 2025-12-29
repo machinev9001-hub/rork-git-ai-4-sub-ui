@@ -456,6 +456,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         <Stack.Screen name="chat" />
         <Stack.Screen name="archived-checklist-detail" />
         <Stack.Screen name="billing-config" />
+        <Stack.Screen name="dumbass" />
         <Stack.Screen name="accounts" options={{ headerShown: false }} />
         <Stack.Screen name="account-info" />
         <Stack.Screen name="debug-info" />
@@ -466,6 +467,13 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         <Stack.Screen name="user-progress-detail" />
         <Stack.Screen name="diesel-clerk-home" options={{ headerShown: false }} />
         <Stack.Screen name="diesel-clerk-fuel-log" />
+        <Stack.Screen name="eph-inbox" />
+        <Stack.Screen name="eph-menu" />
+        <Stack.Screen name="emh-inbox" />
+        <Stack.Screen name="emh-menu" />
+        <Stack.Screen name="billing-menu" />
+        <Stack.Screen name="man-hours" />
+        <Stack.Screen name="machine-hours" />
       </Stack>
     </View>
   );

@@ -442,7 +442,9 @@ export type Employee = {
   employerType: 'company' | 'subcontractor';
   isCrossHire?: boolean;
   crossHireName?: string;
-  hasMasterAccess?: boolean; // Toggle for Master Company Management access
+  allocatedPvArea?: string;
+  allocatedBlockNumber?: string;
+  areaAllocationDate?: any;
   inductionStatus: boolean;
   inductionDate?: any;
   inductionNotes?: string;
@@ -720,8 +722,14 @@ export type PlantAsset = {
   allocatedPvArea?: string;
   allocatedBlockNumber?: string;
   allocationDate?: any;
+  isAvailableForVAS?: boolean;
   breakdownStatus?: boolean;
+  breakdownStartDate?: string;
+  breakdownEndDate?: string | null;
   breakdownTimestamp?: any;
+  breakdownLoggedBy?: string;
+  breakdownReactivatedBy?: string;
+  breakdownReactivatedAt?: any;
   inductionStatus: boolean;
   inductionDate?: any;
   onboardingDate?: any;
@@ -740,32 +748,7 @@ export type PlantAsset = {
   archived?: boolean;
   archivedAt?: any;
   archivedBy?: string;
-  isAvailableForMarketplace?: boolean; // VAS-controlled marketplace visibility toggle
-  marketplaceVisibility?: 'internal' | 'marketplace' | 'both'; // Visibility control
-  availability?: 'available' | 'allocated' | 'maintenance'; // Real-time status for marketplace
-  createdAt: any;
-  updatedAt?: any;
-};
-
-/**
- * AssetSite - Junction table for company-level assets and site allocations
- * Assets are created once at company level, then allocated to sites via this table
- */
-export type AssetSite = {
-  id?: string;
-  assetId: string;
-  assetName: string; // Asset type or identifier
-  assetType: string;
-  siteId: string;
-  siteName: string;
-  companyId: string;
-  masterAccountId: string;
-  allocatedAt: any;
-  allocatedBy: string;
-  deallocatedAt?: any;
-  deallocatedBy?: string;
-  isActive: boolean; // true = currently allocated, false = deallocated
-  allocationNotes?: string;
+  availability?: 'available' | 'allocated' | 'maintenance';
   createdAt: any;
   updatedAt?: any;
 };
