@@ -381,6 +381,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, [user, logout]);
 
   useEffect(() => {
+    // Set mounted flag immediately
     isMounted.current = true;
     
     if (hasInitialized.current) {
@@ -392,10 +393,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     console.log('[Auth] Initializing auth system...');
     console.log('[Auth] Current timestamp:', new Date().toISOString());
     
+    // Use a flag to prevent state updates after unmount
+    let isActive = true;
+    
     // FORCE COMPLETE IMMEDIATELY - no waiting
     const forceComplete = () => {
-      if (!isMounted.current) {
-        console.log('[Auth] Component unmounted, skipping state update');
+      if (!isActive || !isMounted.current) {
+        console.log('[Auth] Component unmounted or inactive, skipping state update');
         return;
       }
       console.log('[Auth] Force completing initialization');
@@ -405,8 +409,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     
     // Ultra-aggressive timeout - complete in 500ms max
     const emergencyTimeout = setTimeout(() => {
-      if (!isMounted.current) {
-        console.log('[Auth] Component unmounted, skipping emergency timeout state update');
+      if (!isActive || !isMounted.current) {
+        console.log('[Auth] Component unmounted or inactive, skipping emergency timeout state update');
         return;
       }
       console.error('[Auth] 🚨 EMERGENCY TIMEOUT (500ms) - Force completing');
@@ -418,16 +422,19 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     console.log('[Auth] Starting loadUserFromStorage (timeout: 500ms)...');
     loadUserFromStorage()
       .then(() => {
+        if (!isActive) return;
         console.log('[Auth] ✓ loadUserFromStorage completed');
         clearTimeout(emergencyTimeout);
       })
       .catch(err => {
+        if (!isActive) return;
         console.error('[Auth] ✗ Load failed:', err?.message || 'Unknown error');
         clearTimeout(emergencyTimeout);
         forceComplete();
       });
     
     return () => {
+      isActive = false;
       isMounted.current = false;
       clearTimeout(emergencyTimeout);
     };

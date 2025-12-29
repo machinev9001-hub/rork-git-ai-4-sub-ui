@@ -1,4 +1,5 @@
-export const Colors = {
+// Ensure Colors is always defined with proper typing
+export const Colors = Object.freeze({
   background: "#000000",
   text: "#FFFFFF",
   textSecondary: "#A0A0A0",
@@ -15,7 +16,7 @@ export const Colors = {
   errorText: "#FCA5A5",
   infoBg: "#2A2A2A",
   infoText: "#FFD600",
-} as const;
+}) as const;
 
 export const BACKGROUND_COLOR = '#000000';
 
@@ -39,7 +40,8 @@ export type ThemeColors = {
   infoText: string;
 };
 
-export const AppTheme: ThemeColors = {
+// Ensure AppTheme is always defined with proper typing
+export const AppTheme: ThemeColors = Object.freeze({
   background: '#000000',
   text: '#FFFFFF',
   textSecondary: '#A0A0A0',
@@ -57,9 +59,9 @@ export const AppTheme: ThemeColors = {
   errorText: '#FCA5A5',
   infoBg: '#2A2A2A',
   infoText: '#FFD600',
-};
+});
 
-export const RoleAccentColors = {
+export const RoleAccentColors = Object.freeze({
   master: '#FFD600',
   Admin: '#3B82F6',
   Planner: '#10B981',
@@ -75,7 +77,7 @@ export const RoleAccentColors = {
   'General Worker': '#6B7280',
   HSE: '#F43F5E',
   Accounts: '#10B981',
-} as const;
+}) as const;
 
 export const getRoleAccentColor = (role?: string): string => {
   if (!role) return RoleAccentColors.master;
