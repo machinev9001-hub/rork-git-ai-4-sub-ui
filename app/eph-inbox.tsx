@@ -248,11 +248,13 @@ export default function MachineHoursScreen() {
       for (const assetId of report.assetIds) {
         console.log('[EPH Inbox] Fetching timesheets for asset:', assetId);
         const q = query(
-          collection(db, 'plantAssetTimesheets'),
+          collection(db, 'verifiedTimesheets'),
+          where('masterAccountId', '==', report.senderMasterAccountId),
+          where('siteId', '==', report.siteId),
           where('assetId', '==', assetId),
+          where('type', '==', 'plant_hours'),
           where('date', '>=', report.dateRangeFrom),
-          where('date', '<=', report.dateRangeTo),
-          firestoreOrderBy('date', 'desc')
+          where('date', '<=', report.dateRangeTo)
         );
 
         const snapshot = await getDocs(q);
