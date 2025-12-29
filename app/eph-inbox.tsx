@@ -11,12 +11,12 @@ import {
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, Calendar, DollarSign, Package, CheckCircle, AlertCircle, Clock, MessageSquare, X, Inbox, Send, CreditCard, ChevronDown, ChevronUp, CalendarDays, CheckSquare, Square } from 'lucide-react-native';
+import { FileText, Calendar, Package, CheckCircle, AlertCircle, Clock, MessageSquare, X, Inbox, Send, CreditCard, ChevronDown, ChevronUp, CalendarDays, CheckSquare, Square } from 'lucide-react-native';
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
-import { getEPHReportsForSender } from '@/utils/ephReportManager';
+import { getPendingAgreementsByMasterAccount, PendingAgreement } from '@/utils/pendingAgreementManager';
 import { getAgreedTimesheetsByDateRange } from '@/utils/agreedTimesheetManager';
-import { EPHReport } from '@/types/ephReport';
+
 import { collection, getDocs, query, where, orderBy as firestoreOrderBy } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { PlantAsset, Subcontractor } from '@/types';
@@ -26,7 +26,7 @@ import SendConfirmationModal from '@/components/accounts/SendConfirmationModal';
 import { generateTimesheetPDF, downloadTimesheetPDF, emailTimesheetPDF } from '@/utils/timesheetPdfGenerator';
 import { sendEPHToSubcontractor } from '@/utils/ephEmailService';
 
-type FilterStatus = 'all' | 'sent' | 'reviewed' | 'agreed' | 'disputed';
+type FilterStatus = 'all' | 'pending_subcontractor_review' | 'subcontractor_responded' | 'agreed' | 'rejected';
 type TabType = 'inbox' | 'report' | 'payments';
 
 type TimesheetEntry = {
@@ -75,11 +75,11 @@ type EPHRecord = {
 export default function MachineHoursScreen() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [reports, setReports] = useState<EPHReport[]>([]);
-  const [filteredReports, setFilteredReports] = useState<EPHReport[]>([]);
+  const [reports, setReports] = useState<PendingAgreement[]>([]);
+  const [filteredReports, setFilteredReports] = useState<PendingAgreement[]>([]);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [activeTab, setActiveTab] = useState<TabType>('inbox');
-  const [selectedReport, setSelectedReport] = useState<EPHReport | null>(null);
+  const [selectedReport, setSelectedReport] = useState<PendingAgreement | null>(null);
   const [detailsVisible, setDetailsVisible] = useState(false);
   const [detailedTimesheets, setDetailedTimesheets] = useState<any[]>([]);
   const [loadingDetails, setLoadingDetails] = useState(false);
@@ -238,8 +238,9 @@ export default function MachineHoursScreen() {
     if (!user?.masterAccountId) return;
     try {
       setReportsLoading(true);
-      const fetchedReports = await getEPHReportsForSender(user.masterAccountId);
+      const fetchedReports = await getPendingAgreementsByMasterAccount(user.masterAccountId);
       setReports(fetchedReports);
+      console.log('[EPH Inbox] Loaded', fetchedReports.length, 'pending agreements');
     } catch (error) {
       console.error('[EPH Inbox] Error loading reports:', error);
       Alert.alert('Error', 'Failed to load EPH reports');
@@ -261,30 +262,29 @@ export default function MachineHoursScreen() {
     }
   }, [filterStatus, reports]);
 
-  const handleViewDetails = async (report: EPHReport) => {
+  const handleViewDetails = async (report: PendingAgreement) => {
     setSelectedReport(report);
     setLoadingDetails(true);
     setDetailsVisible(true);
 
     try {
-      console.log('[EPH Inbox] Loading timesheet details for report:', report.id);
+      console.log('[EPH Inbox] Loading timesheet details for agreement:', report.id);
       const timesheets: any[] = [];
 
       const agreedTimesheets = await getAgreedTimesheetsByDateRange(
-        report.senderMasterAccountId,
-        report.dateRangeFrom,
-        report.dateRangeTo
+        report.masterAccountId,
+        report.dateRange.from,
+        report.dateRange.to
       );
       
-      const assetIdsSet = new Set(report.assetIds);
       agreedTimesheets.forEach(ts => {
-        if (ts.assetId && assetIdsSet.has(ts.assetId) && ts.timesheetType === 'plant_asset') {
+        if (ts.assetId === report.assetId && ts.timesheetType === 'plant_asset') {
           timesheets.push({
             id: ts.id,
             assetId: ts.assetId,
-            assetType: ts.assetType || 'Plant Asset',
-            plantNumber: '',
-            registrationNumber: '',
+            assetType: ts.assetType || report.assetType || 'Plant Asset',
+            plantNumber: report.plantNumber || '',
+            registrationNumber: report.registrationNumber || '',
             date: ts.date,
             totalHours: ts.agreedHours || ts.originalHours || 0,
             openHours: String(ts.originalOpenHours || '00:00'),
@@ -311,33 +311,36 @@ export default function MachineHoursScreen() {
     }
   };
 
-  const getStatusColor = (status: EPHReport['status']): string => {
+  const getStatusColor = (status: PendingAgreement['status']): string => {
     switch (status) {
-      case 'sent': return '#F59E0B';
-      case 'reviewed': return '#3B82F6';
+      case 'pending_subcontractor_review': return '#F59E0B';
+      case 'subcontractor_responded': return '#3B82F6';
+      case 'admin_final_review': return '#8B5CF6';
       case 'agreed': return '#10B981';
-      case 'disputed': return '#EF4444';
+      case 'rejected': return '#EF4444';
       default: return '#64748B';
     }
   };
 
-  const getStatusIcon = (status: EPHReport['status']) => {
+  const getStatusIcon = (status: PendingAgreement['status']) => {
     const color = getStatusColor(status);
     switch (status) {
-      case 'sent': return <Clock size={20} color={color} />;
-      case 'reviewed': return <FileText size={20} color={color} />;
+      case 'pending_subcontractor_review': return <Clock size={20} color={color} />;
+      case 'subcontractor_responded': return <FileText size={20} color={color} />;
+      case 'admin_final_review': return <FileText size={20} color={color} />;
       case 'agreed': return <CheckCircle size={20} color={color} />;
-      case 'disputed': return <AlertCircle size={20} color={color} />;
+      case 'rejected': return <AlertCircle size={20} color={color} />;
       default: return <FileText size={20} color={color} />;
     }
   };
 
-  const getStatusLabel = (status: EPHReport['status']): string => {
+  const getStatusLabel = (status: PendingAgreement['status']): string => {
     switch (status) {
-      case 'sent': return 'Awaiting Review';
-      case 'reviewed': return 'Reviewed';
+      case 'pending_subcontractor_review': return 'Awaiting Review';
+      case 'subcontractor_responded': return 'Response Received';
+      case 'admin_final_review': return 'Final Review';
       case 'agreed': return 'Agreed';
-      case 'disputed': return 'Disputed';
+      case 'rejected': return 'Rejected';
       default: return status;
     }
   };
@@ -515,15 +518,18 @@ export default function MachineHoursScreen() {
     );
   };
 
-  const renderReportCard = (report: EPHReport) => {
+  const renderReportCard = (report: PendingAgreement) => {
+    const adminHours = report.adminEditedVersion?.hours;
+    const subHours = report.subcontractorSuggestedVersion?.hours;
+    
     return (
       <View key={report.id} style={styles.reportCard}>
         <View style={styles.reportHeader}>
           <View style={styles.reportHeaderLeft}>
             <FileText size={24} color="#3B82F6" />
             <View style={styles.reportHeaderText}>
-              <Text style={styles.reportCompany}>To: {report.recipientName}</Text>
-              <Text style={styles.reportSite}>{report.siteName || 'Unknown Site'}</Text>
+              <Text style={styles.reportCompany}>To: {report.subcontractorName}</Text>
+              <Text style={styles.reportSite}>{report.assetType} - {report.plantNumber || report.registrationNumber || report.assetId}</Text>
             </View>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(report.status)}20` }]}>
@@ -539,40 +545,44 @@ export default function MachineHoursScreen() {
             <Calendar size={16} color={Colors.textSecondary} />
             <Text style={styles.reportInfoLabel}>Period:</Text>
             <Text style={styles.reportInfoValue}>
-              {formatDateStr(report.dateRangeFrom)} - {formatDateStr(report.dateRangeTo)}
+              {formatDateStr(report.dateRange.from)} - {formatDateStr(report.dateRange.to)}
             </Text>
           </View>
 
           <View style={styles.reportInfoRow}>
             <Package size={16} color={Colors.textSecondary} />
-            <Text style={styles.reportInfoLabel}>Assets:</Text>
-            <Text style={styles.reportInfoValue}>{report.totalAssets}</Text>
+            <Text style={styles.reportInfoLabel}>Asset:</Text>
+            <Text style={styles.reportInfoValue}>{report.assetType}</Text>
           </View>
 
-          <View style={styles.reportInfoRow}>
-            <Clock size={16} color={Colors.textSecondary} />
-            <Text style={styles.reportInfoLabel}>Total Hours:</Text>
-            <Text style={styles.reportInfoValue}>{report.totalHours.toFixed(1)}h</Text>
-          </View>
+          {adminHours !== undefined && (
+            <View style={styles.reportInfoRow}>
+              <Clock size={16} color={Colors.textSecondary} />
+              <Text style={styles.reportInfoLabel}>Admin Hours:</Text>
+              <Text style={styles.reportInfoValue}>{adminHours.toFixed(1)}h</Text>
+            </View>
+          )}
 
-          <View style={styles.reportInfoRow}>
-            <DollarSign size={16} color={Colors.textSecondary} />
-            <Text style={styles.reportInfoLabel}>Total Cost:</Text>
-            <Text style={styles.reportCost}>R{report.totalCost.toFixed(2)}</Text>
-          </View>
+          {subHours !== undefined && (
+            <View style={styles.reportInfoRow}>
+              <Clock size={16} color="#10B981" />
+              <Text style={styles.reportInfoLabel}>Sub Response:</Text>
+              <Text style={[styles.reportInfoValue, { color: '#10B981' }]}>{subHours.toFixed(1)}h</Text>
+            </View>
+          )}
         </View>
 
-        {report.message && (
+        {report.adminEditedVersion?.notes && (
           <View style={styles.messageBox}>
             <MessageSquare size={14} color={Colors.textSecondary} />
-            <Text style={styles.messageText}>{report.message}</Text>
+            <Text style={styles.messageText}>{report.adminEditedVersion.notes}</Text>
           </View>
         )}
 
-        {report.disputeNotes && (
+        {report.subcontractorSuggestedVersion?.notes && (
           <View style={styles.disputeBox}>
             <AlertCircle size={14} color="#EF4444" />
-            <Text style={styles.disputeText}>{report.disputeNotes}</Text>
+            <Text style={styles.disputeText}>{report.subcontractorSuggestedVersion.notes}</Text>
           </View>
         )}
 
@@ -586,7 +596,7 @@ export default function MachineHoursScreen() {
 
         <View style={styles.reportFooter}>
           <Text style={styles.reportFooterText}>
-            Sent: {report.sentAt ? new Date(report.sentAt.seconds * 1000).toLocaleDateString('en-GB') : 'Unknown'}
+            Sent: {report.sentToSubcontractorAt ? new Date(report.sentToSubcontractorAt.seconds * 1000).toLocaleDateString('en-GB') : 'Unknown'}
           </Text>
           {report.agreedAt && (
             <Text style={styles.reportFooterText}>
@@ -600,10 +610,10 @@ export default function MachineHoursScreen() {
 
   const statusCounts = {
     all: reports.length,
-    sent: reports.filter(r => r.status === 'sent').length,
-    reviewed: reports.filter(r => r.status === 'reviewed').length,
+    pending_subcontractor_review: reports.filter(r => r.status === 'pending_subcontractor_review').length,
+    subcontractor_responded: reports.filter(r => r.status === 'subcontractor_responded').length,
     agreed: reports.filter(r => r.status === 'agreed').length,
-    disputed: reports.filter(r => r.status === 'disputed').length,
+    rejected: reports.filter(r => r.status === 'rejected').length,
   };
 
   return (
@@ -761,10 +771,10 @@ export default function MachineHoursScreen() {
               contentContainerStyle={styles.filterContent}
             >
               {renderFilterButton('All', 'all', statusCounts.all)}
-              {renderFilterButton('Awaiting', 'sent', statusCounts.sent)}
-              {renderFilterButton('Reviewed', 'reviewed', statusCounts.reviewed)}
+              {renderFilterButton('Awaiting', 'pending_subcontractor_review', statusCounts.pending_subcontractor_review)}
+              {renderFilterButton('Responded', 'subcontractor_responded', statusCounts.subcontractor_responded)}
               {renderFilterButton('Agreed', 'agreed', statusCounts.agreed)}
-              {renderFilterButton('Disputed', 'disputed', statusCounts.disputed)}
+              {renderFilterButton('Rejected', 'rejected', statusCounts.rejected)}
             </ScrollView>
 
             <ScrollView style={styles.content}>
@@ -804,7 +814,7 @@ export default function MachineHoursScreen() {
             <View style={styles.detailsHeader}>
               <View>
                 <Text style={styles.detailsTitle}>EPH Report Details</Text>
-                <Text style={styles.detailsSubtitle}>Sent to: {selectedReport.recipientName}</Text>
+                <Text style={styles.detailsSubtitle}>Sent to: {selectedReport.subcontractorName}</Text>
               </View>
               <TouchableOpacity
                 onPress={() => {
@@ -826,9 +836,11 @@ export default function MachineHoursScreen() {
             ) : (
               <ScrollView style={styles.detailsContent}>
                 <View style={styles.detailsSummary}>
-                  <Text style={styles.summaryLabel}>Total Hours: {selectedReport.totalHours.toFixed(1)}h</Text>
-                  <Text style={styles.summaryLabel}>Total Cost: R{selectedReport.totalCost.toFixed(2)}</Text>
-                  <Text style={styles.summaryLabel}>Assets: {selectedReport.totalAssets}</Text>
+                  <Text style={styles.summaryLabel}>Asset: {selectedReport.assetType}</Text>
+                  <Text style={styles.summaryLabel}>Period: {selectedReport.dateRange.from} - {selectedReport.dateRange.to}</Text>
+                  {selectedReport.adminEditedVersion && (
+                    <Text style={styles.summaryLabel}>Admin Hours: {selectedReport.adminEditedVersion.hours.toFixed(1)}h</Text>
+                  )}
                 </View>
 
                 {detailedTimesheets.length === 0 ? (
