@@ -8,21 +8,13 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DollarSign, Clock, Users, AlertTriangle } from 'lucide-react-native';
+import { Clock, Users, AlertTriangle } from 'lucide-react-native';
 
 export default function BillingMenuScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
 
   const menuItems = [
-    {
-      id: 'billing-config',
-      title: 'Billing Configuration',
-      description: 'Configure billing rules and rates for all hour types',
-      icon: DollarSign,
-      color: '#f59e0b',
-      route: '/billing-config',
-    },
     {
       id: 'eph',
       title: 'Machine Hours (EPH)',
