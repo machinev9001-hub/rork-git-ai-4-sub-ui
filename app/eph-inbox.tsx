@@ -342,11 +342,65 @@ export default function MachineHoursScreen() {
     if (selectedAssets.length === 0) { Alert.alert('Error', 'No assets to include'); return; }
     try {
       const subcontractor = subcontractors.find(s => s.id === selectedSubcontractor);
-      const groups = selectedAssets.map(record => ({
-        key: record.assetId, title: record.assetType, subtitle: record.plantNumber || record.registrationNumber || record.assetId,
-        entries: record.rawTimesheets.map(ts => ({ id: ts.id, date: ts.date, operatorName: ts.operatorName, operatorId: ts.operatorName, verified: true, verifiedAt: new Date().toISOString(), verifiedBy: 'system', masterAccountId: user?.masterAccountId || '', siteId: user?.siteId || '', type: 'plant_hours' as const, openHours: parseFloat(ts.openHours) || 0, closeHours: parseFloat(ts.closeHours) || 0, totalHours: ts.totalHours, actualHours: ts.totalHours, billableHours: ts.totalHours, assetRate: record.rate, totalCost: ts.totalHours * record.rate, isBreakdown: ts.isBreakdown, inclementWeather: ts.isRainDay, isRainDay: ts.isRainDay, isStrikeDay: ts.isStrikeDay, isPublicHoliday: ts.isPublicHoliday, hasAttachment: false, assetId: record.assetId, assetType: record.assetType, plantNumber: record.plantNumber, registrationNumber: record.registrationNumber, ownerId: selectedSubcontractor, ownerType: 'subcontractor' as const, ownerName: subcontractor?.name, notes: ts.notes })),
-        dateGroups: [],
-      }));
+      const groups = selectedAssets.map(record => {
+        const entries = record.rawTimesheets.map(ts => {
+          const billingResult = record.billingResultsByDate?.get(ts.date);
+          const billableHours = billingResult?.billableHours ?? ts.totalHours;
+          const totalCost = billableHours * record.rate;
+          return {
+            id: ts.id,
+            date: ts.date,
+            operatorName: ts.operatorName,
+            operatorId: ts.operatorName,
+            verified: true,
+            verifiedAt: new Date().toISOString(),
+            verifiedBy: 'system',
+            masterAccountId: user?.masterAccountId || '',
+            siteId: user?.siteId || '',
+            type: 'plant_hours' as const,
+            openHours: parseFloat(ts.openHours) || 0,
+            closeHours: parseFloat(ts.closeHours) || 0,
+            totalHours: ts.totalHours,
+            actualHours: ts.totalHours,
+            billableHours: billableHours,
+            assetRate: record.rate,
+            totalCost: totalCost,
+            isBreakdown: ts.isBreakdown,
+            inclementWeather: ts.isRainDay,
+            isRainDay: ts.isRainDay,
+            isStrikeDay: ts.isStrikeDay,
+            isPublicHoliday: ts.isPublicHoliday,
+            hasAttachment: false,
+            assetId: record.assetId,
+            assetType: record.assetType,
+            plantNumber: record.plantNumber,
+            registrationNumber: record.registrationNumber,
+            ownerId: selectedSubcontractor,
+            ownerType: 'subcontractor' as const,
+            ownerName: subcontractor?.name,
+            notes: ts.notes,
+            location: user?.siteId,
+          };
+        });
+
+        const dateGroups = entries.map(entry => ({
+          date: entry.date,
+          operatorEntry: entry,
+          plantManagerEntry: undefined,
+          adminEntry: undefined,
+          subcontractorEntry: undefined,
+        }));
+
+        return {
+          key: record.assetId,
+          title: record.assetType,
+          subtitle: record.plantNumber || record.registrationNumber || record.assetId,
+          entries,
+          dateGroups,
+        };
+      });
+      console.log('[EPH PDF] Generating PDF with', groups.length, 'groups');
+      groups.forEach(g => console.log('[EPH PDF] Group:', g.title, g.subtitle, 'entries:', g.entries.length, 'dateGroups:', g.dateGroups.length));
       const { uri, fileName } = await generateTimesheetPDF({ groups, reportType: 'plant', subcontractorName: subcontractor?.name, dateRange: { from: startDate, to: endDate }, selectedOnly: options.scope === 'selected', selectedGroups: options.scope === 'selected' ? new Set(selectedAssets.map(r => r.assetId)) : undefined });
       if (options.deliveryMethod === 'email') { await emailTimesheetPDF(uri, fileName, { recipientEmail: options.recipientEmail, subject: `EPH Report - ${subcontractor?.name}`, body: 'Please find attached the EPH report.' }); Alert.alert('Success', 'Email composer opened'); }
       else { await downloadTimesheetPDF(uri, fileName); Alert.alert('Success', 'Report downloaded'); }
@@ -359,7 +413,64 @@ export default function MachineHoursScreen() {
       const selectedAssets = Array.from(selectedAssetIds).map(id => ephData.find(r => r.assetId === id)).filter(Boolean) as EPHRecord[];
       const totalHours = selectedAssets.reduce((sum, a) => sum + a.totalBillableHours, 0);
       const subcontractor = subcontractors.find(s => s.id === selectedSubcontractor);
-      const { uri, fileName } = await generateTimesheetPDF({ groups: [], reportType: 'plant', subcontractorName: subcontractor?.name, dateRange: { from: startDate, to: endDate }, selectedOnly: true });
+      
+      const groups = selectedAssets.map(record => {
+        const entries = record.rawTimesheets.map(ts => {
+          const billingResult = record.billingResultsByDate?.get(ts.date);
+          const billableHours = billingResult?.billableHours ?? ts.totalHours;
+          const totalCost = billableHours * record.rate;
+          return {
+            id: ts.id,
+            date: ts.date,
+            operatorName: ts.operatorName,
+            operatorId: ts.operatorName,
+            verified: true,
+            verifiedAt: new Date().toISOString(),
+            verifiedBy: 'system',
+            masterAccountId: user?.masterAccountId || '',
+            siteId: user?.siteId || '',
+            type: 'plant_hours' as const,
+            openHours: parseFloat(ts.openHours) || 0,
+            closeHours: parseFloat(ts.closeHours) || 0,
+            totalHours: ts.totalHours,
+            actualHours: ts.totalHours,
+            billableHours: billableHours,
+            assetRate: record.rate,
+            totalCost: totalCost,
+            isBreakdown: ts.isBreakdown,
+            inclementWeather: ts.isRainDay,
+            isRainDay: ts.isRainDay,
+            isStrikeDay: ts.isStrikeDay,
+            isPublicHoliday: ts.isPublicHoliday,
+            hasAttachment: false,
+            assetId: record.assetId,
+            assetType: record.assetType,
+            plantNumber: record.plantNumber,
+            registrationNumber: record.registrationNumber,
+            ownerId: selectedSubcontractor,
+            ownerType: 'subcontractor' as const,
+            ownerName: subcontractor?.name,
+            notes: ts.notes,
+            location: user?.siteId,
+          };
+        });
+        const dateGroups = entries.map(entry => ({
+          date: entry.date,
+          operatorEntry: entry,
+          plantManagerEntry: undefined,
+          adminEntry: undefined,
+          subcontractorEntry: undefined,
+        }));
+        return {
+          key: record.assetId,
+          title: record.assetType,
+          subtitle: record.plantNumber || record.registrationNumber || record.assetId,
+          entries,
+          dateGroups,
+        };
+      });
+      
+      const { uri, fileName } = await generateTimesheetPDF({ groups, reportType: 'plant', subcontractorName: subcontractor?.name, dateRange: { from: startDate, to: endDate }, selectedOnly: true, selectedGroups: new Set(selectedAssets.map(r => r.assetId)) });
       await sendEPHToSubcontractor({ recipientEmail, message, pdfUri: uri, pdfFileName: fileName, subcontractorName: subcontractor?.name || 'Unknown', dateRange: { from: startDate, to: endDate }, assetCount: selectedAssets.length, totalHours, companyName: user.companyName || 'Your Company' });
       Alert.alert('Success', 'EPH report sent');
     } catch (error) { console.error('[EPH] Error:', error); throw error; }
