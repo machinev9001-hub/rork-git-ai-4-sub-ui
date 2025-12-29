@@ -327,6 +327,22 @@ service cloud.firestore {
       allow read, write: if true;
     }
     
+    // ============================================================================
+    // SUBCONTRACTOR ARCHITECTURE - NEW COLLECTIONS
+    // ============================================================================
+    
+    match /employeeSiteLinks/{linkId} {
+      allow read, write: if true;
+    }
+    
+    match /plantAssetAllocations/{allocationId} {
+      allow read, write: if true;
+    }
+    
+    match /marketplaceListings/{listingId} {
+      allow read, write: if true;
+    }
+    
     // Default allow for any other collections
     match /{document=**} {
       allow read, write: if true;

@@ -6,7 +6,8 @@ export type VASFeatureId =
   | 'data_exports'
   | 'advanced_integrations'
   | 'custom_branding'
-  | 'priority_support';
+  | 'priority_support'
+  | 'marketplace_access'; // New VAS for marketplace
 
 export type VASFeature = {
   id: VASFeatureId;
@@ -78,6 +79,12 @@ export type Company = {
   vatNumber: string;
   industrySector: string;
   status: 'Active' | 'Inactive' | 'Archived';
+  accountType?: AccountType; // Company account type (free/enterprise)
+  subscriptionTier?: 'free' | 'basic' | 'premium' | 'enterprise';
+  vasFeatures?: VASFeatureId[]; // Active VAS features for this company
+  billingEmail?: string;
+  subscriptionStartDate?: any;
+  subscriptionEndDate?: any;
   accountType: AccountType;
   createdAt: any;
   updatedAt?: any;
@@ -125,6 +132,8 @@ export type MasterAccount = {
   createdAt: any;
 };
 
+export type AccessScope = 'company-level' | 'all-sites' | 'selected-sites' | 'no-sites';
+
 export type User = {
   id: string;
   userId: string;
@@ -142,7 +151,10 @@ export type User = {
   masterAccountId?: string;
   accountType?: AccountType;
   vasFeatures?: VASFeatureId[];
+  canAccessMasterCompanyProfile?: boolean; // Flag for Master Company Profile access
+  accessScope?: AccessScope; // Defines where user's actions apply
   createdAt: any;
+  disabledMenus?: string[];
   isLocked?: boolean;
 };
 
@@ -432,6 +444,9 @@ export type Employee = {
   email?: string;
   employeeIdNumber?: string;
   citizenshipCountry?: string;
+  companyId: string; // Company-level ownership (required)
+  masterAccountId: string;
+  siteId?: string; // DEPRECATED: Use EmployeeSiteLink instead
   siteId: string; // Deprecated - kept for backward compatibility. Use EmployeeSite linking table instead
   masterAccountId: string;
   companyId?: string; // Company-level ownership - single source of truth
@@ -442,6 +457,8 @@ export type Employee = {
   employerType: 'company' | 'subcontractor';
   isCrossHire?: boolean;
   crossHireName?: string;
+  accessScope?: AccessScope; // Access scope for this employee
+  canAccessMasterCompanyProfile?: boolean; // Can access Master Company Profile
   allocatedPvArea?: string;
   allocatedBlockNumber?: string;
   areaAllocationDate?: any;
@@ -457,6 +474,21 @@ export type Employee = {
   updatedAt?: any;
 };
 
+// New type for many-to-many employee-site relationships
+export type EmployeeSiteLink = {
+  id?: string;
+  employeeId: string;
+  employeeName?: string;
+  siteId: string;
+  siteName?: string;
+  companyId: string;
+  masterAccountId: string;
+  isActive: boolean;
+  assignedAt: any;
+  assignedBy: string;
+  removedAt?: any;
+  removedBy?: string;
+  notes?: string;
 /**
  * EmployeeSite - Junction table for company-level employees and site assignments
  * Employees are created once at company level, then linked to sites via this table
@@ -713,6 +745,9 @@ export type PlantAsset = {
   crossHireName?: string;
   salaryPayer?: string;
   operatorHistory?: OperatorHistory[];
+  siteId?: string | null; // DEPRECATED: Use PlantAssetAllocation instead
+  masterAccountId: string;
+  companyId: string; // Company-level ownership (required)
   siteId?: string | null; // Deprecated - kept for backward compatibility. Use AssetSite linking table instead
   masterAccountId: string;
   companyId?: string; // Company-level ownership - single source of truth
@@ -748,10 +783,65 @@ export type PlantAsset = {
   archived?: boolean;
   archivedAt?: any;
   archivedBy?: string;
+  // New marketplace fields
+  internalAllocationEnabled?: boolean; // Can be allocated to own sites
+  marketplaceVisibilityEnabled?: boolean; // Listed in marketplace (VAS-gated)
+  isAvailableForVAS?: boolean; // Legacy field (deprecated)
   availability?: 'available' | 'allocated' | 'maintenance';
   createdAt: any;
   updatedAt?: any;
 };
+  updatedAt?: any;
+};
+
+// New type for plant asset allocation tracking
+export type PlantAssetAllocation = {
+  id?: string;
+  assetId: string;
+  assetType?: string;
+  companyId: string;
+  siteId: string;
+  siteName?: string;
+  masterAccountId: string;
+  isActive: boolean; // Current allocation or historical
+  allocatedAt: any;
+  allocatedBy: string;
+  deallocatedAt?: any;
+  deallocatedBy?: string;
+  pvArea?: string;
+  blockArea?: string;
+  requestId?: string;
+  notes?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+// New type for marketplace listings
+export type MarketplaceListing = {
+  id?: string;
+  assetId: string;
+  assetType: string;
+  companyId: string; // Owner company
+  companyName?: string;
+  plantNumber?: string;
+  registrationNumber?: string;
+  description?: string;
+  availability: 'available' | 'currently_allocated' | 'maintenance';
+  currentAllocationSiteId?: string; // If currently allocated
+  currentAllocationSiteName?: string;
+  dryRate?: number;
+  wetRate?: number;
+  dailyRate?: number;
+  billingMethod?: 'PER_HOUR' | 'MINIMUM_BILLING';
+  location?: string;
+  contactPerson?: string;
+  contactNumber?: string;
+  isActive: boolean; // Listing active or hidden
+  listedAt: any;
+  lastUpdatedAt?: any;
+  viewCount?: number;
+  inquiryCount?: number;
+  createdAt: any;
   updatedAt?: any;
 };
 
