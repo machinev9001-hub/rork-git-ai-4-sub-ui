@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DollarSign } from 'lucide-react-native';
+import { DollarSign, Clock, Users } from 'lucide-react-native';
 
 export default function BillingMenuScreen() {
   const insets = useSafeAreaInsets();
@@ -22,6 +22,22 @@ export default function BillingMenuScreen() {
       icon: DollarSign,
       color: '#f59e0b',
       route: '/billing-config',
+    },
+    {
+      id: 'eph',
+      title: 'Machine Hours (EPH)',
+      description: 'Reports, approvals, and payments for machine hours',
+      icon: Clock,
+      color: '#0ea5e9',
+      route: '/eph-menu',
+    },
+    {
+      id: 'emh',
+      title: 'Man Hours (EMH)',
+      description: 'Reports, approvals, and payments for man hours',
+      icon: Users,
+      color: '#22c55e',
+      route: '/emh-menu',
     },
   ];
 
@@ -59,6 +75,7 @@ export default function BillingMenuScreen() {
           return (
             <TouchableOpacity
               key={item.id}
+              testID={`billing-menu-item-${item.id}`}
               style={styles.menuCard}
               onPress={() => router.push(item.route as any)}
               activeOpacity={0.7}
