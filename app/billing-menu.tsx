@@ -33,8 +33,8 @@ export default function BillingMenuScreen() {
     },
     {
       id: 'dumbass',
-      title: 'Dumbass',
-      description: 'New menu item',
+      title: 'Billing Configuration',
+      description: 'Configure billing rules for machine and man hours',
       icon: AlertTriangle,
       color: '#ef4444',
       route: '/dumbass',
