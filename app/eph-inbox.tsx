@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -15,11 +15,12 @@ import { FileText, Calendar, DollarSign, Package, CheckCircle, AlertCircle, Cloc
 import { Colors } from '@/constants/colors';
 import { useAuth } from '@/contexts/AuthContext';
 import { getEPHReportsForSender } from '@/utils/ephReportManager';
+import { getAgreedTimesheetsByDateRange } from '@/utils/agreedTimesheetManager';
 import { EPHReport } from '@/types/ephReport';
 import { collection, getDocs, query, where, orderBy as firestoreOrderBy } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { PlantAsset, Subcontractor } from '@/types';
-import { calculateBillableHours, BillingConfigForCalculation, BillableHoursResult } from '@/utils/billableHoursCalculator';
+import { BillableHoursResult } from '@/utils/billableHoursCalculator';
 import ReportGenerationModal from '@/components/accounts/ReportGenerationModal';
 import SendConfirmationModal from '@/components/accounts/SendConfirmationModal';
 import { generateTimesheetPDF, downloadTimesheetPDF, emailTimesheetPDF } from '@/utils/timesheetPdfGenerator';
@@ -69,18 +70,7 @@ type EPHRecord = {
   billingResultsByDate?: Map<string, BillableHoursResult>;
 };
 
-const getEffectiveEntriesForBilling = (entries: TimesheetEntry[]): TimesheetEntry[] => {
-  const pairingMap = new Map<string, TimesheetEntry>();
-  entries.forEach((entry) => {
-    const key = `${entry.date}-${entry.operatorName}`;
-    const isPM = entry.hasOriginalEntry || entry.isAdjustment || Boolean(entry.adjustedBy);
-    const existing = pairingMap.get(key);
-    if (!existing || isPM) {
-      pairingMap.set(key, entry);
-    }
-  });
-  return Array.from(pairingMap.values());
-};
+
 
 export default function MachineHoursScreen() {
   const { user } = useAuth();
@@ -109,14 +99,7 @@ export default function MachineHoursScreen() {
   });
   const [endDate, setEndDate] = useState<Date>(new Date());
 
-  const billingConfig: BillingConfigForCalculation = useMemo(() => ({
-    weekdays: { minHours: 0 },
-    saturday: { minHours: 8 },
-    sunday: { minHours: 8 },
-    publicHolidays: { minHours: 8 },
-    rainDays: { enabled: true, minHours: 4.5 },
-    breakdown: { enabled: true },
-  }), []);
+
 
   const loadSubcontractors = useCallback(async () => {
     if (!user?.masterAccountId || !user?.siteId) return;
@@ -138,54 +121,96 @@ export default function MachineHoursScreen() {
 
   const generateEPHReport = useCallback(async (assets: PlantAsset[], _subcontractorId: string) => {
     try {
-      const ephRecords: EPHRecord[] = await Promise.all(
-        assets.map(async (asset) => {
-          const timesheetQuery = query(
-            collection(db, 'verifiedTimesheets'),
-            where('masterAccountId', '==', user?.masterAccountId),
-            where('siteId', '==', user?.siteId),
-            where('assetId', '==', asset.assetId),
-            where('type', '==', 'plant_hours'),
-            where('date', '>=', startDate.toISOString().split('T')[0]),
-            where('date', '<=', endDate.toISOString().split('T')[0])
-          );
-          const timesheetSnapshot = await getDocs(timesheetQuery);
-          const rawEntries = timesheetSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as TimesheetEntry[];
-          setEphTimesheets(prev => { const m = new Map(prev); m.set(asset.assetId, rawEntries); return m; });
-          const effectiveEntries = getEffectiveEntriesForBilling(rawEntries);
-          let actualNormalHours = 0, actualSaturdayHours = 0, actualSundayHours = 0, actualPublicHolidayHours = 0, actualRainDayHours = 0;
-          let billableNormalHours = 0, billableSaturdayHours = 0, billableSundayHours = 0, billablePublicHolidayHours = 0, billableRainDayHours = 0;
-          const billingResultsByDate = new Map<string, BillableHoursResult>();
-          effectiveEntries.forEach((entry) => {
-            const actualHours = entry.totalHours || 0;
-            const date = new Date(entry.date);
-            const dayOfWeek = date.getDay();
-            const billingResult = calculateBillableHours({ startTime: entry.openHours, endTime: entry.closeHours, date: entry.date, isBreakdown: entry.isBreakdown, isRainDay: entry.isRainDay, isInclementWeather: entry.isRainDay, isPublicHoliday: entry.isPublicHoliday, totalHours: actualHours }, billingConfig);
-            billingResultsByDate.set(entry.date, billingResult);
-            if (entry.isRainDay) { actualRainDayHours += actualHours; billableRainDayHours += billingResult.billableHours; }
-            else if (entry.isPublicHoliday) { actualPublicHolidayHours += actualHours; billablePublicHolidayHours += billingResult.billableHours; }
-            else if (dayOfWeek === 6) { actualSaturdayHours += actualHours; billableSaturdayHours += billingResult.billableHours; }
-            else if (dayOfWeek === 0) { actualSundayHours += actualHours; billableSundayHours += billingResult.billableHours; }
-            else { actualNormalHours += actualHours; billableNormalHours += billingResult.billableHours; }
-          });
-          const rate = asset.dryRate || asset.wetRate || 0;
-          const totalActualHours = actualNormalHours + actualSaturdayHours + actualSundayHours + actualPublicHolidayHours + actualRainDayHours;
-          const totalBillableHours = billableNormalHours + billableSaturdayHours + billableSundayHours + billablePublicHolidayHours + billableRainDayHours;
-          return {
-            assetId: asset.assetId, assetType: asset.type, plantNumber: asset.plantNumber, registrationNumber: asset.registrationNumber,
-            rate, rateType: (asset.dryRate ? 'dry' : 'wet') as 'wet' | 'dry',
-            totalActualHours, totalBillableHours, estimatedCost: totalBillableHours * rate,
-            actualNormalHours, actualSaturdayHours, actualSundayHours, actualPublicHolidayHours, actualRainDayHours,
-            billableNormalHours, billableSaturdayHours, billableSundayHours, billablePublicHolidayHours, billableRainDayHours,
-            rawTimesheets: rawEntries, billingResultsByDate,
-          };
-        })
+      console.log('[EPH] Generating EPH report for', assets.length, 'assets');
+      const startDateStr = startDate.toISOString().split('T')[0];
+      const endDateStr = endDate.toISOString().split('T')[0];
+      
+      const agreedTimesheets = await getAgreedTimesheetsByDateRange(
+        user?.masterAccountId || '',
+        startDateStr,
+        endDateStr
       );
+      console.log('[EPH] Found', agreedTimesheets.length, 'agreed timesheets');
+      
+      const assetTimesheetsMap = new Map<string, any[]>();
+      agreedTimesheets.forEach(ts => {
+        if (ts.assetId && ts.timesheetType === 'plant_asset') {
+          const existing = assetTimesheetsMap.get(ts.assetId) || [];
+          existing.push(ts);
+          assetTimesheetsMap.set(ts.assetId, existing);
+        }
+      });
+      
+      const ephRecords: EPHRecord[] = assets.map((asset) => {
+        const assetTimesheets = assetTimesheetsMap.get(asset.assetId) || [];
+        console.log('[EPH] Asset', asset.assetId, 'has', assetTimesheets.length, 'agreed timesheets');
+        
+        const rawEntries: TimesheetEntry[] = assetTimesheets.map(ts => ({
+          id: ts.id,
+          date: ts.date,
+          openHours: String(ts.originalOpenHours || 0),
+          closeHours: String(ts.originalCloseHours || 0),
+          totalHours: ts.agreedHours || ts.originalHours || 0,
+          operatorName: ts.operatorName || 'Unknown',
+          isRainDay: ts.isRainDay || false,
+          isStrikeDay: false,
+          isBreakdown: ts.isBreakdown || false,
+          isPublicHoliday: ts.isPublicHoliday || false,
+          notes: ts.adminNotes || ts.originalNotes,
+          hasOriginalEntry: false,
+          adjustedBy: ts.agreedByRole,
+          isAdjustment: false,
+        }));
+        
+        setEphTimesheets(prev => { const m = new Map(prev); m.set(asset.assetId, rawEntries); return m; });
+        
+        let actualNormalHours = 0, actualSaturdayHours = 0, actualSundayHours = 0, actualPublicHolidayHours = 0, actualRainDayHours = 0;
+        let billableNormalHours = 0, billableSaturdayHours = 0, billableSundayHours = 0, billablePublicHolidayHours = 0, billableRainDayHours = 0;
+        const billingResultsByDate = new Map<string, BillableHoursResult>();
+        
+        assetTimesheets.forEach((ts) => {
+          const actualHours = ts.agreedHours || ts.originalHours || 0;
+          const storedBillableHours = ts.billableHours || actualHours;
+          const date = new Date(ts.date);
+          const dayOfWeek = date.getDay();
+          
+          const billingResult: BillableHoursResult = {
+            actualHours: actualHours,
+            billableHours: storedBillableHours,
+            appliedRule: ts.billingRule || 'stored',
+            minimumApplied: 0,
+            notes: '',
+          };
+          billingResultsByDate.set(ts.date, billingResult);
+          
+          if (ts.isRainDay) { actualRainDayHours += actualHours; billableRainDayHours += storedBillableHours; }
+          else if (ts.isPublicHoliday) { actualPublicHolidayHours += actualHours; billablePublicHolidayHours += storedBillableHours; }
+          else if (dayOfWeek === 6) { actualSaturdayHours += actualHours; billableSaturdayHours += storedBillableHours; }
+          else if (dayOfWeek === 0) { actualSundayHours += actualHours; billableSundayHours += storedBillableHours; }
+          else { actualNormalHours += actualHours; billableNormalHours += storedBillableHours; }
+        });
+        
+        const rate = asset.dryRate || asset.wetRate || 0;
+        const totalActualHours = actualNormalHours + actualSaturdayHours + actualSundayHours + actualPublicHolidayHours + actualRainDayHours;
+        const totalBillableHours = billableNormalHours + billableSaturdayHours + billableSundayHours + billablePublicHolidayHours + billableRainDayHours;
+        
+        return {
+          assetId: asset.assetId, assetType: asset.type, plantNumber: asset.plantNumber, registrationNumber: asset.registrationNumber,
+          rate, rateType: (asset.dryRate ? 'dry' : 'wet') as 'wet' | 'dry',
+          totalActualHours, totalBillableHours, estimatedCost: totalBillableHours * rate,
+          actualNormalHours, actualSaturdayHours, actualSundayHours, actualPublicHolidayHours, actualRainDayHours,
+          billableNormalHours, billableSaturdayHours, billableSundayHours, billablePublicHolidayHours, billableRainDayHours,
+          rawTimesheets: rawEntries, billingResultsByDate,
+        };
+      });
+      
       setEphData(ephRecords);
+      console.log('[EPH] Generated', ephRecords.length, 'EPH records');
     } catch (error) {
       console.error('[EPH] Error generating EPH report:', error);
+      Alert.alert('Error', 'Failed to generate EPH report. Please try again.');
     }
-  }, [startDate, endDate, user?.masterAccountId, user?.siteId, billingConfig]);
+  }, [startDate, endDate, user?.masterAccountId]);
 
   const loadPlantAssets = useCallback(async (subcontractorId: string) => {
     setLoading(true);
@@ -245,40 +270,36 @@ export default function MachineHoursScreen() {
       console.log('[EPH Inbox] Loading timesheet details for report:', report.id);
       const timesheets: any[] = [];
 
-      for (const assetId of report.assetIds) {
-        console.log('[EPH Inbox] Fetching timesheets for asset:', assetId);
-        const q = query(
-          collection(db, 'verifiedTimesheets'),
-          where('masterAccountId', '==', report.senderMasterAccountId),
-          where('siteId', '==', report.siteId),
-          where('assetId', '==', assetId),
-          where('type', '==', 'plant_hours'),
-          where('date', '>=', report.dateRangeFrom),
-          where('date', '<=', report.dateRangeTo)
-        );
-
-        const snapshot = await getDocs(q);
-        snapshot.docs.forEach(doc => {
-          const data = doc.data();
+      const agreedTimesheets = await getAgreedTimesheetsByDateRange(
+        report.senderMasterAccountId,
+        report.dateRangeFrom,
+        report.dateRangeTo
+      );
+      
+      const assetIdsSet = new Set(report.assetIds);
+      agreedTimesheets.forEach(ts => {
+        if (ts.assetId && assetIdsSet.has(ts.assetId) && ts.timesheetType === 'plant_asset') {
           timesheets.push({
-            id: doc.id,
-            assetId: data.assetId,
-            assetType: data.assetType,
-            plantNumber: data.plantNumber,
-            registrationNumber: data.registrationNumber,
-            date: data.date,
-            totalHours: data.totalHours || 0,
-            openHours: data.openHours || '00:00',
-            closeHours: data.closeHours || data.closingHours || '00:00',
-            operatorName: data.operatorName || 'Unknown',
-            isBreakdown: data.isBreakdown || false,
-            isRainDay: data.isRainDay || false,
-            isStrikeDay: data.isStrikeDay || false,
-            isPublicHoliday: data.isPublicHoliday || false,
-            notes: data.notes || data.adminNotes || data.billingNotes || '',
+            id: ts.id,
+            assetId: ts.assetId,
+            assetType: ts.assetType || 'Plant Asset',
+            plantNumber: '',
+            registrationNumber: '',
+            date: ts.date,
+            totalHours: ts.agreedHours || ts.originalHours || 0,
+            openHours: String(ts.originalOpenHours || '00:00'),
+            closeHours: String(ts.originalCloseHours || '00:00'),
+            operatorName: ts.operatorName || 'Unknown',
+            isBreakdown: ts.isBreakdown || false,
+            isRainDay: ts.isRainDay || false,
+            isStrikeDay: false,
+            isPublicHoliday: ts.isPublicHoliday || false,
+            notes: ts.adminNotes || ts.originalNotes || '',
+            billableHours: ts.billableHours,
+            billingRule: ts.billingRule,
           });
-        });
-      }
+        }
+      });
 
       console.log('[EPH Inbox] Loaded', timesheets.length, 'timesheet entries');
       setDetailedTimesheets(timesheets);
