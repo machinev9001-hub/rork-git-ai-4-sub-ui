@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { DollarSign, Settings } from 'lucide-react-native';
+import { DollarSign, Settings, Wrench } from 'lucide-react-native';
 
 export default function BillingMenuScreen() {
   const insets = useSafeAreaInsets();
@@ -22,6 +22,14 @@ export default function BillingMenuScreen() {
       icon: Settings,
       color: '#0ea5e9',
       route: '/billing-configuration',
+    },
+    {
+      id: 'billing-config',
+      title: 'Billing Config',
+      description: 'Legacy screen (includes EPH tabs/workflow)',
+      icon: Wrench,
+      color: '#64748b',
+      route: '/billing-config',
     },
     {
       id: 'eph',
