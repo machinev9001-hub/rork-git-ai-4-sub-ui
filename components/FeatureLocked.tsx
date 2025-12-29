@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { Lock } from 'lucide-react-native';
 import { useRouter } from 'expo-router';
+import { VASPromptModal, VASFeatureMetadata } from './VASPromptModal';
+import { VASFeatureId } from '@/types';
+import { getVASFeatureMetadata } from '@/utils/featureFlags';
 
 type FeatureLockedBadgeProps = {
   featureName: string;
   size?: 'small' | 'medium' | 'large';
   showUpgrade?: boolean;
   onUpgradePress?: () => void;
+  vasFeatureId?: VASFeatureId;
 };
 
 /**
@@ -18,16 +22,22 @@ export function FeatureLockedBadge({
   size = 'small',
   showUpgrade = false,
   onUpgradePress,
+  vasFeatureId,
 }: FeatureLockedBadgeProps) {
   const router = useRouter();
+  const [showVASPrompt, setShowVASPrompt] = useState(false);
 
   const handleUpgrade = () => {
-    if (onUpgradePress) {
+    if (vasFeatureId) {
+      setShowVASPrompt(true);
+    } else if (onUpgradePress) {
       onUpgradePress();
     } else {
-      router.push('/accounts/settings' as any);
+      router.push('/vas-management' as any);
     }
   };
+
+  const vasMetadata = vasFeatureId ? getVASFeatureMetadata()[vasFeatureId] : null;
 
   const iconSize = size === 'small' ? 12 : size === 'medium' ? 16 : 20;
   const fontSize = size === 'small' ? 10 : size === 'medium' ? 12 : 14;
@@ -35,17 +45,27 @@ export function FeatureLockedBadge({
   const sizeStyle = size === 'small' ? styles.badgeSmall : size === 'medium' ? styles.badgeMedium : styles.badgeLarge;
 
   return (
-    <View style={styles.container}>
-      <View style={[styles.badge, sizeStyle]}>
-        <Lock size={iconSize} color="#f59e0b" strokeWidth={2} />
-        <Text style={[styles.text, { fontSize }]}>Locked</Text>
+    <>
+      <View style={styles.container}>
+        <View style={[styles.badge, sizeStyle]}>
+          <Lock size={iconSize} color="#f59e0b" strokeWidth={2} />
+          <Text style={[styles.text, { fontSize }]}>Locked</Text>
+        </View>
+        {showUpgrade && (
+          <TouchableOpacity onPress={handleUpgrade} style={styles.upgradeButton}>
+            <Text style={styles.upgradeText}>Upgrade</Text>
+          </TouchableOpacity>
+        )}
       </View>
-      {showUpgrade && (
-        <TouchableOpacity onPress={handleUpgrade} style={styles.upgradeButton}>
-          <Text style={styles.upgradeText}>Upgrade</Text>
-        </TouchableOpacity>
+      
+      {vasMetadata && (
+        <VASPromptModal
+          visible={showVASPrompt}
+          onClose={() => setShowVASPrompt(false)}
+          feature={vasMetadata}
+        />
       )}
-    </View>
+    </>
   );
 }
 
@@ -53,6 +73,7 @@ type FeatureLockedOverlayProps = {
   featureName: string;
   message?: string;
   onUpgradePress?: () => void;
+  vasFeatureId?: VASFeatureId;
 };
 
 /**
@@ -62,31 +83,47 @@ export function FeatureLockedOverlay({
   featureName,
   message,
   onUpgradePress,
+  vasFeatureId,
 }: FeatureLockedOverlayProps) {
   const router = useRouter();
+  const [showVASPrompt, setShowVASPrompt] = useState(false);
 
   const handleUpgrade = () => {
-    if (onUpgradePress) {
+    if (vasFeatureId) {
+      setShowVASPrompt(true);
+    } else if (onUpgradePress) {
       onUpgradePress();
     } else {
-      router.push('/accounts/settings' as any);
+      router.push('/vas-management' as any);
     }
   };
 
+  const vasMetadata = vasFeatureId ? getVASFeatureMetadata()[vasFeatureId] : null;
+
   return (
-    <View style={styles.overlay}>
-      <View style={styles.overlayContent}>
-        <Lock size={48} color="#f59e0b" strokeWidth={2} />
-        <Text style={styles.overlayTitle}>{featureName} is Locked</Text>
-        <Text style={styles.overlayMessage}>
-          {message ||
-            `This feature is only available with an Enterprise account or as a Value-Added Service.`}
-        </Text>
-        <TouchableOpacity onPress={handleUpgrade} style={styles.overlayButton}>
-          <Text style={styles.overlayButtonText}>View Upgrade Options</Text>
-        </TouchableOpacity>
+    <>
+      <View style={styles.overlay}>
+        <View style={styles.overlayContent}>
+          <Lock size={48} color="#f59e0b" strokeWidth={2} />
+          <Text style={styles.overlayTitle}>{featureName} is Locked</Text>
+          <Text style={styles.overlayMessage}>
+            {message ||
+              `This feature is only available with an Enterprise account or as a Value-Added Service.`}
+          </Text>
+          <TouchableOpacity onPress={handleUpgrade} style={styles.overlayButton}>
+            <Text style={styles.overlayButtonText}>View Upgrade Options</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </View>
+      
+      {vasMetadata && (
+        <VASPromptModal
+          visible={showVASPrompt}
+          onClose={() => setShowVASPrompt(false)}
+          feature={vasMetadata}
+        />
+      )}
+    </>
   );
 }
 

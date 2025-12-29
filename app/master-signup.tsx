@@ -13,9 +13,9 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Shield } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { AppTheme } from '@/constants/colors';
 
 export default function MasterSignupScreen() {
   const { createMasterAccount } = useAuth();
@@ -61,6 +61,12 @@ export default function MasterSignupScreen() {
     console.log('[MasterSignup] Starting master account creation...');
 
     try {
+      console.log('[MasterSignup] Calling createMasterAccount with:', {
+        name: name.trim(),
+        masterId: masterId.trim(),
+        activationCode: activationCode.trim().substring(0, 4) + '***'
+      });
+
       const result = await createMasterAccount(
         name.trim(),
         masterId.trim(),
@@ -79,22 +85,27 @@ export default function MasterSignupScreen() {
       
       console.log('[MasterSignup] ❌ Failed:', result.error);
       setIsLoading(false);
-      Alert.alert('Error', result.error || 'Failed to create account');
-    } catch (error) {
+      Alert.alert('Account Creation Failed', result.error || 'Failed to create account. Please check your activation code and try again.');
+    } catch (error: any) {
       console.error('[MasterSignup] ❌ Exception:', error);
+      console.error('[MasterSignup] ❌ Error details:', {
+        message: error?.message,
+        code: error?.code,
+        stack: error?.stack?.substring(0, 200)
+      });
       setIsLoading(false);
-      Alert.alert('Error', 'An unexpected error occurred');
+      Alert.alert(
+        'Error',
+        error?.message || 'An unexpected error occurred. Please check your internet connection and try again.'
+      );
     }
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <LinearGradient
-        colors={['#1e3a8a', '#3b82f6', '#60a5fa']}
-        style={styles.gradient}
-      >
+      <View style={styles.gradient}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -108,12 +119,12 @@ export default function MasterSignupScreen() {
               onPress={() => router.back()}
               disabled={isLoading}
             >
-              <ArrowLeft size={24} color="#fff" />
+              <ArrowLeft size={24} color={AppTheme.text} />
             </TouchableOpacity>
 
             <View style={styles.header}>
               <View style={styles.iconContainer}>
-                <Shield size={48} color="#fff" strokeWidth={2} />
+                <Shield size={48} color={AppTheme.accent} strokeWidth={2} />
               </View>
               <Text style={styles.title}>Create Master Account</Text>
               <Text style={styles.subtitle}>
@@ -127,7 +138,7 @@ export default function MasterSignupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter your full name"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={name}
                   onChangeText={setName}
                   autoCapitalize="words"
@@ -140,7 +151,7 @@ export default function MasterSignupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter master user ID"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={masterId}
                   onChangeText={setMasterId}
                   autoCapitalize="none"
@@ -157,7 +168,7 @@ export default function MasterSignupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter 4-6 digit PIN"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={pin}
                   onChangeText={setPin}
                   secureTextEntry
@@ -175,7 +186,7 @@ export default function MasterSignupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Re-enter PIN to confirm"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={confirmPin}
                   onChangeText={setConfirmPin}
                   secureTextEntry
@@ -193,7 +204,7 @@ export default function MasterSignupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Enter software activation code"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={activationCode}
                   onChangeText={setActivationCode}
                   autoCapitalize="none"
@@ -213,7 +224,7 @@ export default function MasterSignupScreen() {
               >
                 {isLoading ? (
                   <View style={styles.buttonLoadingContainer}>
-                    <ActivityIndicator color="#1e3a8a" size="small" />
+                    <ActivityIndicator color={AppTheme.background} size="small" />
                     <Text style={styles.buttonLoadingText}>Creating account...</Text>
                   </View>
                 ) : (
@@ -223,7 +234,7 @@ export default function MasterSignupScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -231,10 +242,11 @@ export default function MasterSignupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: AppTheme.background,
   },
   gradient: {
     flex: 1,
+    backgroundColor: AppTheme.background,
   },
   keyboardView: {
     flex: 1,
@@ -243,6 +255,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingVertical: 16,
+    paddingBottom: 40,
   },
   backButton: {
     width: 40,
@@ -258,22 +271,24 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 96,
     height: 96,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: AppTheme.surface,
     borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    borderWidth: 2,
+    borderColor: AppTheme.accent,
   },
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: AppTheme.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
@@ -286,25 +301,27 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: AppTheme.text,
     marginLeft: 4,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.cardBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1e293b',
+    color: AppTheme.text,
+    borderWidth: 1,
+    borderColor: AppTheme.border,
   },
   hint: {
     fontSize: 12,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     marginLeft: 4,
     marginTop: 4,
   },
   createButton: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.accent,
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: 'center',
@@ -324,11 +341,11 @@ const styles = StyleSheet.create({
   buttonLoadingText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1e3a8a',
+    color: AppTheme.background,
   },
   buttonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1e3a8a',
+    color: AppTheme.background,
   },
 });

@@ -472,6 +472,10 @@ export default function AddEmployeeScreen() {
         companyId: user.currentCompanyId, // Required for both modes
         accessScope: isCompanyLevelCreation ? accessScope : 'no-sites', // Only set for company-level creation
         canAccessMasterCompanyProfile: isCompanyLevelCreation ? canAccessMasterCompanyProfile : false,
+        siteId: user.siteId, // Kept for backward compatibility
+        masterAccountId: user.masterAccountId,
+        companyId: user.currentCompanyId || null, // Company-level ownership
+        hasMasterAccess: hasMasterAccess, // Master Company Management access toggle
         inductionStatus,
         inductionNotes: inductionNotes.trim(),
         attachments,
@@ -506,11 +510,32 @@ export default function AddEmployeeScreen() {
       const isOnline = netInfo.isConnected;
 
       console.log('[AddEmployee] Network status:', isOnline ? 'Online' : 'Offline');
+      console.log('[AddEmployee] Employee will be created at company level with companyId:', employeeData.companyId);
+      console.log('[AddEmployee] Master Access enabled:', employeeData.hasMasterAccess);
 
       if (isOnline) {
         const employeesRef = collection(db, 'employees');
-        await addDoc(employeesRef, employeeData);
-        console.log('[AddEmployee] Employee saved to Firebase');
+        const newEmployeeRef = await addDoc(employeesRef, employeeData);
+        console.log('[AddEmployee] Employee saved to Firebase with ID:', newEmployeeRef.id);
+
+        // Create EmployeeSite linking for the current site
+        if (user.siteId && user.siteName) {
+          const employeeSitesRef = collection(db, 'employeeSites');
+          await addDoc(employeeSitesRef, {
+            employeeId: newEmployeeRef.id,
+            employeeName: name.trim(),
+            siteId: user.siteId,
+            siteName: user.siteName,
+            companyId: user.currentCompanyId || null,
+            masterAccountId: user.masterAccountId,
+            role: role.trim(),
+            linkedAt: serverTimestamp(),
+            linkedBy: user.userId,
+            isActive: true,
+            createdAt: serverTimestamp(),
+          });
+          console.log('[AddEmployee] Employee linked to site via EmployeeSite junction table');
+        }
       } else {
         await queueFirestoreOperation(
           {
@@ -527,7 +552,7 @@ export default function AddEmployeeScreen() {
       }
 
       const statusMessage = isOnline 
-        ? 'Employee added successfully'
+        ? 'Employee added successfully at company level'
         : 'Employee saved offline. Will sync when connection is restored.';
 
       Alert.alert('Success', statusMessage, [
@@ -806,6 +831,26 @@ export default function AddEmployeeScreen() {
                   <Text style={styles.fieldHint}>
                     Specify the company that pays this employee
                   </Text>
+                </View>
+              )}
+
+              {/* Master Company Management Access Toggle - Only for Master users */}
+              {user?.role === 'master' && (
+                <View style={styles.switchRow}>
+                  <View style={styles.switchLabel}>
+                    <Text style={styles.switchLabelText}>Master Company Management Access</Text>
+                    <Text style={styles.switchLabelHint}>
+                      Grant access to manage company-level settings
+                    </Text>
+                  </View>
+                  <Switch
+                    value={hasMasterAccess}
+                    onValueChange={setHasMasterAccess}
+                    trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
+                    thumbColor={hasMasterAccess ? '#fff' : '#f4f3f4'}
+                    ios_backgroundColor="#e2e8f0"
+                    disabled={isSaving}
+                  />
                 </View>
               )}
 

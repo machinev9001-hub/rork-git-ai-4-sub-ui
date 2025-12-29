@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Lock, CheckCircle2, AlertCircle } from 'lucide-react-native';
@@ -14,6 +15,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getAvailableVASFeatures } from '@/utils/featureFlags';
 import { VASFeatureId } from '@/types';
 import { useAccountType } from '@/utils/hooks/useFeatureFlags';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/config/firebase';
 
 export default function VASManagementScreen() {
   const { user } = useAuth();
@@ -21,32 +24,58 @@ export default function VASManagementScreen() {
   const [selectedFeatures, setSelectedFeatures] = useState<VASFeatureId[]>(
     user?.vasFeatures || []
   );
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const availableFeatures = getAvailableVASFeatures().map((feature) => ({
     ...feature,
     isActive: selectedFeatures.includes(feature.id),
   }));
 
-  const handleFeatureToggle = (featureId: VASFeatureId) => {
-    // In a real implementation, this would trigger a payment/subscription flow
+  const handleFeatureToggle = async (featureId: VASFeatureId) => {
+    const masterAccountId = user?.masterAccountId;
+    if (!masterAccountId) {
+      Alert.alert('Error', 'Master account not found');
+      return;
+    }
+
+    const isSubscribed = selectedFeatures.includes(featureId);
+    const action = isSubscribed ? 'unsubscribe from' : 'subscribe to';
+
     Alert.alert(
-      'Subscribe to Feature',
-      'This will redirect you to the payment flow to subscribe to this feature.',
+      isSubscribed ? 'Unsubscribe' : 'Subscribe to Feature',
+      `This will ${action} this feature. In production, this would process payment.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Continue',
-          onPress: () => {
-            // Toggle the feature for demo purposes
-            setSelectedFeatures((prev) =>
-              prev.includes(featureId)
-                ? prev.filter((id) => id !== featureId)
-                : [...prev, featureId]
-            );
-            Alert.alert(
-              'Success',
-              'Feature subscription updated. (This is a demo - payment integration would be required for production)'
-            );
+          onPress: async () => {
+            setIsUpdating(true);
+            try {
+              const newFeatures = isSubscribed
+                ? selectedFeatures.filter((id) => id !== featureId)
+                : [...selectedFeatures, featureId];
+
+              const masterAccountRef = doc(db, 'masterAccounts', masterAccountId);
+              await updateDoc(masterAccountRef, {
+                vasFeatures: newFeatures,
+                updatedAt: serverTimestamp(),
+              });
+
+              setSelectedFeatures(newFeatures);
+              
+              Alert.alert(
+                'Success',
+                `Feature ${isSubscribed ? 'unsubscribed' : 'subscribed'} successfully. Changes are now active.`
+              );
+            } catch (error) {
+              console.error('Error updating VAS features:', error);
+              Alert.alert(
+                'Error',
+                'Failed to update feature subscription. Please try again.'
+              );
+            } finally {
+              setIsUpdating(false);
+            }
           },
         },
       ]
@@ -169,17 +198,23 @@ export default function VASManagementScreen() {
                     style={[
                       styles.subscribeButton,
                       feature.isActive && styles.subscribeButtonActive,
+                      isUpdating && styles.subscribeButtonDisabled,
                     ]}
                     onPress={() => handleFeatureToggle(feature.id)}
+                    disabled={isUpdating}
                   >
-                    <Text
-                      style={[
-                        styles.subscribeButtonText,
-                        feature.isActive && styles.subscribeButtonTextActive,
-                      ]}
-                    >
-                      {feature.isActive ? 'Unsubscribe' : 'Subscribe'}
-                    </Text>
+                    {isUpdating ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text
+                        style={[
+                          styles.subscribeButtonText,
+                          feature.isActive && styles.subscribeButtonTextActive,
+                        ]}
+                      >
+                        {feature.isActive ? 'Unsubscribe' : 'Subscribe'}
+                      </Text>
+                    )}
                   </TouchableOpacity>
                 </View>
               ))}
@@ -374,6 +409,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     borderWidth: 1,
     borderColor: '#e2e8f0',
+  },
+  subscribeButtonDisabled: {
+    opacity: 0.5,
   },
   subscribeButtonText: {
     fontSize: 14,

@@ -17,6 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { PlantAsset, Employee } from '@/types';
+import { ensureBreakdownTimesheets } from '@/utils/breakdownTimesheetManager';
 
 type PvArea = {
   id: string;
@@ -179,16 +180,16 @@ export default function PlantManagerAssetsScreen() {
     }
   }, [user]);
 
-  const loadOperators = useCallback(async () => {
-    if (!user?.masterAccountId || !user?.siteId) return;
+  const loadOperators = useCallback(async (companyId: string) => {
+    if (!user?.masterAccountId) return;
 
     try {
+      console.log('[PlantManagerAssets] Loading operators for company:', companyId);
       const operatorsQuery = query(
         collection(db, 'employees'),
         where('masterAccountId', '==', user.masterAccountId),
-        where('siteId', '==', user.siteId),
-        where('role', '==', 'Operator'),
-        where('archived', '!=', true)
+        where('companyId', '==', companyId),
+        where('role', '==', 'Operator')
       );
       
       const snapshot = await getDocs(operatorsQuery);
@@ -197,10 +198,11 @@ export default function PlantManagerAssetsScreen() {
         ...doc.data()
       } as Employee));
       
-      console.log('[PlantManagerAssets] Loaded operators:', operatorsList.length);
+      console.log('[PlantManagerAssets] Loaded', operatorsList.length, 'operators for company');
       setOperators(operatorsList);
     } catch (error) {
       console.error('[PlantManagerAssets] Error loading operators:', error);
+      Alert.alert('Error', 'Failed to load operators. Please try again.');
     }
   }, [user]);
 
@@ -208,8 +210,7 @@ export default function PlantManagerAssetsScreen() {
     useCallback(() => {
       loadAssets();
       loadPvBlocks();
-      loadOperators();
-    }, [loadAssets, loadPvBlocks, loadOperators])
+    }, [loadAssets, loadPvBlocks])
   );
 
   const handleSearch = useCallback((text: string) => {
@@ -245,6 +246,15 @@ export default function PlantManagerAssetsScreen() {
     
     setShowOptionsModal(false);
     
+    if (selectedAsset.ownerType === 'subcontractor') {
+      Alert.alert(
+        'Cannot List Subcontractor Asset',
+        'Only company-owned assets from the master account can be listed on the VAS marketplace. Subcontractor assets cannot be listed.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    
     const isCurrentlyListed = selectedAsset.isAvailableForVAS || false;
     
     try {
@@ -272,19 +282,91 @@ export default function PlantManagerAssetsScreen() {
     
     setShowOptionsModal(false);
     
-    try {
-      const assetRef = doc(db, 'plantAssets', selectedAsset.id);
-      await updateDoc(assetRef, {
-        breakdownStatus: true,
-        breakdownTimestamp: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-      
-      Alert.alert('Success', `${selectedAsset.assetId} marked as on breakdown.`);
-      loadAssets();
-    } catch (error) {
-      console.error('[PlantManagerAssets] Error marking breakdown:', error);
-      Alert.alert('Error', 'Failed to mark asset as breakdown.');
+    const isCurrentlyOnBreakdown = selectedAsset.breakdownStatus === true;
+    
+    if (isCurrentlyOnBreakdown) {
+      Alert.alert(
+        'Reactivate Asset',
+        `Mark ${selectedAsset.assetId} as repaired and back to work?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Reactivate',
+            onPress: async () => {
+              try {
+                const today = new Date().toISOString().split('T')[0];
+                const assetRef = doc(db, 'plantAssets', selectedAsset.id!);
+                
+                await ensureBreakdownTimesheets(
+                  selectedAsset.id!,
+                  selectedAsset.breakdownStartDate || today,
+                  today,
+                  user?.masterAccountId || '',
+                  user?.siteId || '',
+                  selectedAsset.currentOperatorId,
+                  selectedAsset.currentOperator
+                );
+                
+                await updateDoc(assetRef, {
+                  breakdownStatus: false,
+                  breakdownEndDate: today,
+                  breakdownReactivatedBy: user?.name || 'Unknown',
+                  breakdownReactivatedAt: serverTimestamp(),
+                  updatedAt: serverTimestamp(),
+                });
+                
+                Alert.alert('Success', `${selectedAsset.assetId} reactivated and back to work.`);
+                loadAssets();
+              } catch (error) {
+                console.error('[PlantManagerAssets] Error reactivating asset:', error);
+                Alert.alert('Error', 'Failed to reactivate asset.');
+              }
+            }
+          }
+        ]
+      );
+    } else {
+      Alert.alert(
+        'Book on Breakdown',
+        `Mark ${selectedAsset.assetId} as on breakdown?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Confirm',
+            onPress: async () => {
+              try {
+                const today = new Date().toISOString().split('T')[0];
+                const assetRef = doc(db, 'plantAssets', selectedAsset.id!);
+                
+                await updateDoc(assetRef, {
+                  breakdownStatus: true,
+                  breakdownStartDate: today,
+                  breakdownEndDate: null,
+                  breakdownTimestamp: serverTimestamp(),
+                  breakdownLoggedBy: user?.name || 'Unknown',
+                  updatedAt: serverTimestamp(),
+                });
+                
+                await ensureBreakdownTimesheets(
+                  selectedAsset.id!,
+                  today,
+                  null,
+                  user?.masterAccountId || '',
+                  user?.siteId || '',
+                  selectedAsset.currentOperatorId,
+                  selectedAsset.currentOperator
+                );
+                
+                Alert.alert('Success', `${selectedAsset.assetId} marked as on breakdown.`);
+                loadAssets();
+              } catch (error) {
+                console.error('[PlantManagerAssets] Error marking breakdown:', error);
+                Alert.alert('Error', 'Failed to mark asset as breakdown.');
+              }
+            }
+          }
+        ]
+      );
     }
   };
 
@@ -302,7 +384,12 @@ export default function PlantManagerAssetsScreen() {
   };
 
   const handleAssignOperatorOption = () => {
+    if (!selectedAsset?.companyId) {
+      Alert.alert('Error', 'Plant asset does not have a company assigned.');
+      return;
+    }
     setShowOptionsModal(false);
+    loadOperators(selectedAsset.companyId);
     setShowOperatorModal(true);
     if (selectedAsset?.currentOperatorId) {
       setSelectedOperatorId(selectedAsset.currentOperatorId);
@@ -551,8 +638,10 @@ export default function PlantManagerAssetsScreen() {
               onPress={handleBreakdownOption}
               activeOpacity={0.7}
             >
-              <AlertCircle size={22} color="#ef4444" />
-              <Text style={styles.optionText}>Book on Breakdown</Text>
+              <AlertCircle size={22} color={selectedAsset?.breakdownStatus ? "#10b981" : "#ef4444"} />
+              <Text style={styles.optionText}>
+                {selectedAsset?.breakdownStatus ? 'Reactivate Asset (Back to Work)' : 'Book on Breakdown'}
+              </Text>
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -571,7 +660,7 @@ export default function PlantManagerAssetsScreen() {
             >
               <Package size={22} color="#3b82f6" />
               <Text style={styles.optionText}>
-                {selectedAsset?.isAvailableForVAS ? 'Remove from VAS' : 'List on VAS Marketplace'}
+                {selectedAsset?.isAvailableForVAS ? 'Remove from Marketplace' : 'List on Marketplace'}
               </Text>
             </TouchableOpacity>
 

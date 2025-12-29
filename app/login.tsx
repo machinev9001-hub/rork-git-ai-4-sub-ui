@@ -10,11 +10,12 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { LogIn, UserPlus, ScanLine } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { Colors } from '@/constants/colors';
 import { isManagementRole, isOperatorRole, isDieselClerkRole } from '@/utils/roles';
 
 export default function LoginScreen() {
@@ -33,7 +34,6 @@ export default function LoginScreen() {
   useFocusEffect(
     useCallback(() => {
       console.log('[Login] Screen focused, isLoading:', isLoading);
-      // Only clear form when NOT loading to prevent clearing during navigation
       if (!isLoading) {
         console.log('[Login] Clearing form state');
         setUserId('');
@@ -142,7 +142,7 @@ export default function LoginScreen() {
         console.log('[Login] Login successful, keeping loading state during navigation');
         setTimeout(() => {
           setIsLoading(false);
-        }, 500); // Brief delay to let navigation complete
+        }, 500);
       }
     }
   };
@@ -151,10 +151,7 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <LinearGradient
-        colors={['#1e3a8a', '#3b82f6', '#60a5fa']}
-        style={styles.gradient}
-      >
+      <View style={styles.mainContainer}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.content}
@@ -176,15 +173,18 @@ export default function LoginScreen() {
               }}
               style={styles.logoPlaceholder}
             >
-              <View style={styles.logoCircle}>
-                <LogIn size={48} color="#fff" strokeWidth={2} />
-              </View>
+              <Image
+                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/s6lvruiuuld79970m1b5b' }}
+                style={styles.logoImage}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
             <Text style={styles.appTitle}>Machine</Text>
             <Text style={styles.appSubtitle}>Business Management and Tracking</Text>
+            <View style={styles.accentBar} />
             {isOffline && (
               <View style={styles.offlineBadge}>
-                <Text style={styles.offlineText}>Offline Mode</Text>
+                <Text style={styles.offlineText}>● Offline Mode</Text>
               </View>
             )}
           </View>
@@ -197,8 +197,8 @@ export default function LoginScreen() {
               <TextInput
                 testID="login-user-id-input"
                 style={styles.input}
-                placeholder="Enter ID number or Master ID"
-                placeholderTextColor="#94a3b8"
+                placeholder="Enter your National ID number"
+                placeholderTextColor={Colors.textSecondary}
                 value={userId}
                 onChangeText={(text) => {
                   console.log('[Login] ID input changed:', text);
@@ -221,7 +221,7 @@ export default function LoginScreen() {
                     testID="login-create-pin-input"
                     style={styles.input}
                     placeholder="Enter a 4-6 digit PIN"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={pin}
                     onChangeText={setPin}
                     secureTextEntry
@@ -236,7 +236,7 @@ export default function LoginScreen() {
                     testID="login-verify-pin-input"
                     style={styles.input}
                     placeholder="Re-enter your PIN"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={verifyPin}
                     onChangeText={setVerifyPin}
                     secureTextEntry
@@ -254,7 +254,7 @@ export default function LoginScreen() {
                   testID="login-pin-input"
                   style={styles.input}
                   placeholder="Enter your PIN"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={Colors.textSecondary}
                   value={pin}
                   onChangeText={(text) => {
                     console.log('[Login] PIN input changed:', text.length, 'chars');
@@ -281,10 +281,10 @@ export default function LoginScreen() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color={Colors.background} />
                 ) : (
                   <>
-                    <LogIn size={20} color="#fff" />
+                    <LogIn size={20} color={Colors.background} />
                     <Text style={styles.buttonText}>Sign In</Text>
                   </>
                 )}
@@ -296,33 +296,27 @@ export default function LoginScreen() {
                 onPress={() => router.push({ pathname: '/qr-scanner', params: { context: 'login' } })}
                 disabled={isLoading}
               >
-                <ScanLine size={20} color="#3b82f6" />
+                <ScanLine size={20} color={Colors.accent} />
                 <Text style={styles.qrButtonText}>Scan QR</Text>
               </TouchableOpacity>
             </View>
           </View>
 
           <View style={styles.footer}>
-            <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or</Text>
-              <View style={styles.dividerLine} />
-            </View>
-
             <TouchableOpacity
               testID="login-activate-button"
               style={styles.activateButton}
               onPress={() => router.push('/account-type-selection')}
               disabled={isLoading}
             >
-              <UserPlus size={18} color="#fff" />
+              <UserPlus size={18} color={Colors.background} />
               <Text style={styles.activateButtonText}>Create New Account</Text>
             </TouchableOpacity>
             
             <Text style={styles.version}>Machine App V1.0.0</Text>
           </View>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -330,10 +324,11 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: Colors.background,
   },
-  gradient: {
+  mainContainer: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
@@ -348,37 +343,40 @@ const styles = StyleSheet.create({
   logoPlaceholder: {
     marginBottom: 16,
   },
-  logoCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    justifyContent: 'center' as const,
-    alignItems: 'center' as const,
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+  logoImage: {
+    width: 120,
+    height: 120,
+  },
+  accentBar: {
+    width: 60,
+    height: 4,
+    backgroundColor: Colors.accent,
+    marginTop: 12,
+    borderRadius: 2,
   },
   appTitle: {
     fontSize: 32,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: Colors.text,
     marginBottom: 4,
     textAlign: 'center',
   },
   appSubtitle: {
     fontSize: 14,
-    color: '#cbd5e1',
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   offlineBadge: {
     marginTop: 12,
-    backgroundColor: 'rgba(251, 191, 36, 0.9)',
+    backgroundColor: Colors.warningBg,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.warningText,
   },
   offlineText: {
-    color: '#78350f',
+    color: Colors.warningText,
     fontSize: 12,
     fontWeight: '600' as const,
   },
@@ -388,7 +386,7 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: Colors.text,
     marginBottom: 4,
   },
   inputContainer: {
@@ -397,21 +395,23 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: Colors.text,
     marginLeft: 4,
   },
   hint: {
     fontSize: 12,
-    color: '#cbd5e1',
+    color: Colors.textSecondary,
     marginLeft: 4,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1e293b',
+    color: Colors.text,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -428,17 +428,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   primaryButton: {
-    backgroundColor: '#1e3a8a',
+    backgroundColor: Colors.accent,
   },
   qrButton: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderWidth: 2,
-    borderColor: '#3b82f6',
+    borderColor: Colors.accent,
   },
   qrButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#3b82f6',
+    color: Colors.accent,
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -446,56 +446,34 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: Colors.background,
   },
   footer: {
     alignItems: 'center',
     gap: 16,
     paddingBottom: 10,
   },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: '100%',
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  dividerText: {
-    fontSize: 13,
-    color: '#cbd5e1',
-    fontWeight: '500' as const,
-  },
   activateButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
+    backgroundColor: Colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderWidth: 2,
+    borderColor: Colors.accent,
     width: '100%',
   },
   activateButtonText: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#fff',
-  },
-  footerHint: {
-    textAlign: 'center',
-    color: '#cbd5e1',
-    fontSize: 12,
-    paddingHorizontal: 20,
+    color: Colors.background,
   },
   version: {
     textAlign: 'center',
-    color: '#94a3b8',
+    color: Colors.textSecondary,
     fontSize: 11,
     marginTop: 4,
   },

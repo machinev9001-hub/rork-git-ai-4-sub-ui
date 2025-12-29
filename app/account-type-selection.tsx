@@ -8,10 +8,10 @@ import {
   ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Building2, Users, CheckCircle2 } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AccountType } from '@/types';
+import { AppTheme } from '@/constants/colors';
 
 const ACCOUNT_TYPE_STORAGE_KEY = '@selected_account_type';
 
@@ -29,19 +29,16 @@ export default function AccountTypeSelectionScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
 
-      <LinearGradient
-        colors={['#1e3a8a', '#3b82f6', '#60a5fa']}
-        style={styles.gradient}
-      >
+      <View style={styles.mainContainer}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.back()}
           >
-            <ArrowLeft size={24} color="#fff" />
+            <ArrowLeft size={24} color={AppTheme.text} />
           </TouchableOpacity>
 
           <View style={styles.header}>
@@ -62,10 +59,10 @@ export default function AccountTypeSelectionScreen() {
             >
               <View style={styles.cardHeader}>
                 <View style={styles.iconContainer}>
-                  <Building2 size={32} color="#3b82f6" strokeWidth={2} />
+                  <Building2 size={32} color={AppTheme.accent} strokeWidth={2} />
                 </View>
                 {selectedType === 'enterprise' && (
-                  <CheckCircle2 size={24} color="#10b981" strokeWidth={2} />
+                  <CheckCircle2 size={24} color={AppTheme.accent} strokeWidth={2} />
                 )}
               </View>
 
@@ -76,19 +73,19 @@ export default function AccountTypeSelectionScreen() {
 
               <View style={styles.featureList}>
                 <View style={styles.featureItem}>
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color={AppTheme.accent} />
                   <Text style={styles.featureText}>All features included</Text>
                 </View>
                 <View style={styles.featureItem}>
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color={AppTheme.accent} />
                   <Text style={styles.featureText}>Advanced analytics & reporting</Text>
                 </View>
                 <View style={styles.featureItem}>
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color={AppTheme.accent} />
                   <Text style={styles.featureText}>Data exports & integrations</Text>
                 </View>
                 <View style={styles.featureItem}>
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color={AppTheme.accent} />
                   <Text style={styles.featureText}>Priority support</Text>
                 </View>
               </View>
@@ -106,10 +103,10 @@ export default function AccountTypeSelectionScreen() {
             >
               <View style={styles.cardHeader}>
                 <View style={styles.iconContainer}>
-                  <Users size={32} color="#8b5cf6" strokeWidth={2} />
+                  <Users size={32} color={AppTheme.accent} strokeWidth={2} />
                 </View>
                 {selectedType === 'free' && (
-                  <CheckCircle2 size={24} color="#10b981" strokeWidth={2} />
+                  <CheckCircle2 size={24} color={AppTheme.accent} strokeWidth={2} />
                 )}
               </View>
 
@@ -120,19 +117,19 @@ export default function AccountTypeSelectionScreen() {
 
               <View style={styles.featureList}>
                 <View style={styles.featureItem}>
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color={AppTheme.accent} />
                   <Text style={styles.featureText}>Employee management</Text>
                 </View>
                 <View style={styles.featureItem}>
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color={AppTheme.accent} />
                   <Text style={styles.featureText}>Asset management</Text>
                 </View>
                 <View style={styles.featureItem}>
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color={AppTheme.accent} />
                   <Text style={styles.featureText}>External data reception</Text>
                 </View>
                 <View style={styles.featureItem}>
-                  <CheckCircle2 size={16} color="#10b981" />
+                  <CheckCircle2 size={16} color={AppTheme.accent} />
                   <Text style={styles.featureText}>Time tracking</Text>
                 </View>
                 <View style={styles.featureItem}>
@@ -156,7 +153,7 @@ export default function AccountTypeSelectionScreen() {
             You can upgrade or change your account type later in settings
           </Text>
         </ScrollView>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -164,16 +161,17 @@ export default function AccountTypeSelectionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: AppTheme.background,
   },
-  gradient: {
+  mainContainer: {
     flex: 1,
+    backgroundColor: AppTheme.background,
   },
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 24,
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
   backButton: {
     width: 40,
@@ -189,13 +187,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: AppTheme.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
@@ -204,15 +202,15 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.cardBg,
     borderRadius: 16,
     padding: 16,
     borderWidth: 2,
-    borderColor: 'transparent',
+    borderColor: AppTheme.border,
   },
   cardSelected: {
-    borderColor: '#10b981',
-    shadowColor: '#10b981',
+    borderColor: AppTheme.accent,
+    shadowColor: AppTheme.accent,
     shadowOffset: { width: 0, height: 0 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
@@ -227,7 +225,7 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 56,
     height: 56,
-    backgroundColor: '#f1f5f9',
+    backgroundColor: AppTheme.surface,
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',
@@ -235,12 +233,12 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 20,
     fontWeight: '700' as const,
-    color: '#1e293b',
+    color: AppTheme.text,
     marginBottom: 8,
   },
   cardDescription: {
     fontSize: 14,
-    color: '#64748b',
+    color: AppTheme.textSecondary,
     marginBottom: 16,
     lineHeight: 20,
   },
@@ -255,24 +253,24 @@ const styles = StyleSheet.create({
   },
   featureText: {
     fontSize: 14,
-    color: '#475569',
+    color: AppTheme.textSecondary,
     flex: 1,
   },
   vasText: {
     fontSize: 13,
-    color: '#8b5cf6',
+    color: AppTheme.accent,
     fontWeight: '600' as const,
     fontStyle: 'italic',
   },
   recommended: {
     fontSize: 12,
-    color: '#3b82f6',
+    color: AppTheme.accent,
     fontWeight: '600' as const,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
   continueButton: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.accent,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -284,11 +282,11 @@ const styles = StyleSheet.create({
   continueButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1e3a8a',
+    color: AppTheme.background,
   },
   helpText: {
     fontSize: 13,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 20,
   },

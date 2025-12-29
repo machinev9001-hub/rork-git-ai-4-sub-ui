@@ -183,6 +183,25 @@
       ]
     },
     {
+      "collectionGroup": "employees",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "allocatedPvArea", "order": "ASCENDING" },
+        { "fieldPath": "name", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "employees",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "allocatedPvArea", "order": "ASCENDING" },
+        { "fieldPath": "allocatedBlockNumber", "order": "ASCENDING" },
+        { "fieldPath": "name", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "plantAssets",
       "queryScope": "COLLECTION",
       "fields": [
@@ -271,6 +290,14 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "plantAssets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
         { "fieldPath": "siteId", "order": "ASCENDING" },
         { "fieldPath": "location", "order": "DESCENDING" }
       ]
@@ -345,6 +372,34 @@
         { "fieldPath": "siteId", "order": "ASCENDING" },
         { "fieldPath": "ownerId", "order": "ASCENDING" },
         { "fieldPath": "ownerType", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "plantAssets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "allocatedPvArea", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "plantAssets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "allocatedPvArea", "order": "ASCENDING" },
+        { "fieldPath": "allocatedBlockNumber", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "plantAssets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "allocationStatus", "order": "ASCENDING" },
+        { "fieldPath": "allocatedPvArea", "order": "ASCENDING" }
       ]
     },
 
@@ -1483,6 +1538,15 @@
       "collectionGroup": "agreedTimesheets",
       "queryScope": "COLLECTION",
       "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agreedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
         { "fieldPath": "originalTimesheetId", "order": "ASCENDING" }
       ]
     },
@@ -1714,6 +1778,136 @@
       "fields": [
         { "fieldPath": "assetId", "order": "ASCENDING" },
         { "fieldPath": "isActive", "order": "ASCENDING" }
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "subcontractorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "subcontractorId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "emhPendingEdits",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "verifiedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "verifiedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agreedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agreedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "operatorId", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" },
+        { "fieldPath": "timesheetType", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "agreedTimesheets",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "siteId", "order": "ASCENDING" },
+        { "fieldPath": "timesheetType", "order": "ASCENDING" },
+        { "fieldPath": "date", "order": "ASCENDING" }
       ]
     }
   ],

@@ -12,11 +12,11 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { ArrowLeft, Key } from 'lucide-react-native';
 import { validateActivationCode, createFreeAccountActivationCode } from '@/utils/activationCode';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AccountType } from '@/types';
+import { AppTheme } from '@/constants/colors';
 
 const ACTIVATION_STORAGE_KEY = '@activation_data';
 const ACCOUNT_TYPE_STORAGE_KEY = '@selected_account_type';
@@ -116,13 +116,10 @@ export default function ActivateScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
       
-      <LinearGradient
-        colors={['#1e3a8a', '#3b82f6', '#60a5fa']}
-        style={styles.gradient}
-      >
+      <View style={styles.mainContainer}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -133,12 +130,12 @@ export default function ActivateScreen() {
               onPress={() => router.back()}
               disabled={isLoading}
             >
-              <ArrowLeft size={24} color="#fff" />
+              <ArrowLeft size={24} color={AppTheme.text} />
             </TouchableOpacity>
 
             <View style={styles.header}>
               <View style={styles.iconContainer}>
-                <Key size={48} color="#fff" strokeWidth={2} />
+                <Key size={48} color={AppTheme.accent} strokeWidth={2} />
               </View>
               <Text style={styles.title}>Activate Your Account</Text>
               <Text style={styles.subtitle}>
@@ -153,7 +150,7 @@ export default function ActivateScreen() {
                 <Text style={styles.label}>Activation Code</Text>
                 {isGeneratingCode ? (
                   <View style={styles.generatingContainer}>
-                    <ActivityIndicator color="#1e3a8a" />
+                    <ActivityIndicator color={AppTheme.accent} />
                     <Text style={styles.generatingText}>Generating activation code...</Text>
                   </View>
                 ) : (
@@ -162,7 +159,7 @@ export default function ActivateScreen() {
                       testID="activate-code-input"
                       style={[styles.input, accountType === 'free' && styles.inputReadOnly]}
                       placeholder="XXXX-XXXX-XXXX-XXXX"
-                      placeholderTextColor="#94a3b8"
+                      placeholderTextColor={AppTheme.textSecondary}
                       value={activationCode}
                       onChangeText={(text) => setActivationCode(formatActivationCode(text))}
                       autoCapitalize="characters"
@@ -186,7 +183,7 @@ export default function ActivateScreen() {
                 disabled={isLoading || isGeneratingCode}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#1e3a8a" />
+                  <ActivityIndicator color={AppTheme.background} />
                 ) : (
                   <Text style={styles.buttonText}>Continue</Text>
                 )}
@@ -205,7 +202,7 @@ export default function ActivateScreen() {
             </View>
           </View>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -213,10 +210,11 @@ export default function ActivateScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: AppTheme.background,
   },
-  gradient: {
+  mainContainer: {
     flex: 1,
+    backgroundColor: AppTheme.background,
   },
   keyboardView: {
     flex: 1,
@@ -225,7 +223,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 8,
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
   backButton: {
     width: 40,
@@ -241,22 +239,24 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 96,
     height: 96,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: AppTheme.surface,
     borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    borderWidth: 2,
+    borderColor: AppTheme.accent,
   },
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: AppTheme.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
@@ -269,46 +269,50 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: AppTheme.text,
     marginLeft: 4,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.cardBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 18,
-    color: '#1e293b',
+    color: AppTheme.text,
     fontWeight: '600' as const,
     letterSpacing: 2,
     textAlign: 'center',
+    borderWidth: 1,
+    borderColor: AppTheme.border,
   },
   inputReadOnly: {
-    backgroundColor: '#f1f5f9',
-    color: '#475569',
+    backgroundColor: AppTheme.surface,
+    color: AppTheme.textSecondary,
   },
   generatingContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.cardBg,
     borderRadius: 12,
     paddingVertical: 20,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 12,
+    borderWidth: 1,
+    borderColor: AppTheme.border,
   },
   generatingText: {
     fontSize: 16,
-    color: '#1e3a8a',
+    color: AppTheme.text,
     fontWeight: '500' as const,
   },
   hint: {
     fontSize: 12,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     marginLeft: 4,
     marginTop: 4,
   },
   button: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.accent,
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center',
@@ -320,7 +324,7 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1e3a8a',
+    color: AppTheme.background,
   },
   helpContainer: {
     marginTop: 16,
@@ -329,7 +333,7 @@ const styles = StyleSheet.create({
   },
   helpText: {
     fontSize: 13,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     textAlign: 'center',
   },
 });

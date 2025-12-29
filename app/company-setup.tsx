@@ -14,12 +14,12 @@ import {
   Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Building2, CheckCircle, ChevronDown, X, ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { addDoc, collection, serverTimestamp, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { INDUSTRY_SECTORS } from '@/constants/industrySectors';
+import { AppTheme } from '@/constants/colors';
 
 export default function CompanySetupScreen() {
   const { masterAccount, user, refreshMasterAccount } = useAuth();
@@ -93,6 +93,9 @@ export default function CompanySetupScreen() {
     try {
       console.log('[CompanySetup] Saving to database...');
       
+      const accountType = masterAccount?.accountType || user?.accountType || 'enterprise';
+      console.log('[CompanySetup] Creating company with account type:', accountType);
+      
       const companyRef = await addDoc(collection(db, 'companies'), {
         legalEntityName: legalEntityName.trim(),
         alias: alias.trim(),
@@ -104,6 +107,7 @@ export default function CompanySetupScreen() {
         vatNumber: vatNumber.trim(),
         industrySector: industrySector,
         status: 'Active',
+        accountType: accountType,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
         createdBy: creatorId,
@@ -179,7 +183,7 @@ export default function CompanySetupScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
 
       <Modal
@@ -193,7 +197,7 @@ export default function CompanySetupScreen() {
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Industry Sector</Text>
               <TouchableOpacity onPress={() => setShowSectorModal(false)}>
-                <X size={24} color="#64748b" />
+                <X size={24} color={AppTheme.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -219,7 +223,7 @@ export default function CompanySetupScreen() {
                     {sector}
                   </Text>
                   {industrySector === sector && (
-                    <CheckCircle size={20} color="#3b82f6" />
+                    <CheckCircle size={20} color={AppTheme.accent} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -228,7 +232,7 @@ export default function CompanySetupScreen() {
         </View>
       </Modal>
       
-      <LinearGradient colors={['#1e3a8a', '#3b82f6', '#60a5fa']} style={styles.gradient}>
+      <View style={styles.mainContainer}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -242,13 +246,13 @@ export default function CompanySetupScreen() {
               onPress={() => router.back()}
               disabled={isLoading}
             >
-              <ArrowLeft size={24} color="#fff" />
+              <ArrowLeft size={24} color={AppTheme.text} />
               <Text style={styles.exitButtonText}>Exit</Text>
             </TouchableOpacity>
 
             <View style={styles.header}>
               <View style={styles.iconContainer}>
-                <Building2 size={48} color="#fff" strokeWidth={2} />
+                <Building2 size={48} color={AppTheme.accent} strokeWidth={2} />
               </View>
               <Text style={styles.title}>Setup Your Company</Text>
               <Text style={styles.subtitle}>
@@ -267,7 +271,7 @@ export default function CompanySetupScreen() {
                   <Text style={[styles.selectorText, !industrySector && styles.placeholderText]}>
                     {industrySector || 'Select industry sector'}
                   </Text>
-                  <ChevronDown size={20} color="#64748b" />
+                  <ChevronDown size={20} color={AppTheme.textSecondary} />
                 </TouchableOpacity>
               </View>
 
@@ -276,7 +280,7 @@ export default function CompanySetupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="e.g., ABC Construction (Pty) Ltd"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={legalEntityName}
                   onChangeText={setLegalEntityName}
                   autoCapitalize="words"
@@ -289,7 +293,7 @@ export default function CompanySetupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="e.g., ABC Construction"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={alias}
                   onChangeText={setAlias}
                   autoCapitalize="words"
@@ -302,7 +306,7 @@ export default function CompanySetupScreen() {
                 <TextInput
                   style={[styles.input, styles.textArea]}
                   placeholder="Enter full company address"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={address}
                   onChangeText={setAddress}
                   multiline
@@ -316,7 +320,7 @@ export default function CompanySetupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="e.g., +27 12 345 6789"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={contactNumber}
                   onChangeText={setContactNumber}
                   keyboardType="phone-pad"
@@ -329,7 +333,7 @@ export default function CompanySetupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="Admin contact number"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={adminContact}
                   onChangeText={setAdminContact}
                   keyboardType="phone-pad"
@@ -342,7 +346,7 @@ export default function CompanySetupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="admin@company.com"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={adminEmail}
                   onChangeText={setAdminEmail}
                   keyboardType="email-address"
@@ -356,7 +360,7 @@ export default function CompanySetupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="e.g., 2021/123456/07"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={companyRegistrationNr}
                   onChangeText={setCompanyRegistrationNr}
                   editable={!isLoading}
@@ -368,7 +372,7 @@ export default function CompanySetupScreen() {
                 <TextInput
                   style={styles.input}
                   placeholder="e.g., 4123456789"
-                  placeholderTextColor="#94a3b8"
+                  placeholderTextColor={AppTheme.textSecondary}
                   value={vatNumber}
                   onChangeText={setVatNumber}
                   editable={!isLoading}
@@ -381,10 +385,10 @@ export default function CompanySetupScreen() {
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="#1e3a8a" />
+                  <ActivityIndicator color={AppTheme.background} />
                 ) : (
                   <>
-                    <CheckCircle size={20} color="#1e3a8a" />
+                    <CheckCircle size={20} color={AppTheme.background} />
                     <Text style={styles.buttonText}>Create Company</Text>
                   </>
                 )}
@@ -392,7 +396,7 @@ export default function CompanySetupScreen() {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -400,10 +404,11 @@ export default function CompanySetupScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: AppTheme.background,
   },
-  gradient: {
+  mainContainer: {
     flex: 1,
+    backgroundColor: AppTheme.background,
   },
   keyboardView: {
     flex: 1,
@@ -421,22 +426,24 @@ const styles = StyleSheet.create({
   iconContainer: {
     width: 96,
     height: 96,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backgroundColor: AppTheme.surface,
     borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
+    borderWidth: 2,
+    borderColor: AppTheme.accent,
   },
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: AppTheme.text,
     marginBottom: 8,
     textAlign: 'center',
   },
   subtitle: {
     fontSize: 15,
-    color: '#cbd5e1',
+    color: AppTheme.textSecondary,
     textAlign: 'center',
     paddingHorizontal: 20,
   },
@@ -449,16 +456,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: AppTheme.text,
     marginLeft: 4,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.cardBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1e293b',
+    color: AppTheme.text,
+    borderWidth: 1,
+    borderColor: AppTheme.border,
   },
   textArea: {
     minHeight: 80,
@@ -469,7 +478,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.accent,
     paddingVertical: 16,
     borderRadius: 12,
     marginTop: 12,
@@ -480,23 +489,25 @@ const styles = StyleSheet.create({
   buttonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1e3a8a',
+    color: AppTheme.background,
   },
   selectorButton: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.cardBg,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    borderWidth: 1,
+    borderColor: AppTheme.border,
   },
   selectorText: {
     fontSize: 16,
-    color: '#1e293b',
+    color: AppTheme.text,
   },
   placeholderText: {
-    color: '#94a3b8',
+    color: AppTheme.textSecondary,
   },
   modalOverlay: {
     flex: 1,
@@ -504,7 +515,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: AppTheme.cardBg,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -516,12 +527,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: AppTheme.border,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: '#1e293b',
+    color: AppTheme.text,
   },
   sectorList: {
     paddingHorizontal: 16,
@@ -536,15 +547,15 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   sectorItemSelected: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: AppTheme.surface,
   },
   sectorItemText: {
     fontSize: 16,
-    color: '#475569',
+    color: AppTheme.textSecondary,
     flex: 1,
   },
   sectorItemTextSelected: {
-    color: '#3b82f6',
+    color: AppTheme.accent,
     fontWeight: '600' as const,
   },
   exitButton: {
@@ -556,6 +567,6 @@ const styles = StyleSheet.create({
   exitButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#fff',
+    color: AppTheme.text,
   },
 });

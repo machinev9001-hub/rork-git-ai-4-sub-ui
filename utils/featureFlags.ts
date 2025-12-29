@@ -1,4 +1,5 @@
 import { AccountType, FeatureFlags, VASFeatureId } from '@/types';
+import { VASFeatureMetadata } from '@/components/VASPromptModal';
 
 /**
  * Default feature flags for enterprise accounts
@@ -131,6 +132,104 @@ export function getAvailableVASFeatures() {
       isActive: false,
     },
   ];
+}
+
+/**
+ * Get detailed metadata for VAS features for use in prompts/modals
+ */
+export function getVASFeatureMetadata(): Record<VASFeatureId, VASFeatureMetadata> {
+  return {
+    analytics: {
+      id: 'analytics',
+      name: 'Advanced Analytics',
+      description: 'Unlock powerful analytics and insights to track performance across your projects, sites, and teams.',
+      valueSummary: 'Make data-driven decisions with real-time dashboards, trend analysis, and predictive insights that help you optimize operations and reduce costs.',
+      benefits: [
+        'Real-time performance dashboards',
+        'Customizable KPI tracking',
+        'Trend analysis and forecasting',
+        'Cross-site performance comparison',
+        'Export charts and reports',
+      ],
+      price: '$49/month',
+      learnMoreUrl: 'https://machineapp.com/features/analytics',
+    },
+    reporting: {
+      id: 'reporting',
+      name: 'Advanced Reporting',
+      description: 'Generate comprehensive reports with custom templates and automated scheduling.',
+      valueSummary: 'Save hours every week with automated report generation. Create professional reports for stakeholders, compliance, and project reviews.',
+      benefits: [
+        'Customizable report templates',
+        'Scheduled report delivery',
+        'Multi-format exports (PDF, Excel, CSV)',
+        'Compliance-ready documentation',
+        'Automated distribution to stakeholders',
+      ],
+      price: '$39/month',
+      learnMoreUrl: 'https://machineapp.com/features/reporting',
+    },
+    data_exports: {
+      id: 'data_exports',
+      name: 'Data Exports',
+      description: 'Export your data in multiple formats for backup, analysis, or integration with other systems.',
+      valueSummary: 'Own your data completely. Export timesheets, assets, progress, and more in the format you need for accounting, payroll, or business intelligence tools.',
+      benefits: [
+        'Export to CSV, Excel, and PDF',
+        'Bulk data exports',
+        'Filtered and custom exports',
+        'Automated backup scheduling',
+        'Integration-ready data formats',
+      ],
+      price: '$29/month',
+      learnMoreUrl: 'https://machineapp.com/features/data-exports',
+    },
+    advanced_integrations: {
+      id: 'advanced_integrations',
+      name: 'Advanced Integrations',
+      description: 'Connect with your existing tools and systems through powerful API integrations.',
+      valueSummary: 'Streamline workflows by connecting MACHINE with your accounting software, ERP systems, payroll providers, and more.',
+      benefits: [
+        'REST API access',
+        'Webhook notifications',
+        'Pre-built integrations (QuickBooks, Xero, etc.)',
+        'Custom integration support',
+        'Real-time data synchronization',
+      ],
+      price: '$59/month',
+      learnMoreUrl: 'https://machineapp.com/features/integrations',
+    },
+    custom_branding: {
+      id: 'custom_branding',
+      name: 'Custom Branding',
+      description: 'White-label the app with your company logo, colors, and branding.',
+      valueSummary: 'Present a professional, branded experience to your team and subcontractors. Reinforce your company identity in every interaction.',
+      benefits: [
+        'Custom logo and colors',
+        'Branded login screen',
+        'Custom email templates',
+        'Branded reports and exports',
+        'Professional appearance for clients',
+      ],
+      price: '$99/month',
+      learnMoreUrl: 'https://machineapp.com/features/branding',
+    },
+    priority_support: {
+      id: 'priority_support',
+      name: 'Priority Support',
+      description: 'Get help when you need it most with 24/7 priority customer support.',
+      valueSummary: 'Skip the queue and get immediate assistance from our expert support team. Minimize downtime and keep your projects running smoothly.',
+      benefits: [
+        '24/7 phone and email support',
+        'Priority queue - faster response times',
+        'Dedicated account manager',
+        'Training and onboarding assistance',
+        'Proactive system health monitoring',
+      ],
+      price: '$79/month',
+      learnMoreUrl: 'https://machineapp.com/features/priority-support',
+    },
+  };
 }
 
 /**

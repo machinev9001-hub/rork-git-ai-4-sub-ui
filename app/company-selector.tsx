@@ -48,10 +48,16 @@ export default function CompanySelectorScreen() {
     if (result.success) {
       console.log('[CompanySelector] Company selected successfully');
       console.log('[CompanySelector] User role:', user?.role, 'MasterAccount:', !!masterAccount);
+      console.log('[CompanySelector] Account type:', company.accountType);
       
       if (user?.role === 'master' || masterAccount) {
-        console.log('[CompanySelector] Master account → navigating to /master-sites');
-        router.push('/master-sites');
+        if (company.accountType === 'free') {
+          console.log('[CompanySelector] Free account → navigating to plant marketplace');
+          router.replace('/plant-asset-marketplace');
+        } else {
+          console.log('[CompanySelector] Enterprise master account → navigating to /master-sites');
+          router.replace('/master-sites');
+        }
       } else if (user) {
         console.log('[CompanySelector] User role:', user.role);
         
@@ -141,6 +147,7 @@ export default function CompanySelectorScreen() {
           vatNumber: data.vatNumber,
           industrySector: data.industrySector || '',
           status: data.status || 'Active',
+          accountType: data.accountType || 'enterprise',
           createdAt: data.createdAt,
           updatedAt: data.updatedAt,
           createdBy: data.createdBy,

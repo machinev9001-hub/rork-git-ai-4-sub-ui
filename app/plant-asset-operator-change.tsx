@@ -1,5 +1,5 @@
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { ArrowLeft, UserCheck, Clock, User, History, Plus } from 'lucide-react-native';
+import { ArrowLeft, UserCheck, Clock, User, History } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc, updateDoc, serverTimestamp, collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -28,12 +28,7 @@ export default function PlantAssetOperatorChangeScreen() {
   const [showOperatorDropdown, setShowOperatorDropdown] = useState(false);
   const [operatorSearch, setOperatorSearch] = useState('');
 
-  useEffect(() => {
-    loadAssetData();
-    loadOperators();
-  }, [assetId]);
-
-  const loadAssetData = async () => {
+  const loadAssetData = useCallback(async () => {
     if (!assetId) return;
 
     try {
@@ -49,16 +44,18 @@ export default function PlantAssetOperatorChangeScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [assetId]);
 
-  const loadOperators = async () => {
-    if (!user?.masterAccountId) return;
+  const loadOperators = useCallback(async () => {
+    if (!user?.masterAccountId || !asset?.companyId) return;
     
     try {
+      console.log('[OperatorChange] Loading operators for company:', asset.companyId);
       const employeesRef = collection(db, 'employees');
       const employeesQuery = query(
         employeesRef,
         where('masterAccountId', '==', user.masterAccountId),
+        where('companyId', '==', asset.companyId),
         where('role', '==', 'Operator'),
         orderBy('name')
       );
@@ -74,11 +71,22 @@ export default function PlantAssetOperatorChangeScreen() {
         });
       });
       
+      console.log('[OperatorChange] Loaded', operatorsList.length, 'operators for company');
       setOperators(operatorsList);
     } catch (error) {
       console.error('[OperatorChange] Error loading operators:', error);
     }
-  };
+  }, [user?.masterAccountId, asset?.companyId]);
+
+  useEffect(() => {
+    loadAssetData();
+  }, [loadAssetData]);
+
+  useEffect(() => {
+    if (asset?.companyId) {
+      loadOperators();
+    }
+  }, [asset?.companyId, loadOperators]);
 
   const handleChangeOperator = async () => {
     if (!selectedOperator) {

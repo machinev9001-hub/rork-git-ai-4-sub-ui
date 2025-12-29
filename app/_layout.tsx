@@ -220,14 +220,14 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       const hasCompanies = masterData?.companyIds && masterData.companyIds.length > 0;
       const hasSelectedCompany = !!masterData?.currentCompanyId;
       const hasSelectedSite = !!(user?.siteId && user?.siteName);
-      const canAccessMasterProfile = masterData?.canAccessMasterCompanyProfile ?? true; // Default true for master users
+      const isFreeAccount = user?.accountType === 'free';
       
       console.log('[RootLayout] Master account state:');
       console.log('[RootLayout]   isMasterUser:', isMasterUser);
       console.log('[RootLayout]   hasCompanies:', hasCompanies, 'IDs:', masterData?.companyIds);
       console.log('[RootLayout]   hasSelectedCompany:', hasSelectedCompany, 'Current:', masterData?.currentCompanyId);
       console.log('[RootLayout]   hasSelectedSite:', hasSelectedSite, 'Site:', user?.siteName);
-      console.log('[RootLayout]   canAccessMasterProfile:', canAccessMasterProfile);
+      console.log('[RootLayout]   isFreeAccount:', isFreeAccount);
       
       if (!hasCompanies && currentPath !== '/company-setup' && !navigationAttempted.current) {
         console.log('[RootLayout] ✅ Master has no companies → Routing to /company-setup');
@@ -258,10 +258,20 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         return;
       }
       
-      if (hasSelectedCompany && !hasSelectedSite && !canAccessMasterProfile && currentPath !== '/master-sites' && !publicPaths.includes(currentPath) && !navigationAttempted.current) {
-        console.log('[RootLayout] ✅ Master account with selected company but no site and no master profile access → Routing to /master-sites');
-        navigationAttempted.current = true;
-        router.replace('/master-sites');
+      if (hasSelectedCompany && !hasSelectedSite && !publicPaths.includes(currentPath) && !navigationAttempted.current) {
+        if (isFreeAccount) {
+          console.log('[RootLayout] ✅ Free account with selected company → Routing to /plant-asset-marketplace');
+          if (currentPath !== '/plant-asset-marketplace') {
+            navigationAttempted.current = true;
+            router.replace('/plant-asset-marketplace');
+          }
+        } else {
+          console.log('[RootLayout] ✅ Enterprise master with selected company but no site → Routing to /master-sites');
+          if (currentPath !== '/master-sites') {
+            navigationAttempted.current = true;
+            router.replace('/master-sites');
+          }
+        }
       }
       return;
     }
@@ -457,6 +467,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         <Stack.Screen name="chat" />
         <Stack.Screen name="archived-checklist-detail" />
         <Stack.Screen name="billing-config" />
+        <Stack.Screen name="dumbass" />
         <Stack.Screen name="accounts" options={{ headerShown: false }} />
         <Stack.Screen name="account-info" />
         <Stack.Screen name="debug-info" />
@@ -467,6 +478,13 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         <Stack.Screen name="user-progress-detail" />
         <Stack.Screen name="diesel-clerk-home" options={{ headerShown: false }} />
         <Stack.Screen name="diesel-clerk-fuel-log" />
+        <Stack.Screen name="eph-inbox" />
+        <Stack.Screen name="eph-menu" />
+        <Stack.Screen name="emh-inbox" />
+        <Stack.Screen name="emh-menu" />
+        <Stack.Screen name="billing-menu" />
+        <Stack.Screen name="man-hours" />
+        <Stack.Screen name="machine-hours" />
       </Stack>
     </View>
   );

@@ -12,7 +12,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { FileSpreadsheet, ChevronDown, ChevronUp, Calendar, CheckCircle2, Wrench, AlertTriangle, CloudRain, Trash2, Home, Settings, QrCode } from 'lucide-react-native';
+import { FileSpreadsheet, ChevronDown, ChevronUp, Calendar, CheckCircle2, Wrench, AlertTriangle, CloudRain, Trash2, Home, Settings, QrCode, Coffee } from 'lucide-react-native';
 import { collection, query, where, getDocs, doc, updateDoc, addDoc, orderBy, deleteDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -980,6 +980,9 @@ export default function PlantManagerTimesheetsScreen() {
                   <Text style={[styles.tableHeaderCell, styles.hoursCol]}>Total</Text>
                   <Text style={[styles.tableHeaderCell, styles.hoursCol]}>Normal</Text>
                   <Text style={[styles.tableHeaderCell, styles.hoursCol]}>Overtime</Text>
+                  <View style={[styles.tableHeaderCell, styles.checkCol, styles.iconHeaderCell]}>
+                    <Coffee size={18} color="#475569" />
+                  </View>
                   <Text style={[styles.tableHeaderCell, styles.actionsCol]}>Actions</Text>
                 </View>
 
@@ -1044,6 +1047,19 @@ export default function PlantManagerTimesheetsScreen() {
                       <Text style={[styles.tableCell, styles.hoursCol]}>
                         {displayOvertimeHours?.toFixed(1)}h
                       </Text>
+
+                      <View style={[styles.tableCell, styles.checkCol]}>
+                        {canEdit ? (
+                          <TouchableOpacity
+                            onPress={() => updateManEditedEntry(entry.id, 'noLunchBreak', !(editedData.noLunchBreak ?? entry.noLunchBreak))}
+                            activeOpacity={0.7}
+                          >
+                            <View style={[styles.checkbox, (editedData.noLunchBreak ?? entry.noLunchBreak) && styles.checkboxChecked]} />
+                          </TouchableOpacity>
+                        ) : (
+                          <View style={[styles.checkbox, entry.noLunchBreak && styles.checkboxChecked]} />
+                        )}
+                      </View>
 
                       <View style={[styles.tableCell, styles.actionsCol]}>
                         <View style={styles.actionButtons}>

@@ -1,0 +1,266 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ==========================================
+    // HELPER FUNCTIONS
+    // ==========================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+    
+    function getMasterData() {
+      return get(/databases/$(database)/documents/masterAccounts/$(request.auth.uid)).data;
+    }
+    
+    function getUserCompanyId() {
+      return request.auth.token.companyId;
+    }
+    
+    function getUserRole() {
+      return request.auth.token.role;
+    }
+    
+    function getAccountType() {
+      return request.auth.token.accountType;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && getUserRole() == 'Admin';
+    }
+    
+    function isMaster() {
+      return isAuthenticated() && getUserRole() == 'master';
+    }
+    
+    function isEnterpriseAccount() {
+      return getAccountType() == 'enterprise';
+    }
+    
+    function belongsToUserCompany(companyId) {
+      return isAuthenticated() && getUserCompanyId() == companyId;
+    }
+    
+    function belongsToMasterAccount(masterAccountId) {
+      return isMaster() && request.auth.uid == masterAccountId;
+    }
+    
+    function hasRequiredUserFields(data) {
+      return data.keys().hasAll(['userId', 'role', 'companyId', 'siteId', 'name']);
+    }
+    
+    function hasRequiredCompanyFields(data) {
+      return data.keys().hasAll(['legalEntityName', 'accountType', 'createdBy']);
+    }
+    
+    function companyIdUnchanged() {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(['companyId']);
+    }
+    
+    // ==========================================
+    // PUBLIC READ COLLECTIONS (Login purposes)
+    // ==========================================
+    
+    match /masterAccounts/{accountId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+    
+    match /users/{userId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    match /employees/{employeeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    match /companies/{companyId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    match /sites/{siteId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    match /qrCodes/{codeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    match /activationCodes/{codeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    
+    // ==========================================
+    // AUTHENTICATED ACCESS - COMPANY ISOLATION
+    // ==========================================
+    
+    // Users collection - Admin can create, users can read own company
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(resource.data.companyId) ||
+        isMaster()
+      );
+      allow create: if isAuthenticated() && isAdmin() && hasRequiredUserFields(request.resource.data);
+      allow update: if isAuthenticated() && isAdmin() && companyIdUnchanged();
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // Companies - must have accountType
+    match /companies/{companyId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(companyId) ||
+        isMaster()
+      );
+      allow create: if isAuthenticated() && hasRequiredCompanyFields(request.resource.data);
+      allow update: if isAuthenticated() && isAdmin();
+      allow delete: if false;
+    }
+    
+    // Sites - company isolation
+    match /sites/{siteId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(resource.data.companyId) ||
+        belongsToMasterAccount(resource.data.masterAccountId)
+      );
+      allow write: if isAuthenticated() && (
+        isAdmin() ||
+        isMaster()
+      );
+    }
+    
+    // Employees - company isolation
+    match /employees/{employeeId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(resource.data.companyId) ||
+        isMaster()
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && companyIdUnchanged();
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // Plant Assets - company isolation
+    match /plantAssets/{assetId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(resource.data.companyId) ||
+        isMaster()
+      );
+      allow write: if isAuthenticated() && companyIdUnchanged();
+    }
+    
+    // Timesheets - company isolation
+    match /plantAssetTimesheets/{timesheetId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(resource.data.companyId) ||
+        isMaster()
+      );
+      allow write: if isAuthenticated() && companyIdUnchanged();
+    }
+    
+    match /operatorTimesheets/{timesheetId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(resource.data.companyId) ||
+        isMaster()
+      );
+      allow write: if isAuthenticated() && companyIdUnchanged();
+    }
+    
+    // Subcontractors - company isolation
+    match /subcontractors/{subcontractorId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(resource.data.companyId) ||
+        isMaster()
+      );
+      allow write: if isAuthenticated();
+    }
+    
+    // Face Templates - company isolation + security
+    match /faceTemplates/{templateId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(resource.data.companyId) ||
+        isMaster()
+      );
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+    
+    // Face Clock Attempts - company isolation
+    match /faceClockAttempts/{attemptId} {
+      allow read: if isAuthenticated() && (
+        belongsToUserCompany(resource.data.companyId) ||
+        isMaster()
+      );
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+    
+    // ==========================================
+    // ENTERPRISE-ONLY FEATURES
+    // ==========================================
+    
+    match /analyticsData/{docId} {
+      allow read, write: if isAuthenticated() && isEnterpriseAccount();
+    }
+    
+    match /customReports/{reportId} {
+      allow read, write: if isAuthenticated() && isEnterpriseAccount();
+    }
+    
+    match /integrations/{integrationId} {
+      allow read, write: if isAuthenticated() && isEnterpriseAccount();
+    }
+    
+    // ==========================================
+    // TASK MANAGEMENT - SITE ISOLATION
+    // ==========================================
+    
+    match /tasks/{taskId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    match /tasks/{taskId}/activities/{activityId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    match /gridCellProgress/{cellId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+    
+    // ==========================================
+    // MESSAGING AND NOTIFICATIONS
+    // ==========================================
+    
+    match /onboardingMessages/{messageId} {
+      allow read: if isAuthenticated() && (
+        resource.data.toUserId == request.auth.uid ||
+        resource.data.fromUserId == request.auth.uid
+      );
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && resource.data.toUserId == request.auth.uid;
+      allow delete: if false;
+    }
+    
+    // ==========================================
+    // DEFAULT DENY
+    // ==========================================
+    
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

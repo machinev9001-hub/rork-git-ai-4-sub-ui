@@ -85,6 +85,7 @@ export type Company = {
   billingEmail?: string;
   subscriptionStartDate?: any;
   subscriptionEndDate?: any;
+  accountType: AccountType;
   createdAt: any;
   updatedAt?: any;
   createdBy: string;
@@ -446,6 +447,9 @@ export type Employee = {
   companyId: string; // Company-level ownership (required)
   masterAccountId: string;
   siteId?: string; // DEPRECATED: Use EmployeeSiteLink instead
+  siteId: string; // Deprecated - kept for backward compatibility. Use EmployeeSite linking table instead
+  masterAccountId: string;
+  companyId?: string; // Company-level ownership - single source of truth
   type?: 'employee' | 'subcontractor';
   subcontractorCompany?: string;
   employerName?: string;
@@ -455,6 +459,9 @@ export type Employee = {
   crossHireName?: string;
   accessScope?: AccessScope; // Access scope for this employee
   canAccessMasterCompanyProfile?: boolean; // Can access Master Company Profile
+  allocatedPvArea?: string;
+  allocatedBlockNumber?: string;
+  areaAllocationDate?: any;
   inductionStatus: boolean;
   inductionDate?: any;
   inductionNotes?: string;
@@ -482,6 +489,26 @@ export type EmployeeSiteLink = {
   removedAt?: any;
   removedBy?: string;
   notes?: string;
+/**
+ * EmployeeSite - Junction table for company-level employees and site assignments
+ * Employees are created once at company level, then linked to sites via this table
+ */
+export type EmployeeSite = {
+  id?: string;
+  employeeId: string;
+  employeeName: string;
+  siteId: string;
+  siteName: string;
+  companyId: string;
+  masterAccountId: string;
+  role?: string; // Site-specific role (can override employee's default role)
+  linkedAt: any;
+  linkedBy: string;
+  unlinkedAt?: any;
+  unlinkedBy?: string;
+  isActive: boolean;
+  createdAt: any;
+  updatedAt?: any;
 };
 
 export type ChecklistItem = {
@@ -709,6 +736,9 @@ export type PlantAsset = {
   ownerName?: string;
   ownerId?: string;
   ownerType: 'company' | 'subcontractor';
+  ownerMasterAccountId?: string;
+  ownerEmail?: string;
+  ownerContactName?: string;
   ownerProvince?: string;
   ownerAddress?: string;
   isCrossHire?: boolean;
@@ -718,14 +748,23 @@ export type PlantAsset = {
   siteId?: string | null; // DEPRECATED: Use PlantAssetAllocation instead
   masterAccountId: string;
   companyId: string; // Company-level ownership (required)
+  siteId?: string | null; // Deprecated - kept for backward compatibility. Use AssetSite linking table instead
+  masterAccountId: string;
+  companyId?: string; // Company-level ownership - single source of truth
   allocationStatus: AllocationStatus;
   currentAllocation?: CurrentAllocation;
   allocationHistory?: AllocationHistoryEntry[];
   allocatedPvArea?: string;
   allocatedBlockNumber?: string;
   allocationDate?: any;
+  isAvailableForVAS?: boolean;
   breakdownStatus?: boolean;
+  breakdownStartDate?: string;
+  breakdownEndDate?: string | null;
   breakdownTimestamp?: any;
+  breakdownLoggedBy?: string;
+  breakdownReactivatedBy?: string;
+  breakdownReactivatedAt?: any;
   inductionStatus: boolean;
   inductionDate?: any;
   onboardingDate?: any;
@@ -750,6 +789,8 @@ export type PlantAsset = {
   isAvailableForVAS?: boolean; // Legacy field (deprecated)
   availability?: 'available' | 'allocated' | 'maintenance';
   createdAt: any;
+  updatedAt?: any;
+};
   updatedAt?: any;
 };
 

@@ -70,6 +70,8 @@ export default function AddAssetScreen() {
   const [isLoadingOwnerOptions, setIsLoadingOwnerOptions] = useState(false);
   const [isCrossHire, setIsCrossHire] = useState(false);
   const [crossHireName, setCrossHireName] = useState('');
+  const [isAvailableForMarketplace, setIsAvailableForMarketplace] = useState(false); // NEW: Marketplace visibility toggle
+  const [marketplaceVisibility, setMarketplaceVisibility] = useState<'internal' | 'marketplace' | 'both'>('internal'); // NEW: Visibility control
   
   const [isBasicInfoExpanded, setIsBasicInfoExpanded] = useState(false);
   const [isAdditionalInfoExpanded, setIsAdditionalInfoExpanded] = useState(false);
@@ -471,6 +473,13 @@ export default function AddAssetScreen() {
         // Marketplace fields (company-level only)
         internalAllocationEnabled: isCompanyLevelCreation ? internalAllocationEnabled : true,
         marketplaceVisibilityEnabled: isCompanyLevelCreation ? marketplaceVisibilityEnabled : false,
+        siteId: user.siteId, // Kept for backward compatibility
+        masterAccountId: user.masterAccountId,
+        companyId: user.currentCompanyId || null, // Company-level ownership
+        allocationStatus: 'UNALLOCATED',
+        isAvailableForMarketplace, // Marketplace visibility toggle
+        marketplaceVisibility, // Visibility control
+        availability: 'available', // Real-time status
         inductionStatus,
         inductionNotes: inductionNotes.trim(),
         attachments,
@@ -514,11 +523,33 @@ export default function AddAssetScreen() {
       const isOnline = netInfo.isConnected;
 
       console.log('[AddAsset] Network status:', isOnline ? 'Online' : 'Offline');
+      console.log('[AddAsset] Asset will be created at company level with companyId:', assetData.companyId);
+      console.log('[AddAsset] Marketplace visibility:', assetData.isAvailableForMarketplace ? assetData.marketplaceVisibility : 'disabled');
 
       if (isOnline) {
         const assetsRef = collection(db, 'plantAssets');
         const docRef = await addDoc(assetsRef, assetData);
         console.log('[AddAsset] Asset saved to Firebase with ID:', docRef.id);
+
+        // Create AssetSite linking for the current site (if allocated)
+        if (user.siteId && user.siteName && assetData.allocationStatus === 'ALLOCATED') {
+          const assetSitesRef = collection(db, 'assetSites');
+          await addDoc(assetSitesRef, {
+            assetId: docRef.id,
+            assetName: assetData.assetId,
+            assetType: assetData.type,
+            siteId: user.siteId,
+            siteName: user.siteName,
+            companyId: user.currentCompanyId || null,
+            masterAccountId: user.masterAccountId,
+            allocatedAt: serverTimestamp(),
+            allocatedBy: user.userId,
+            isActive: true,
+            allocationNotes: 'Initial allocation on asset creation',
+            createdAt: serverTimestamp(),
+          });
+          console.log('[AddAsset] Asset linked to site via AssetSite junction table');
+        }
       } else {
         await queueFirestoreOperation(
           {
@@ -535,7 +566,7 @@ export default function AddAssetScreen() {
       }
 
       const statusMessage = isOnline 
-        ? 'Plant asset added successfully'
+        ? 'Plant asset added successfully at company level'
         : 'Asset saved offline. Will sync when connection is restored.';
 
       Alert.alert('Success', statusMessage);
@@ -851,6 +882,84 @@ export default function AddAssetScreen() {
                   />
                   <Text style={styles.fieldHint}>
                     Specify the company that owns this asset
+                  </Text>
+                </View>
+              )}
+
+              {/* Marketplace Visibility Toggle - VAS Feature */}
+              <View style={styles.switchRow}>
+                <View style={styles.switchLabel}>
+                  <Text style={styles.switchLabelText}>Marketplace Visibility</Text>
+                  <Text style={styles.switchLabelHint}>
+                    Make asset visible in marketplace (VAS feature)
+                  </Text>
+                </View>
+                <Switch
+                  value={isAvailableForMarketplace}
+                  onValueChange={(value) => {
+                    setIsAvailableForMarketplace(value);
+                    if (!value) {
+                      setMarketplaceVisibility('internal');
+                    }
+                  }}
+                  trackColor={{ false: '#e2e8f0', true: '#3b82f6' }}
+                  thumbColor={isAvailableForMarketplace ? '#fff' : '#f4f3f4'}
+                  ios_backgroundColor="#e2e8f0"
+                  disabled={isSaving}
+                />
+              </View>
+
+              {isAvailableForMarketplace && (
+                <View style={styles.inputGroup}>
+                  <View style={styles.inputLabel}>
+                    <Package size={18} color="#64748b" />
+                    <Text style={styles.inputLabelText}>Visibility Level</Text>
+                  </View>
+                  <View style={styles.radioGroup}>
+                    <TouchableOpacity
+                      style={styles.radioOption}
+                      onPress={() => setMarketplaceVisibility('internal')}
+                      disabled={isSaving}
+                    >
+                      <View style={[styles.radio, marketplaceVisibility === 'internal' && styles.radioSelected]}>
+                        {marketplaceVisibility === 'internal' && <View style={styles.radioDot} />}
+                      </View>
+                      <View style={styles.radioContent}>
+                        <Text style={styles.radioLabel}>Internal Only</Text>
+                        <Text style={styles.radioHint}>Visible to company sites only</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.radioOption}
+                      onPress={() => setMarketplaceVisibility('marketplace')}
+                      disabled={isSaving}
+                    >
+                      <View style={[styles.radio, marketplaceVisibility === 'marketplace' && styles.radioSelected]}>
+                        {marketplaceVisibility === 'marketplace' && <View style={styles.radioDot} />}
+                      </View>
+                      <View style={styles.radioContent}>
+                        <Text style={styles.radioLabel}>Marketplace Only</Text>
+                        <Text style={styles.radioHint}>Visible to external companies</Text>
+                      </View>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.radioOption}
+                      onPress={() => setMarketplaceVisibility('both')}
+                      disabled={isSaving}
+                    >
+                      <View style={[styles.radio, marketplaceVisibility === 'both' && styles.radioSelected]}>
+                        {marketplaceVisibility === 'both' && <View style={styles.radioDot} />}
+                      </View>
+                      <View style={styles.radioContent}>
+                        <Text style={styles.radioLabel}>Both</Text>
+                        <Text style={styles.radioHint}>Visible internally and in marketplace</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={styles.fieldHint}>
+                    Marketplace visibility requires real-time asset status updates
                   </Text>
                 </View>
               )}

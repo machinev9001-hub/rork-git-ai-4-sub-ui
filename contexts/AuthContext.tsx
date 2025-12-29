@@ -1,7 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { AppState, AppStateStatus, Platform } from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 import { collection, doc, getDoc, getDocs, query, where, setDoc, addDoc, serverTimestamp, updateDoc, onSnapshot, runTransaction } from 'firebase/firestore';
 import { db, clearFirestoreCache, isDemoFirebaseProject } from '@/config/firebase';
 import { DEMO_MASTER_ACCOUNTS, DEMO_USERS, DEMO_DEFAULT_PIN, DEMO_USER_ALIASES, DEMO_MASTER_ALIASES } from '@/constants/demoAuthData';
@@ -350,7 +350,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     } catch (error) {
       console.error('[Auth] Logout error:', error);
     }
-  }, [queryClient]);
+  }, [queryClient, user?.userId, user?.role]);
 
   const updateActivity = useCallback(async () => {
     lastActivityTime.current = Date.now();
@@ -536,7 +536,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         clearInterval(inactivityTimer.current);
       }
     };
-  }, [user, checkInactivity, updateActivity]);
+  }, [user, checkInactivity, updateActivity, logout]);
 
   const createMasterAccount = useCallback(async (
     name: string,
@@ -546,40 +546,57 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     accountType?: AccountType
   ): Promise<{ success: boolean; error?: string; masterAccount?: MasterAccount }> => {
     try {
-      console.log('[Auth] Creating master account...');
-      console.log('[Auth]   masterId:', masterId);
-      console.log('[Auth]   activationCode:', activationCode);
-      console.log('[Auth]   accountType:', accountType);
+      console.log('[Auth] ========================================');
+      console.log('[Auth] CREATE MASTER ACCOUNT STARTED');
+      console.log('[Auth]   Name:', name);
+      console.log('[Auth]   MasterId:', masterId);
+      console.log('[Auth]   ActivationCode:', activationCode.substring(0, 4) + '***');
+      console.log('[Auth]   AccountType:', accountType || 'default-enterprise');
+      console.log('[Auth] ========================================');
       
+      console.log('[Auth] Step 1: Validating activation code...');
       const codeValidation = await validateActivationCode(activationCode);
       if (!codeValidation.isValid) {
-        console.log('[Auth] Activation code validation failed:', codeValidation.error);
+        console.log('[Auth] ❌ Activation code validation failed:', codeValidation.error);
         return { success: false, error: codeValidation.error || 'Invalid activation code' };
       }
+      console.log('[Auth] ✓ Activation code is valid');
+      console.log('[Auth]   Company:', codeValidation.activationCode?.companyName || 'N/A');
+      console.log('[Auth]   CompanyId:', codeValidation.activationCode?.companyId || 'N/A');
 
+      console.log('[Auth] Step 2: Checking if master ID already exists...');
       const masterAccountsRef = collection(db, 'masterAccounts');
       const masterQuery = query(masterAccountsRef, where('masterId', '==', masterId));
       const masterSnapshot = await getDocs(masterQuery);
       
       if (!masterSnapshot.empty) {
-        console.log('[Auth] Master ID already exists (pre-check)');
-        return { success: false, error: 'Master ID already exists' };
+        console.log('[Auth] ❌ Master ID already exists (pre-check)');
+        return { success: false, error: `Master ID "${masterId}" is already taken. Please choose a different ID.` };
       }
+      console.log('[Auth] ✓ Master ID is available');
 
+      console.log('[Auth] Step 3: Hashing PIN...');
       const { hash: pinHash, salt: pinSalt } = hashPin(pin);
+      console.log('[Auth] ✓ PIN hashed successfully');
 
       let newMasterDocId: string | null = null;
 
+      console.log('[Auth] Step 4: Creating master account document in transaction...');
       try {
         await runTransaction(db, async (transaction) => {
+          console.log('[Auth]   Transaction started');
           const checkSnapshot = await getDocs(masterQuery);
           
           if (!checkSnapshot.empty) {
+            console.log('[Auth]   ❌ Master ID already exists in transaction');
             throw new Error('DUPLICATE_MASTER_ID');
           }
+          console.log('[Auth]   ✓ Master ID confirmed available');
 
           const newMasterRef = doc(collection(db, 'masterAccounts'));
-          transaction.set(newMasterRef, {
+          console.log('[Auth]   Creating document with ID:', newMasterRef.id);
+          
+          const docData = {
             masterId,
             name,
             pin: pinHash,
@@ -588,30 +605,56 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             companyId: codeValidation.activationCode?.companyId,
             companyName: codeValidation.activationCode?.companyName,
             companyIds: [],
-            accountType: accountType || 'enterprise', // Default to enterprise for backward compatibility
-            vasFeatures: [], // Initialize empty VAS features
+            accountType: accountType || 'enterprise',
+            vasFeatures: [],
             createdAt: serverTimestamp(),
-          });
+          };
+          
+          console.log('[Auth]   Document data:', { ...docData, pin: '***', pinSalt: '***' });
+          transaction.set(newMasterRef, docData);
 
           newMasterDocId = newMasterRef.id;
+          console.log('[Auth]   ✓ Transaction prepared, doc ID:', newMasterDocId);
         });
+        console.log('[Auth] ✓ Transaction committed successfully');
       } catch (txError: any) {
+        console.error('[Auth] ❌ Transaction failed:', {
+          message: txError?.message,
+          code: txError?.code,
+          name: txError?.name
+        });
+        
         if (txError?.message === 'DUPLICATE_MASTER_ID') {
-          console.log('[Auth] Master ID already exists (transaction check)');
-          return { success: false, error: 'Master ID already exists' };
+          return { success: false, error: `Master ID "${masterId}" is already taken. Please choose a different ID.` };
         }
+        
+        if (txError?.code === 'permission-denied') {
+          return { success: false, error: 'Permission denied. Please check your Firebase security rules.' };
+        }
+        
+        if (txError?.code === 'unavailable') {
+          return { success: false, error: 'Cannot connect to database. Please check your internet connection.' };
+        }
+        
         throw txError;
       }
 
-      if (codeValidation.activationCode?.id && newMasterDocId) {
-        await markActivationCodeAsRedeemed(
+      if (!newMasterDocId) {
+        console.log('[Auth] ❌ No document ID returned after transaction');
+        throw new Error('Failed to create master account document - no ID returned');
+      }
+
+      console.log('[Auth] Step 5: Marking activation code as redeemed...');
+      if (codeValidation.activationCode?.id) {
+        const redeemResult = await markActivationCodeAsRedeemed(
           codeValidation.activationCode.id,
           newMasterDocId
         );
-      }
-
-      if (!newMasterDocId) {
-        throw new Error('Failed to create master account document');
+        if (redeemResult.success) {
+          console.log('[Auth] ✓ Activation code marked as redeemed');
+        } else {
+          console.warn('[Auth] ⚠️ Failed to mark activation code as redeemed:', redeemResult.error);
+        }
       }
 
       const newMasterAccount: MasterAccount = {
@@ -625,15 +668,36 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         createdAt: serverTimestamp(),
       };
 
-      console.log('[Auth] Master account created successfully, setting state...');
+      console.log('[Auth] Step 6: Setting state and saving to storage...');
       setMasterAccount(newMasterAccount);
       await AsyncStorage.setItem(STORAGE_KEYS.LAST_KNOWN_USER, JSON.stringify(newMasterAccount));
-      console.log('[Auth] Master account state set, ready to navigate');
+      console.log('[Auth] ✓ State updated and saved');
+      
+      console.log('[Auth] ========================================');
+      console.log('[Auth] ✅ MASTER ACCOUNT CREATED SUCCESSFULLY');
+      console.log('[Auth]   Document ID:', newMasterDocId);
+      console.log('[Auth]   Ready to navigate to company setup');
+      console.log('[Auth] ========================================');
       
       return { success: true, masterAccount: newMasterAccount };
-    } catch (error) {
-      console.error('[Auth] Error creating master account:', error);
-      return { success: false, error: 'Failed to create master account' };
+    } catch (error: any) {
+      console.error('[Auth] ========================================');
+      console.error('[Auth] ❌ ERROR CREATING MASTER ACCOUNT');
+      console.error('[Auth] Error details:', {
+        message: error?.message,
+        code: error?.code,
+        name: error?.name,
+        stack: error?.stack?.substring(0, 300)
+      });
+      console.error('[Auth] ========================================');
+      
+      const errorMessage = error?.message || 'Failed to create master account';
+      return { 
+        success: false, 
+        error: errorMessage.includes('network') || error?.code === 'unavailable'
+          ? 'Network error. Please check your internet connection and try again.'
+          : errorMessage
+      };
     }
   }, []);
 
@@ -745,6 +809,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           pin: storedPinHash,
           companyIds: Array.isArray(companyIdsArray) ? companyIdsArray : [],
           currentCompanyId: undefined, // Don't set to force company selection
+          accountType: data.accountType,
+          vasFeatures: data.vasFeatures || [],
           createdAt: data.createdAt,
         };
 
@@ -770,6 +836,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             pin: String(refreshedData.pin || '').trim(),
             companyIds: Array.isArray(companyIdsArray) ? companyIdsArray : [],
             currentCompanyId: undefined,
+            accountType: refreshedData.accountType,
+            vasFeatures: refreshedData.vasFeatures || [],
             createdAt: refreshedData.createdAt,
           };
         } else {
@@ -788,6 +856,8 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           currentCompanyId: foundMaster.currentCompanyId,
           pin: foundMaster.pin,
           masterAccountId: foundMaster.id,  // Self-reference for master accounts
+          accountType: foundMaster.accountType,  // Pass account type to user object
+          vasFeatures: foundMaster.vasFeatures,
           createdAt: foundMaster.createdAt,
           disabledMenus: [],
           isLocked: false
@@ -1123,7 +1193,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
       return { success: false, error: 'No internet connection and no offline data' };
     }
-  }, [user]);
+  }, []);
 
   const setupPin = useCallback(async (pin: string): Promise<{ success: boolean; error?: string }> => {
     try {
