@@ -16,17 +16,17 @@ export default function BillingMenuScreen() {
 
   const menuItems = [
     {
-      id: 'billing-configuration',
-      title: 'Billing Configuration',
-      description: 'Configure billing rules and rates for machine and man hours',
+      id: 'configuration',
+      title: 'Configuration',
+      description: 'Billing rules & rates (EPH + EMH)',
       icon: Settings,
-      color: '#8b5cf6',
-      route: '/billing-config',
+      color: '#0ea5e9',
+      route: '/billing-configuration',
     },
     {
       id: 'eph',
       title: 'EPH (Estimated Plant Hours)',
-      description: 'Manage machine hours reports and billing',
+      description: 'Reports, approvals, payments (machine hours)',
       icon: DollarSign,
       color: '#f59e0b',
       route: '/eph-inbox',
