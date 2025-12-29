@@ -432,9 +432,9 @@ export type Employee = {
   email?: string;
   employeeIdNumber?: string;
   citizenshipCountry?: string;
-  siteId: string;
+  siteId: string; // Deprecated - kept for backward compatibility. Use EmployeeSite linking table instead
   masterAccountId: string;
-  companyId?: string;
+  companyId?: string; // Company-level ownership - single source of truth
   type?: 'employee' | 'subcontractor';
   subcontractorCompany?: string;
   employerName?: string;
@@ -453,6 +453,28 @@ export type Employee = {
   licenseExpiryDate?: any;
   competencyExpiryDate?: any;
   pdpExpiryDate?: any;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+/**
+ * EmployeeSite - Junction table for company-level employees and site assignments
+ * Employees are created once at company level, then linked to sites via this table
+ */
+export type EmployeeSite = {
+  id?: string;
+  employeeId: string;
+  employeeName: string;
+  siteId: string;
+  siteName: string;
+  companyId: string;
+  masterAccountId: string;
+  role?: string; // Site-specific role (can override employee's default role)
+  linkedAt: any;
+  linkedBy: string;
+  unlinkedAt?: any;
+  unlinkedBy?: string;
+  isActive: boolean;
   createdAt: any;
   updatedAt?: any;
 };
@@ -691,9 +713,9 @@ export type PlantAsset = {
   crossHireName?: string;
   salaryPayer?: string;
   operatorHistory?: OperatorHistory[];
-  siteId?: string | null;
+  siteId?: string | null; // Deprecated - kept for backward compatibility. Use AssetSite linking table instead
   masterAccountId: string;
-  companyId?: string;
+  companyId?: string; // Company-level ownership - single source of truth
   allocationStatus: AllocationStatus;
   currentAllocation?: CurrentAllocation;
   allocationHistory?: AllocationHistoryEntry[];
@@ -728,6 +750,8 @@ export type PlantAsset = {
   archivedBy?: string;
   availability?: 'available' | 'allocated' | 'maintenance';
   createdAt: any;
+  updatedAt?: any;
+};
   updatedAt?: any;
 };
 

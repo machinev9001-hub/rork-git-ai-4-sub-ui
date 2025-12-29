@@ -1,7 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, Info, CreditCard } from 'lucide-react-native';
+import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, Info, CreditCard, ChevronRight, MapPin } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
 import { useAccountType } from '@/utils/hooks/useFeatureFlags';
@@ -98,6 +98,88 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View>
+
+        {/* Company & Site Context - Show for Master users */}
+        {isMaster && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Company & Site</Text>
+            
+            <View style={styles.menuCard}>
+              {/* Current Company Display */}
+              {user?.companyName && (
+                <View style={styles.contextDisplay}>
+                  <Building2 size={20} color={Colors.accent} />
+                  <View style={styles.contextInfo}>
+                    <Text style={styles.contextLabel}>Current Company</Text>
+                    <Text style={styles.contextValue}>{user.companyName}</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Current Site Display */}
+              {user?.siteName && (
+                <View style={styles.contextDisplay}>
+                  <MapPin size={20} color={Colors.accent} />
+                  <View style={styles.contextInfo}>
+                    <Text style={styles.contextLabel}>Current Site</Text>
+                    <Text style={styles.contextValue}>{user.siteName}</Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Master Company Profile */}
+              <TouchableOpacity 
+                style={styles.menuButton}
+                onPress={() => router.push('/master-company-profile' as any)}
+              >
+                <View style={styles.menuButtonContent}>
+                  <View style={styles.menuIcon}>
+                    <Building2 size={24} color="#3b82f6" />
+                  </View>
+                  <View style={styles.menuContent}>
+                    <Text style={styles.menuTitle}>Master Company Profile</Text>
+                    <Text style={styles.menuDescription}>Manage company-level settings</Text>
+                  </View>
+                  <ChevronRight size={20} color={Colors.textSecondary} />
+                </View>
+              </TouchableOpacity>
+
+              {/* Switch Company */}
+              <TouchableOpacity 
+                style={styles.menuButton}
+                onPress={() => router.push('/company-selector' as any)}
+              >
+                <View style={styles.menuButtonContent}>
+                  <View style={styles.menuIcon}>
+                    <Building2 size={24} color="#10b981" />
+                  </View>
+                  <View style={styles.menuContent}>
+                    <Text style={styles.menuTitle}>Switch Company</Text>
+                    <Text style={styles.menuDescription}>Change current company context</Text>
+                  </View>
+                  <ChevronRight size={20} color={Colors.textSecondary} />
+                </View>
+              </TouchableOpacity>
+
+              {/* Manage Sites */}
+              <TouchableOpacity 
+                style={styles.menuButton}
+                onPress={() => router.push('/master-sites' as any)}
+              >
+                <View style={styles.menuButtonContent}>
+                  <View style={styles.menuIcon}>
+                    <MapPin size={24} color="#f59e0b" />
+                  </View>
+                  <View style={styles.menuContent}>
+                    <Text style={styles.menuTitle}>Manage Sites</Text>
+                    <Text style={styles.menuDescription}>View and manage company sites</Text>
+                  </View>
+                  <ChevronRight size={20} color={Colors.textSecondary} />
+                </View>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
 
         {!isMasterOrPlanner && (
           <View style={styles.profileHeader}>
@@ -884,6 +966,27 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     borderTopWidth: 1,
     borderTopColor: Colors.border,
+  },
+  contextDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    gap: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border,
+  },
+  contextInfo: {
+    flex: 1,
+  },
+  contextLabel: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginBottom: 4,
+  },
+  contextValue: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: Colors.text,
   },
 
 });
