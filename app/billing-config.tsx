@@ -2876,7 +2876,7 @@ export default function BillingConfigScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          headerTitle: () => <HeaderTitleWithSync title="Billing Management" />,
+          headerTitle: () => <HeaderTitleWithSync title="EPH" />,
           headerStyle: {
             backgroundColor: '#1e3a8a',
           },
