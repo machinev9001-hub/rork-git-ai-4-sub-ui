@@ -489,6 +489,8 @@ export type EmployeeSiteLink = {
   removedAt?: any;
   removedBy?: string;
   notes?: string;
+};
+
 /**
  * EmployeeSite - Junction table for company-level employees and site assignments
  * Employees are created once at company level, then linked to sites via this table
@@ -789,8 +791,6 @@ export type PlantAsset = {
   isAvailableForVAS?: boolean; // Legacy field (deprecated)
   availability?: 'available' | 'allocated' | 'maintenance';
   createdAt: any;
-  updatedAt?: any;
-};
   updatedAt?: any;
 };
 
