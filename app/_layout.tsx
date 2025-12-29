@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, router, usePathname } from "expo-router";
-import React, { useEffect, Component, ErrorInfo, ReactNode, useCallback, useRef, useState } from "react";
+import React, { useEffect, Component, ErrorInfo, ReactNode, useCallback, useRef } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform, ActivityIndicator, InteractionManager, LayoutChangeEvent } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootSiblingParent } from 'react-native-root-siblings';
@@ -136,7 +136,6 @@ interface RootLayoutNavProps {
 
 function RootLayoutNav({ onReady }: RootLayoutNavProps) {
   const { user, masterAccount, isLoading, authInitializing } = useAuth();
-  const [renderKey, setRenderKey] = useState(0);
   const navigationAttempted = useRef(false);
   const qrLoginInProgress = useRef(false);
   const pathname = usePathname();
@@ -161,12 +160,6 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
   useEffect(() => {
     onReady();
   }, [onReady]);
-
-  useEffect(() => {
-    if (!isLoading) {
-      setRenderKey(prev => prev + 1);
-    }
-  }, [isLoading]);
 
   useEffect(() => {
     if (authInitializing || isLoading) {
@@ -354,7 +347,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
   console.log('[RootLayout] Loading complete, rendering main app');
 
   return (
-    <View key={`app-${renderKey}`} style={{ flex: 1, pointerEvents: 'auto' }} collapsable={false}>
+    <View style={{ flex: 1, pointerEvents: 'auto' }} collapsable={false}>
       <OfflineBanner showDetails={false} />
       <FreshnessNotificationBanner />
       <Stack

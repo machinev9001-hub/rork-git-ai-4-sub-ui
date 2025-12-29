@@ -466,20 +466,15 @@ export default function AddAssetScreen() {
         crossHireName: isCrossHire ? crossHireName.trim() : null,
         currentOperator: currentOperator.trim() || null,
         currentOperatorId: currentOperatorId || null,
-        siteId: user.siteId || null, // Optional for company-level creation
+        siteId: user.siteId || null,
         masterAccountId: user.masterAccountId,
-        companyId: user.currentCompanyId, // Required for both modes
-        allocationStatus: isCompanyLevelCreation ? 'UNALLOCATED' : 'UNALLOCATED',
-        // Marketplace fields (company-level only)
+        companyId: user.currentCompanyId,
+        allocationStatus: 'UNALLOCATED',
         internalAllocationEnabled: isCompanyLevelCreation ? internalAllocationEnabled : true,
         marketplaceVisibilityEnabled: isCompanyLevelCreation ? marketplaceVisibilityEnabled : false,
-        siteId: user.siteId, // Kept for backward compatibility
-        masterAccountId: user.masterAccountId,
-        companyId: user.currentCompanyId || null, // Company-level ownership
-        allocationStatus: 'UNALLOCATED',
-        isAvailableForMarketplace, // Marketplace visibility toggle
-        marketplaceVisibility, // Visibility control
-        availability: 'available', // Real-time status
+        isAvailableForMarketplace,
+        marketplaceVisibility,
+        availability: 'available',
         inductionStatus,
         inductionNotes: inductionNotes.trim(),
         attachments,
@@ -2015,27 +2010,6 @@ const styles = StyleSheet.create({
     color: '#854d0e',
     fontWeight: '600' as const,
   },
-  switchRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 12,
-    gap: 16,
-  },
-  switchLabel: {
-    flex: 1,
-    gap: 4,
-  },
-  switchLabelText: {
-    fontSize: 15,
-    fontWeight: '600' as const,
-    color: '#1e293b',
-  },
-  switchLabelHint: {
-    fontSize: 13,
-    color: '#64748b',
-    lineHeight: 18,
-  },
   vasNotice: {
     backgroundColor: '#eff6ff',
     borderRadius: 8,
@@ -2048,5 +2022,45 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#1e40af',
     lineHeight: 18,
+  },
+
+  radioGroup: {
+    gap: 12,
+  },
+  radioOption: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 12,
+  },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#cbd5e1',
+    alignItems: 'center' as const,
+    justifyContent: 'center' as const,
+  },
+  radioSelected: {
+    borderColor: '#3b82f6',
+  },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#3b82f6',
+  },
+  radioContent: {
+    flex: 1,
+    gap: 2,
+  },
+  radioLabel: {
+    fontSize: 15,
+    fontWeight: '600' as const,
+    color: '#1e293b',
+  },
+  radioHint: {
+    fontSize: 13,
+    color: '#64748b',
   },
 });
