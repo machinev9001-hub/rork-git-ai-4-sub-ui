@@ -243,14 +243,6 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
         return;
       }
       
-      // NEW: Route to Master Company Profile if canAccessMasterProfile is true and company is selected
-      if (canAccessMasterProfile && hasSelectedCompany && !hasSelectedSite && currentPath !== '/master-company-profile' && currentPath !== '/master-sites' && !publicPaths.includes(currentPath) && !navigationAttempted.current) {
-        console.log('[RootLayout] ✅ Master with company access → Routing to /master-company-profile');
-        navigationAttempted.current = true;
-        router.replace('/master-company-profile');
-        return;
-      }
-      
       if (hasSelectedCompany && hasSelectedSite && currentPath !== '/(tabs)' && !publicPaths.includes(currentPath) && !navigationAttempted.current && !currentPath.startsWith('/(tabs)')) {
         console.log('[RootLayout] ✅ Master has selected company and site → Routing to /(tabs)');
         navigationAttempted.current = true;
