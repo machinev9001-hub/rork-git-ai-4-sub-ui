@@ -203,7 +203,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   const lastActivityTime = useRef<number>(Date.now());
   const inactivityTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasInitialized = useRef(false);
-  const isMounted = useRef(false);
+  const isMounted = useRef(true);
 
   const loadUserFromStorage = useCallback(async () => {
     
@@ -381,9 +381,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
   }, [user, logout]);
 
   useEffect(() => {
-    // Set mounted flag immediately
-    isMounted.current = true;
-    
     if (hasInitialized.current) {
       console.log('[Auth] Already initialized, skipping');
       return;
@@ -402,9 +399,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         console.log('[Auth] Component unmounted or inactive, skipping state update');
         return;
       }
-      console.log('[Auth] Force completing initialization');
-      setIsLoading(false);
-      setAuthInitializing(false);
+      // Defer state updates to next tick to avoid state updates during render
+      setTimeout(() => {
+        if (!isActive || !isMounted.current) return;
+        console.log('[Auth] Force completing initialization');
+        setIsLoading(false);
+        setAuthInitializing(false);
+      }, 0);
     };
     
     // Ultra-aggressive timeout - complete in 500ms max
@@ -414,9 +415,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         return;
       }
       console.error('[Auth] 🚨 EMERGENCY TIMEOUT (500ms) - Force completing');
-      setUser(null);
-      setMasterAccount(null);
-      forceComplete();
+      // Defer state updates to next tick
+      setTimeout(() => {
+        if (!isActive || !isMounted.current) return;
+        setUser(null);
+        setMasterAccount(null);
+        setIsLoading(false);
+        setAuthInitializing(false);
+      }, 0);
     }, 500);
     
     console.log('[Auth] Starting loadUserFromStorage (timeout: 500ms)...');
