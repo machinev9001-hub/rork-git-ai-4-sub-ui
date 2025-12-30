@@ -231,14 +231,13 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       const hasCompanies = masterData?.companyIds && masterData.companyIds.length > 0;
       const hasSelectedCompany = !!masterData?.currentCompanyId;
       const hasSelectedSite = !!(user?.siteId && user?.siteName);
-      const isFreeAccount = user?.accountType === 'free';
       
       console.log('[RootLayout] Master account state:');
       console.log('[RootLayout]   isMasterUser:', isMasterUser);
       console.log('[RootLayout]   hasCompanies:', hasCompanies, 'IDs:', masterData?.companyIds);
       console.log('[RootLayout]   hasSelectedCompany:', hasSelectedCompany, 'Current:', masterData?.currentCompanyId);
       console.log('[RootLayout]   hasSelectedSite:', hasSelectedSite, 'Site:', user?.siteName);
-      console.log('[RootLayout]   isFreeAccount:', isFreeAccount);
+      console.log('[RootLayout]   accountType:', user?.accountType);
       
       if (!hasCompanies && currentPath !== '/company-setup' && !navigationAttempted.current) {
         console.log('[RootLayout] ✅ Master has no companies → Routing to /company-setup');
@@ -259,16 +258,10 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       }
       
       if (hasSelectedCompany && !hasSelectedSite && !publicPaths.includes(currentPath) && !navigationAttempted.current) {
-        if (isFreeAccount) {
-          console.log('[RootLayout] ✅ Free account with selected company → Routing to /plant-asset-marketplace');
-          if (currentPath !== '/plant-asset-marketplace') {
-            performNavigation('/plant-asset-marketplace');
-          }
-        } else {
-          console.log('[RootLayout] ✅ Enterprise master with selected company but no site → Routing to /master-sites');
-          if (currentPath !== '/master-sites') {
-            performNavigation('/master-sites');
-          }
+        // Both free and enterprise users follow the same workflow - select a site first
+        console.log('[RootLayout] ✅ Master with selected company but no site → Routing to /master-sites');
+        if (currentPath !== '/master-sites') {
+          performNavigation('/master-sites');
         }
       }
       return () => { isActive = false; };
