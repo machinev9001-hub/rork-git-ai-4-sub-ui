@@ -991,7 +991,7 @@ export default function AddEmployeeScreen() {
 
                   <View style={styles.switchRow}>
                     <View style={styles.switchLabel}>
-                      <Text style={styles.switchLabelText}>Master Company Profile Access</Text>
+                      <Text style={styles.switchLabelText}>Company Profile Access</Text>
                       <Text style={styles.switchLabelHint}>
                         Allow access to company-level management features
                       </Text>

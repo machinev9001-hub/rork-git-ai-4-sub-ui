@@ -128,7 +128,7 @@ export default function SettingsScreen() {
 
               {isCompanySiteExpanded && (
                 <View style={styles.expandedContent}>
-                  {/* Master Company Profile */}
+                  {/* Company Profile */}
                   <View style={styles.subMenuCard}>
                     <TouchableOpacity 
                       style={styles.subMenuItem}
@@ -138,7 +138,7 @@ export default function SettingsScreen() {
                         <Building2 size={20} color="#3b82f6" />
                       </View>
                       <View style={styles.subMenuContent}>
-                        <Text style={styles.subMenuTitle}>Master Company Profile</Text>
+                        <Text style={styles.subMenuTitle}>Company Profile</Text>
                         <Text style={styles.subMenuDescription}>Manage company-level settings</Text>
                       </View>
                     </TouchableOpacity>

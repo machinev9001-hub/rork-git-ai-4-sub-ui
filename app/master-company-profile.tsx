@@ -153,7 +153,7 @@ export default function MasterCompanyProfileScreen() {
       <Stack.Screen
         options={{
           headerShown: true,
-          title: 'Master Company Profile',
+          title: 'Company Profile',
           headerStyle: { backgroundColor: Colors.headerBg },
           headerTintColor: Colors.text,
           headerLeft: () => (
@@ -182,7 +182,7 @@ export default function MasterCompanyProfileScreen() {
         <View style={styles.infoBanner}>
           <Building2 size={20} color={Colors.accent} />
           <Text style={styles.infoBannerText}>
-            This is your Master Company Profile - the single source of truth for employees,
+            This is your Company Profile - the single source of truth for employees,
             assets, and company-wide settings.
           </Text>
         </View>
