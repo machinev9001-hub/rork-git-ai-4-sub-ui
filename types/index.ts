@@ -7,7 +7,11 @@ export type VASFeatureId =
   | 'advanced_integrations'
   | 'custom_branding'
   | 'priority_support'
-  | 'marketplace_access'; // New VAS for marketplace
+  | 'marketplace_access'
+  | 'plant_manager_access'
+  | 'staff_manager_access'
+  | 'logistics_access'
+  | 'operations_bundle';
 
 export type VASFeature = {
   id: VASFeatureId;
@@ -30,6 +34,10 @@ export type FeatureFlags = {
   task_management: boolean;
   time_tracking: boolean;
   progress_reporting: boolean;
+  plant_manager_access: boolean;
+  staff_manager_access: boolean;
+  logistics_access: boolean;
+  operations_bundle: boolean;
 };
 
 export type UserRole =

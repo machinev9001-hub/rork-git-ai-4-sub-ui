@@ -35,7 +35,8 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Planner'],
     bgColor: '#34A853',
     iconColor: '#fff',
-    featureKey: 'task_management',
+    featureKey: 'operations_bundle',
+    vasFeatureId: 'operations_bundle',
   },
   {
     title: 'Supervisor',
@@ -44,7 +45,8 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Supervisor'],
     bgColor: '#FBBC04',
     iconColor: '#fff',
-    featureKey: 'task_management',
+    featureKey: 'operations_bundle',
+    vasFeatureId: 'operations_bundle',
   },
   {
     title: 'QC Requests',
@@ -53,7 +55,8 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'QC'],
     bgColor: '#ec4899',
     iconColor: '#fff',
-    featureKey: 'task_management',
+    featureKey: 'operations_bundle',
+    vasFeatureId: 'operations_bundle',
   },
   {
     title: 'Plant Manager',
@@ -62,7 +65,8 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Plant Manager'],
     bgColor: '#f59e0b',
     iconColor: '#fff',
-    featureKey: 'asset_management',
+    featureKey: 'plant_manager_access',
+    vasFeatureId: 'plant_manager_access',
   },
   {
     title: 'Staff Manager',
@@ -71,7 +75,8 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Staff Manager', 'HR'],
     bgColor: '#8b5cf6',
     iconColor: '#fff',
-    featureKey: 'employee_management',
+    featureKey: 'staff_manager_access',
+    vasFeatureId: 'staff_manager_access',
   },
   {
     title: 'Logistics',
@@ -80,8 +85,8 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Logistics Manager'],
     bgColor: '#0ea5e9',
     iconColor: '#fff',
-    featureKey: 'advanced_integrations',
-    vasFeatureId: 'advanced_integrations',
+    featureKey: 'logistics_access',
+    vasFeatureId: 'logistics_access',
   },
   {
     title: 'Onboarding',
@@ -90,7 +95,8 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Admin', 'HSE', 'Onboarding & Inductions'],
     bgColor: '#3b82f6',
     iconColor: '#fff',
-    featureKey: 'employee_management',
+    featureKey: 'staff_manager_access',
+    vasFeatureId: 'staff_manager_access',
   },
 ];
 

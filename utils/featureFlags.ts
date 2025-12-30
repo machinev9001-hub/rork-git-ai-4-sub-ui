@@ -17,14 +17,18 @@ const ENTERPRISE_FEATURES: FeatureFlags = {
   task_management: true,
   time_tracking: true,
   progress_reporting: true,
+  plant_manager_access: true,
+  staff_manager_access: true,
+  logistics_access: true,
+  operations_bundle: true,
 };
 
 /**
  * Default feature flags for free accounts
  */
 const FREE_FEATURES: FeatureFlags = {
-  employee_management: true,
-  asset_management: true,
+  employee_management: false,
+  asset_management: false,
   external_data_reception: true,
   analytics: false,
   reporting: false,
@@ -35,6 +39,10 @@ const FREE_FEATURES: FeatureFlags = {
   task_management: false,
   time_tracking: true,
   progress_reporting: false,
+  plant_manager_access: false,
+  staff_manager_access: false,
+  logistics_access: false,
+  operations_bundle: false,
 };
 
 /**
@@ -47,7 +55,11 @@ const VAS_TO_FEATURE_MAP: Record<VASFeatureId, keyof FeatureFlags> = {
   advanced_integrations: 'advanced_integrations',
   custom_branding: 'custom_branding',
   priority_support: 'priority_support',
-  marketplace_access: 'asset_management', // Maps to asset_management feature flag
+  marketplace_access: 'asset_management',
+  plant_manager_access: 'plant_manager_access',
+  staff_manager_access: 'staff_manager_access',
+  logistics_access: 'logistics_access',
+  operations_bundle: 'operations_bundle',
 };
 
 /**
@@ -244,6 +256,66 @@ export function getVASFeatureMetadata(): Record<VASFeatureId, VASFeatureMetadata
       ],
       price: '$49/month',
       learnMoreUrl: 'https://machineapp.com/features/marketplace',
+    },
+    plant_manager_access: {
+      id: 'plant_manager_access',
+      name: 'Plant Manager',
+      description: 'Full plant management capabilities including asset tracking, timesheets, and allocation.',
+      valueSummary: 'Manage your entire plant fleet with comprehensive tools for tracking hours, maintenance, and operator assignments.',
+      benefits: [
+        'Plant asset management',
+        'Timesheet tracking and approval',
+        'Asset allocation to sites',
+        'Operator assignment tracking',
+        'Maintenance scheduling',
+      ],
+      price: '$79/month',
+      learnMoreUrl: 'https://machineapp.com/features/plant-manager',
+    },
+    staff_manager_access: {
+      id: 'staff_manager_access',
+      name: 'Staff Manager',
+      description: 'Complete staff management with employee tracking, site allocations, and timesheet oversight.',
+      valueSummary: 'Streamline your workforce management with tools for tracking employees, managing site assignments, and overseeing timesheets.',
+      benefits: [
+        'Employee management',
+        'Site allocation tracking',
+        'Timesheet oversight',
+        'Staff requests handling',
+        'Cross-site employee visibility',
+      ],
+      price: '$79/month',
+      learnMoreUrl: 'https://machineapp.com/features/staff-manager',
+    },
+    logistics_access: {
+      id: 'logistics_access',
+      name: 'Logistics',
+      description: 'Manage logistics operations including material requests and delivery coordination.',
+      valueSummary: 'Coordinate logistics seamlessly with tools for tracking material requests, deliveries, and supply chain management.',
+      benefits: [
+        'Material request management',
+        'Delivery coordination',
+        'Supply chain visibility',
+        'Vendor communication',
+        'Inventory tracking',
+      ],
+      price: '$59/month',
+      learnMoreUrl: 'https://machineapp.com/features/logistics',
+    },
+    operations_bundle: {
+      id: 'operations_bundle',
+      name: 'Operations Bundle',
+      description: 'Complete operations package including Planner, Supervisor, and QC capabilities.',
+      valueSummary: 'Get all the tools you need for site operations - task planning, supervision, and quality control in one bundle.',
+      benefits: [
+        'Task planning and scheduling',
+        'Supervisor task management',
+        'QC request handling',
+        'Progress tracking',
+        'Cross-team coordination',
+      ],
+      price: '$149/month',
+      learnMoreUrl: 'https://machineapp.com/features/operations-bundle',
     },
   };
 }
