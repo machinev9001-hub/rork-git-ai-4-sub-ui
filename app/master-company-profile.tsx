@@ -359,7 +359,7 @@ export default function MasterCompanyProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Colors.background,
   },
   header: {
     paddingHorizontal: 20,
@@ -427,20 +427,17 @@ const styles = StyleSheet.create({
   quickActionCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     padding: 16,
     gap: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   quickActionIcon: {
     width: 48,
     height: 48,
-    backgroundColor: '#eff6ff',
+    backgroundColor: Colors.cardBg,
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
@@ -452,32 +449,31 @@ const styles = StyleSheet.create({
   quickActionTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1e293b',
+    color: Colors.text,
   },
   quickActionDescription: {
     fontSize: 13,
-    color: '#64748b',
+    color: Colors.textSecondary,
   },
   section: {
     gap: 12,
+    paddingHorizontal: 16,
   },
   sectionTitle: {
     fontSize: 13,
     fontWeight: '600' as const,
-    color: '#64748b',
+    color: Colors.accent,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
-    paddingLeft: 4,
+    paddingLeft: 20,
+    marginTop: 16,
   },
   sectionContent: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderRadius: 16,
     overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 2,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   menuItem: {
     flexDirection: 'row',
@@ -485,7 +481,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
+    borderBottomColor: Colors.border,
   },
   menuItemLast: {
     borderBottomWidth: 0,
@@ -493,7 +489,7 @@ const styles = StyleSheet.create({
   menuItemIcon: {
     width: 40,
     height: 40,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Colors.cardBg,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -510,14 +506,14 @@ const styles = StyleSheet.create({
   menuItemLabel: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: '#1e293b',
+    color: Colors.text,
   },
   menuItemLabelLocked: {
-    color: '#94a3b8',
+    color: Colors.textSecondary,
   },
   menuItemDescription: {
     fontSize: 13,
-    color: '#64748b',
+    color: Colors.textSecondary,
     lineHeight: 18,
   },
   vasBadge: {

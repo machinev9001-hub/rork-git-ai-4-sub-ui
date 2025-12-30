@@ -15,13 +15,13 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Building2, ChevronRight, Plus, Edit2, X, Save, ChevronDown, CheckCircle } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, query, where, getDocs, doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Company } from '@/types';
 import { INDUSTRY_SECTORS } from '@/constants/industrySectors';
+import { Colors } from '@/constants/colors';
 
 export default function CompanySelectorScreen() {
   const { user, masterAccount, selectCompany, refreshMasterAccount } = useAuth();
@@ -95,10 +95,8 @@ export default function CompanySelectorScreen() {
       console.log('[CompanySelector] Current user:', user?.userId, 'role:', user?.role);
       console.log('[CompanySelector] Current masterAccount:', masterAccount?.masterId);
       
-      // Refresh master account to get latest companyIds
       await refreshMasterAccount();
       
-      // Get master data from user or masterAccount
       const masterData = user?.role === 'master' ? user : masterAccount;
       const companyIds = masterData?.companyIds || [];
       
@@ -119,7 +117,6 @@ export default function CompanySelectorScreen() {
         return;
       }
 
-      // Fetch companies from database
       const companiesRef = collection(db, 'companies');
       const companiesQuery = query(
         companiesRef,
@@ -163,20 +160,17 @@ export default function CompanySelectorScreen() {
     }
   }, [user, masterAccount, refreshMasterAccount]);
 
-  // Reset hasLoadedOnce when user/masterAccount changes (e.g., after logout/login)
   useEffect(() => {
     hasLoadedOnce.current = false;
     loadInProgress.current = false;
   }, [user?.id, masterAccount?.id]);
 
-  // Load on mount
   useEffect(() => {
     if (!hasLoadedOnce.current) {
       loadCompanies();
     }
   }, [loadCompanies]);
 
-  // Reload when screen comes into focus (but not on initial mount)
   useFocusEffect(
     useCallback(() => {
       if (hasLoadedOnce.current && !loadInProgress.current) {
@@ -293,25 +287,20 @@ export default function CompanySelectorScreen() {
     setEditForm({});
   };
 
-  // Show loading state
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
         <Stack.Screen options={{ headerShown: false }} />
-        <LinearGradient colors={['#1e3a8a', '#3b82f6', '#60a5fa']} style={styles.gradient}>
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.loadingText}>Loading your companies...</Text>
-          </View>
-        </LinearGradient>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={Colors.accent} />
+          <Text style={styles.loadingText}>Loading your companies...</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
-  // If not loading but no user/master data, redirect to login
   if (!isLoading && !user && !masterAccount) {
     console.log('[CompanySelector] No auth data available, should redirect to login');
-    // Don't show anything, let the app routing handle redirect
     return null;
   }
 
@@ -332,10 +321,10 @@ export default function CompanySelectorScreen() {
               onPress={handleCloseEditModal}
               disabled={isSaving}
             >
-              <X size={24} color="#64748b" />
+              <X size={24} color={Colors.textSecondary} />
             </TouchableOpacity>
             <View style={styles.modalHeaderContent}>
-              <Building2 size={24} color="#3b82f6" />
+              <Building2 size={24} color={Colors.accent} />
               <Text style={styles.modalTitle}>Edit Company</Text>
             </View>
             <TouchableOpacity
@@ -344,9 +333,9 @@ export default function CompanySelectorScreen() {
               disabled={isSaving}
             >
               {isSaving ? (
-                <ActivityIndicator size="small" color="#3b82f6" />
+                <ActivityIndicator size="small" color={Colors.accent} />
               ) : (
-                <Save size={24} color="#3b82f6" />
+                <Save size={24} color={Colors.accent} />
               )}
             </TouchableOpacity>
           </View>
@@ -371,7 +360,7 @@ export default function CompanySelectorScreen() {
                     <Text style={[styles.modalSelectorText, !editForm.industrySector && styles.modalPlaceholder]}>
                       {editForm.industrySector || 'Select industry sector'}
                     </Text>
-                    <ChevronDown size={20} color="#64748b" />
+                    <ChevronDown size={20} color={Colors.textSecondary} />
                   </TouchableOpacity>
                 </View>
 
@@ -380,7 +369,7 @@ export default function CompanySelectorScreen() {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="e.g., ABC Construction (Pty) Ltd"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={editForm.legalEntityName}
                     onChangeText={(text) => setEditForm({ ...editForm, legalEntityName: text })}
                     editable={!isSaving}
@@ -392,7 +381,7 @@ export default function CompanySelectorScreen() {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="e.g., ABC Construction"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={editForm.alias}
                     onChangeText={(text) => setEditForm({ ...editForm, alias: text })}
                     editable={!isSaving}
@@ -404,7 +393,7 @@ export default function CompanySelectorScreen() {
                   <TextInput
                     style={[styles.modalInput, styles.modalTextArea]}
                     placeholder="Enter full company address"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={editForm.address}
                     onChangeText={(text) => setEditForm({ ...editForm, address: text })}
                     multiline
@@ -418,7 +407,7 @@ export default function CompanySelectorScreen() {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="e.g., +27 12 345 6789"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={editForm.contactNumber}
                     onChangeText={(text) => setEditForm({ ...editForm, contactNumber: text })}
                     keyboardType="phone-pad"
@@ -431,7 +420,7 @@ export default function CompanySelectorScreen() {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="Admin contact number"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={editForm.adminContact}
                     onChangeText={(text) => setEditForm({ ...editForm, adminContact: text })}
                     keyboardType="phone-pad"
@@ -444,7 +433,7 @@ export default function CompanySelectorScreen() {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="admin@company.com"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={editForm.adminEmail}
                     onChangeText={(text) => setEditForm({ ...editForm, adminEmail: text })}
                     keyboardType="email-address"
@@ -458,7 +447,7 @@ export default function CompanySelectorScreen() {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="e.g., 2021/123456/07"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={editForm.companyRegistrationNr}
                     onChangeText={(text) => setEditForm({ ...editForm, companyRegistrationNr: text })}
                     editable={!isSaving}
@@ -470,7 +459,7 @@ export default function CompanySelectorScreen() {
                   <TextInput
                     style={styles.modalInput}
                     placeholder="e.g., 4123456789"
-                    placeholderTextColor="#94a3b8"
+                    placeholderTextColor={Colors.textSecondary}
                     value={editForm.vatNumber}
                     onChangeText={(text) => setEditForm({ ...editForm, vatNumber: text })}
                     editable={!isSaving}
@@ -493,7 +482,7 @@ export default function CompanySelectorScreen() {
             <View style={styles.sectorModalHeader}>
               <Text style={styles.sectorModalTitle}>Select Industry Sector</Text>
               <TouchableOpacity onPress={() => setShowSectorModal(false)}>
-                <X size={24} color="#64748b" />
+                <X size={24} color={Colors.textSecondary} />
               </TouchableOpacity>
             </View>
 
@@ -519,7 +508,7 @@ export default function CompanySelectorScreen() {
                     {sector}
                   </Text>
                   {editForm.industrySector === sector && (
-                    <CheckCircle size={20} color="#3b82f6" />
+                    <CheckCircle size={20} color={Colors.accent} />
                   )}
                 </TouchableOpacity>
               ))}
@@ -528,10 +517,10 @@ export default function CompanySelectorScreen() {
         </View>
       </Modal>
       
-      <LinearGradient colors={['#1e3a8a', '#3b82f6', '#60a5fa']} style={styles.gradient}>
+      <View style={styles.mainContent}>
         <View style={styles.content}>
           <View style={styles.header}>
-            <Building2 size={48} color="#fff" strokeWidth={2} />
+            <Building2 size={48} color={Colors.accent} strokeWidth={2} />
             <Text style={styles.title}>Select Company</Text>
             <Text style={styles.subtitle}>
               Choose which company you want to access
@@ -548,7 +537,7 @@ export default function CompanySelectorScreen() {
                   style={styles.createButton}
                   onPress={handleCreateCompany}
                 >
-                  <Plus size={20} color="#1e3a8a" />
+                  <Plus size={20} color={Colors.background} />
                   <Text style={styles.createButtonText}>Create First Company</Text>
                 </TouchableOpacity>
               )}
@@ -565,20 +554,20 @@ export default function CompanySelectorScreen() {
                       onPress={() => handleSelectCompany(item)}
                     >
                       <View style={styles.companyIcon}>
-                        <Building2 size={24} color="#3b82f6" />
+                        <Building2 size={24} color={Colors.accent} />
                       </View>
                       <View style={styles.companyInfo}>
                         <Text style={styles.companyName}>{item.alias}</Text>
                         <Text style={styles.companyLegal}>{item.legalEntityName}</Text>
                       </View>
-                      <ChevronRight size={24} color="#94a3b8" />
+                      <ChevronRight size={24} color={Colors.textSecondary} />
                     </TouchableOpacity>
                     {(user?.role === 'master' || masterAccount) && (
                       <TouchableOpacity
                         style={styles.editButton}
                         onPress={() => handleEditCompany(item)}
                       >
-                        <Edit2 size={18} color="#3b82f6" />
+                        <Edit2 size={18} color={Colors.accent} />
                       </TouchableOpacity>
                     )}
                   </View>
@@ -592,7 +581,7 @@ export default function CompanySelectorScreen() {
                     style={styles.addCompanyLink}
                     onPress={handleCreateCompany}
                   >
-                    <Plus size={16} color="#cbd5e1" />
+                    <Plus size={16} color={Colors.textSecondary} />
                     <Text style={styles.addCompanyLinkText}>Add New Company</Text>
                   </TouchableOpacity>
                 </View>
@@ -600,7 +589,7 @@ export default function CompanySelectorScreen() {
             </>
           )}
         </View>
-      </LinearGradient>
+      </View>
     </SafeAreaView>
   );
 }
@@ -608,10 +597,11 @@ export default function CompanySelectorScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#1e3a8a',
+    backgroundColor: Colors.background,
   },
-  gradient: {
+  mainContent: {
     flex: 1,
+    backgroundColor: Colors.background,
   },
   content: {
     flex: 1,
@@ -623,10 +613,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     gap: 16,
+    backgroundColor: Colors.background,
   },
   loadingText: {
     fontSize: 16,
-    color: '#fff',
+    color: Colors.text,
     fontWeight: '600' as const,
   },
   header: {
@@ -636,13 +627,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: '700' as const,
-    color: '#fff',
+    color: Colors.text,
     marginTop: 16,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 15,
-    color: '#cbd5e1',
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   emptyState: {
@@ -653,14 +644,14 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 16,
-    color: '#cbd5e1',
+    color: Colors.textSecondary,
     textAlign: 'center',
   },
   createButton: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.accent,
     paddingVertical: 14,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -668,7 +659,7 @@ const styles = StyleSheet.create({
   createButtonText: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1e3a8a',
+    color: Colors.background,
   },
   listContent: {
     gap: 12,
@@ -680,10 +671,12 @@ const styles = StyleSheet.create({
   companyCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     padding: 16,
     gap: 12,
+    borderWidth: 1,
+    borderColor: Colors.border,
   },
   editButton: {
     position: 'absolute',
@@ -691,17 +684,17 @@ const styles = StyleSheet.create({
     right: 8,
     width: 36,
     height: 36,
-    backgroundColor: '#eff6ff',
+    backgroundColor: Colors.cardBg,
     borderRadius: 18,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#dbeafe',
+    borderColor: Colors.border,
   },
   companyIcon: {
     width: 48,
     height: 48,
-    backgroundColor: '#eff6ff',
+    backgroundColor: Colors.cardBg,
     borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
@@ -713,11 +706,11 @@ const styles = StyleSheet.create({
   companyName: {
     fontSize: 17,
     fontWeight: '600' as const,
-    color: '#1e293b',
+    color: Colors.text,
   },
   companyLegal: {
     fontSize: 14,
-    color: '#64748b',
+    color: Colors.textSecondary,
   },
   addCompanyContainer: {
     alignItems: 'center',
@@ -733,12 +726,12 @@ const styles = StyleSheet.create({
   },
   addCompanyLinkText: {
     fontSize: 15,
-    color: '#cbd5e1',
+    color: Colors.textSecondary,
     fontWeight: '500' as const,
   },
   modalContainer: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: Colors.background,
   },
   modalHeader: {
     flexDirection: 'row',
@@ -746,9 +739,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: Colors.border,
   },
   modalCloseButton: {
     width: 40,
@@ -766,7 +759,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: '#1e293b',
+    color: Colors.text,
   },
   modalSaveButton: {
     width: 40,
@@ -793,18 +786,18 @@ const styles = StyleSheet.create({
   modalLabel: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#475569',
+    color: Colors.textSecondary,
     marginLeft: 4,
   },
   modalInput: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 15,
-    color: '#1e293b',
+    color: Colors.text,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: Colors.border,
   },
   modalTextArea: {
     minHeight: 80,
@@ -812,7 +805,7 @@ const styles = StyleSheet.create({
     paddingTop: 14,
   },
   modalSelectorButton: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -820,22 +813,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: Colors.border,
   },
   modalSelectorText: {
     fontSize: 15,
-    color: '#1e293b',
+    color: Colors.text,
   },
   modalPlaceholder: {
-    color: '#94a3b8',
+    color: Colors.textSecondary,
   },
   sectorModalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     justifyContent: 'flex-end',
   },
   sectorModalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: Colors.surface,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     maxHeight: '80%',
@@ -847,12 +840,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 20,
     borderBottomWidth: 1,
-    borderBottomColor: '#e2e8f0',
+    borderBottomColor: Colors.border,
   },
   sectorModalTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
-    color: '#1e293b',
+    color: Colors.text,
   },
   sectorList: {
     paddingHorizontal: 16,
@@ -867,15 +860,15 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   sectorItemSelected: {
-    backgroundColor: '#eff6ff',
+    backgroundColor: Colors.cardBg,
   },
   sectorItemText: {
     fontSize: 16,
-    color: '#475569',
+    color: Colors.textSecondary,
     flex: 1,
   },
   sectorItemTextSelected: {
-    color: '#3b82f6',
+    color: Colors.accent,
     fontWeight: '600' as const,
   },
 });
