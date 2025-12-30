@@ -39,16 +39,15 @@ export default function CompanySettingsScreen() {
   const [showPlantTypesSection, setShowPlantTypesSection] = useState(false);
 
   const loadCompanySettings = useCallback(async () => {
-    if (!user?.siteId) return;
-    
-    if (user?.role !== 'master' && user?.role !== 'Planner') {
-      Alert.alert('Access Denied', 'Only Master and Planner accounts can access Company Settings');
-      router.back();
+    if (!user?.siteId) {
+      console.log('[CompanySettings] No siteId found');
+      setIsFetching(false);
       return;
     }
 
     try {
       setIsFetching(true);
+      console.log('[CompanySettings] Loading settings for siteId:', user.siteId);
       const siteRef = doc(db, 'sites', user.siteId);
       const siteDoc = await getDoc(siteRef);
       
@@ -68,20 +67,28 @@ export default function CompanySettingsScreen() {
           setPlantTypes(settings.plantTypes || []);
         }
       }
+      console.log('[CompanySettings] Settings loaded successfully');
     } catch (error) {
       console.error('[CompanySettings] Error loading settings:', error);
+      Alert.alert('Error', 'Failed to load company settings');
     } finally {
       setIsFetching(false);
     }
   }, [user?.siteId]);
 
   useEffect(() => {
+    if (user?.role !== 'master') {
+      console.log('[CompanySettings] Access denied for role:', user?.role);
+      Alert.alert('Access Denied', 'Only Master accounts can access Company Settings');
+      router.back();
+      return;
+    }
     loadCompanySettings();
-  }, [loadCompanySettings]);
+  }, [loadCompanySettings, user?.role]);
 
   const handleSave = async () => {
-    if (user?.role !== 'master' && user?.role !== 'Planner') {
-      Alert.alert('Access Denied', 'Only Master and Planner accounts can edit Company Settings');
+    if (user?.role !== 'master') {
+      Alert.alert('Access Denied', 'Only Master accounts can edit Company Settings');
       return;
     }
     
