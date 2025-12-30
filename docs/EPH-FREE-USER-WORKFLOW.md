@@ -1,62 +1,88 @@
-# EPH Workflow for Free Users
+# EPH System & Free User Workflow
 
 ## Overview
 
-This document describes the EPH (Equipment Per Hour) workflow extension to support free users as plant asset owners.
+This document describes the complete EPH (Equipment Per Hour) workflow, including how free users interact with the system. Both free and enterprise users share the same core workflow—the only difference is feature access restrictions for free users.
 
-## Current Situation
+---
 
-**Enterprise Setup:**
-- Enterprise users have sites
-- They hire plant assets from subcontractors OR free users
-- Plant assets record timesheets
-- EPH reports are generated and sent to subcontractors for approval
-- After agreement, billing proceeds
+## User Types & Access
 
-**Free User Setup:**
-- Free users create master accounts
-- They list their plant assets in the marketplace
-- Enterprise users (or VAS-enabled free users) can see and hire these assets
-- Free users need to receive EPH reports from enterprises where their assets are working
+### Enterprise Users
+- Full access to all features
+- Can create sites, manage employees, generate reports
+- Can hire plant assets from subcontractors or free users
+- Generate and send EPH reports
 
-## The Problem
+### Free Users
+- Same workflow and UI as enterprise users
+- Most features are locked with explanatory popups
+- Can list plant assets in the marketplace
+- Receive EPH reports from enterprise clients via EPH Inbox
+- Can review and approve/dispute hours
 
-The current EPH system only supports:
-- **Enterprise → Subcontractor** workflow
-- Uses `ownerId` (subcontractor document ID) to identify asset owners
+**Important:** Free users land on the same HOME screen as enterprise users. Locked modules display a popup explaining the feature with options to unlock.
 
-Free users need:
-- **Enterprise → Free User** workflow
-- Track which free user (masterAccountId) owns each plant asset
-- EPH inbox to receive reports from multiple enterprise clients
-- Ability to review and approve hours
+---
 
-## Solution Architecture
+## EPH Workflow Overview
 
-### 1. Extended PlantAsset Type
+### Enterprise → Asset Owner Flow
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│  Enterprise User                    Asset Owner                 │
+│  (Hires assets)                     (Subcontractor or Free User)│
+│                                                                 │
+│  ┌─────────────┐                    ┌─────────────┐            │
+│  │ Record      │                    │ EPH Inbox   │            │
+│  │ Timesheets  │                    │             │            │
+│  └─────┬───────┘                    └──────▲──────┘            │
+│        │                                   │                    │
+│        ▼                                   │                    │
+│  ┌─────────────┐    Send Report     ┌──────┴──────┐            │
+│  │ Billing     │ ─────────────────► │ EPH Report  │            │
+│  │ Config      │                    │ Created     │            │
+│  └─────────────┘                    └──────┬──────┘            │
+│                                            │                    │
+│                                            ▼                    │
+│                                     ┌─────────────┐            │
+│                                     │ Review &    │            │
+│                                     │ Approve     │            │
+│                                     └─────────────┘            │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## Data Structures
+
+### PlantAsset Type (Extended)
 
 ```typescript
 export type PlantAsset = {
-  // ... existing fields
-  ownerType: 'company' | 'subcontractor';
-  ownerId?: string;  // For subcontractors (existing)
+  // Existing fields...
+  assetId: string;
+  assetName: string;
+  assetType: string;
   
-  // NEW FIELDS for free user owners
-  ownerMasterAccountId?: string;  // Free user's master account ID
-  ownerEmail?: string;  // Contact email for EPH reports
-  ownerContactName?: string;  // Contact name
+  // Owner identification
+  ownerType: 'company' | 'subcontractor';
+  ownerId?: string;                    // For subcontractors (existing)
+  ownerMasterAccountId?: string;       // Free user's master account ID
+  ownerEmail?: string;                 // Contact email for EPH reports
+  ownerContactName?: string;           // Contact name
+  ownerName?: string;                  // Company/business name
 }
 ```
 
 **Logic:**
-- If `ownerType === 'subcontractor'`: Use existing subcontractor workflow with `ownerId`
-- If `ownerType === 'company'` AND `ownerMasterAccountId` is set: This is a free user owner
+- `ownerType === 'subcontractor'` → Use existing subcontractor workflow with `ownerId`
+- `ownerType === 'company'` AND `ownerMasterAccountId` → Free user owner
 
-### 2. New EPHReport Collection
-
-**Purpose:** Track EPH reports sent to free users (and subcontractors)
-
-**Collection:** `ephReports`
+### EPHReport Type
 
 ```typescript
 export type EPHReport = {
@@ -66,10 +92,10 @@ export type EPHReport = {
   
   // Recipient info
   recipientType: 'subcontractor' | 'free_user';
-  recipientId: string;  // subcontractorId or ownerMasterAccountId
+  recipientId: string;
   recipientName: string;
   recipientEmail?: string;
-  recipientMasterAccountId?: string;  // For free users
+  recipientMasterAccountId?: string;
   
   // Sender info
   senderMasterAccountId: string;
@@ -94,17 +120,20 @@ export type EPHReport = {
   reviewedBy?: string;
   agreedAt?: Timestamp;
   agreedBy?: string;
+  disputeNotes?: string;
   
   createdAt: Timestamp;
   updatedAt?: Timestamp;
 }
 ```
 
-### 3. EPH Generation Changes
+---
 
-**File:** `app/billing-config.tsx`
+## Workflow Steps
 
-When generating EPH, identify the owner:
+### Step 1: Enterprise Generates EPH Report
+
+Location: `app/billing-config.tsx` → EPH Tab
 
 ```typescript
 const determineAssetOwner = (asset: PlantAsset) => {
@@ -129,20 +158,37 @@ const determineAssetOwner = (asset: PlantAsset) => {
 };
 ```
 
-### 4. Free User EPH Inbox
+When "Send to Owner" is clicked:
+1. Generate PDF report
+2. Identify owner type (subcontractor vs free user)
+3. Create EPH report record in Firestore
+4. Send email notification
 
-**New Screen:** `app/eph-inbox.tsx`
+### Step 2: Free User Receives Notification
 
-**Purpose:** Free users see EPH reports sent to them by enterprise clients
+Email notification sent to owner:
+```
+Subject: EPH Report for Review - [Company Name]
 
-**Features:**
-- List all EPH reports where `recipientMasterAccountId === currentUser.masterAccountId`
-- Filter by status (sent, reviewed, agreed)
-- View report details
-- Review and approve hours
-- Dispute hours (add notes)
+Dear [Owner Name],
 
-**UI Layout:**
+[Company Name] has sent you an Equipment/Plant Hours (EPH) 
+report for the period [Start Date] to [End Date].
+
+Your Assets: [Count]
+Total Hours: [Hours]h
+Estimated Cost: R[Amount]
+
+Please login to review and approve the hours.
+
+[View EPH Report]
+```
+
+### Step 3: Free User Reviews in EPH Inbox
+
+Location: `app/eph-inbox.tsx`
+
+UI Layout:
 ```
 ┌─────────────────────────────────────┐
 │ EPH Inbox                           │
@@ -167,90 +213,9 @@ const determineAssetOwner = (asset: PlantAsset) => {
 └─────────────────────────────────────┘
 ```
 
-### 5. Workflow Steps
+### Step 4: Free User Takes Action
 
-#### Step 1: Enterprise Generates EPH
-
-```typescript
-// In billing-config.tsx - when "Send to Subcontractor/Owner" clicked
-
-const sendEPHReport = async () => {
-  // 1. Generate PDF
-  const pdfUri = await generateTimesheetPDF(ephData);
-  
-  // 2. Determine recipient
-  const owner = determineAssetOwner(selectedAssets[0]);
-  
-  // 3. Create EPH report record
-  const reportRef = doc(collection(db, 'ephReports'));
-  await setDoc(reportRef, {
-    id: reportRef.id,
-    reportId: `EPH-${Date.now()}`,
-    status: 'sent',
-    recipientType: owner.recipientType,
-    recipientId: owner.recipientId,
-    recipientName: owner.recipientName,
-    recipientEmail: recipientEmail,
-    recipientMasterAccountId: owner.recipientMasterAccountId,
-    senderMasterAccountId: user.masterAccountId,
-    senderCompanyName: user.companyName,
-    siteId: user.siteId,
-    siteName: user.siteName,
-    dateRangeFrom: startDate.toISOString(),
-    dateRangeTo: endDate.toISOString(),
-    assetIds: selectedAssets.map(a => a.assetId),
-    totalAssets: selectedAssets.length,
-    totalHours: totalHours,
-    totalCost: totalCost,
-    message: customMessage,
-    pdfUrl: pdfUri,
-    sentAt: Timestamp.now(),
-    sentBy: user.userId,
-    createdAt: Timestamp.now(),
-  });
-  
-  // 4. Send email notification
-  await sendEPHToOwner({
-    recipientEmail,
-    recipientName: owner.recipientName,
-    ownerType: owner.recipientType,
-    ...
-  });
-};
-```
-
-#### Step 2: Free User Receives Notification
-
-**Email:**
-```
-Subject: EPH Report for Review - ABC Construction Ltd
-
-Dear John's Plant Hire,
-
-ABC Construction Ltd has sent you an Equipment/Plant Hours (EPH) 
-report for the period 1 Dec 2025 to 15 Dec 2025.
-
-Your Assets: 3
-Total Hours: 285h
-Estimated Cost: R128,250
-
-Please login to your account to review and approve the hours.
-
-[View EPH Report]
-
-Thank you,
-ABC Construction Ltd
-```
-
-#### Step 3: Free User Reviews EPH
-
-**Screen:** EPH Inbox → EPH Detail
-
-**Actions:**
-1. **Approve Hours** - Agree with the report
-2. **Dispute Hours** - Add notes about discrepancies
-3. **Request Edits** - Ask enterprise to adjust hours
-
+**Approve Hours:**
 ```typescript
 const approveEPH = async (reportId: string) => {
   await updateDoc(doc(db, 'ephReports', reportId), {
@@ -261,11 +226,11 @@ const approveEPH = async (reportId: string) => {
     agreedBy: currentUser.userId,
     updatedAt: Timestamp.now(),
   });
-  
-  // Send confirmation email to enterprise
-  await sendApprovalNotification(...);
 };
+```
 
+**Dispute Hours:**
+```typescript
 const disputeEPH = async (reportId: string, notes: string) => {
   await updateDoc(doc(db, 'ephReports', reportId), {
     status: 'disputed',
@@ -274,150 +239,158 @@ const disputeEPH = async (reportId: string, notes: string) => {
     disputeNotes: notes,
     updatedAt: Timestamp.now(),
   });
-  
-  // Send dispute notification to enterprise
-  await sendDisputeNotification(...);
 };
 ```
 
-#### Step 4: Enterprise Receives Response
+### Step 5: Enterprise Receives Response
 
-**Notification Methods:**
-- Email notification
-- In-app notification badge
-- Status update in billing-config EPH tab
+Status updates visible in billing-config EPH tab:
+- ✅ **Agreed** → Can proceed to payment
+- ⚠️ **Disputed** → View notes, edit hours, resend
 
-**If Approved:**
-- Status: "✅ Agreed by Owner"
-- Can proceed to payment
+---
 
-**If Disputed:**
-- Status: "⚠️ Disputed by Owner"
-- View dispute notes
-- Edit hours and resend
+## Firebase Configuration
 
-### 6. Firebase Rules
+### Security Rules
 
 ```javascript
 match /ephReports/{reportId} {
-  allow read: if (
-    request.auth != null &&
-    (
-      // Sender can read their sent reports
-      resource.data.senderMasterAccountId == request.auth.token.masterAccountId ||
-      // Recipient can read reports sent to them
-      resource.data.recipientMasterAccountId == request.auth.token.masterAccountId
-    )
+  allow read: if request.auth != null;
+  
+  allow create: if request.auth != null;
+  
+  allow update: if request.auth != null && (
+    resource.data.senderMasterAccountId == request.auth.token.masterAccountId ||
+    resource.data.recipientMasterAccountId == request.auth.token.masterAccountId
   );
   
-  allow create: if (
-    request.auth != null &&
-    request.resource.data.senderMasterAccountId == request.auth.token.masterAccountId
-  );
-  
-  allow update: if (
-    request.auth != null &&
-    (
-      // Sender can update their reports
-      resource.data.senderMasterAccountId == request.auth.token.masterAccountId ||
-      // Recipient can update status (approve/dispute)
-      (
-        resource.data.recipientMasterAccountId == request.auth.token.masterAccountId &&
-        request.resource.data.status in ['reviewed', 'agreed', 'disputed']
-      )
-    )
-  );
+  allow delete: if request.auth != null && 
+    resource.data.senderMasterAccountId == request.auth.token.masterAccountId;
 }
 ```
 
-### 7. Firebase Indexes
-
-Add to `firestore.indexes.json`:
+### Required Indexes
 
 ```json
 {
-  "collectionGroup": "ephReports",
-  "queryScope": "COLLECTION",
-  "fields": [
-    { "fieldPath": "recipientMasterAccountId", "order": "ASCENDING" },
-    { "fieldPath": "status", "order": "ASCENDING" },
-    { "fieldPath": "createdAt", "order": "DESCENDING" }
-  ]
-},
-{
-  "collectionGroup": "ephReports",
-  "queryScope": "COLLECTION",
-  "fields": [
-    { "fieldPath": "senderMasterAccountId", "order": "ASCENDING" },
-    { "fieldPath": "status", "order": "ASCENDING" },
-    { "fieldPath": "sentAt", "order": "DESCENDING" }
+  "indexes": [
+    {
+      "collectionGroup": "ephReports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recipientMasterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "ephReports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "recipientMasterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "ephReports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "senderMasterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "sentAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "ephReports",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "senderMasterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "sentAt", "order": "DESCENDING" }
+      ]
+    }
   ]
 }
 ```
 
-## Implementation Checklist
+---
 
-### Phase 1: Type Definitions
-- [ ] Add new fields to PlantAsset type
-- [ ] Create EPHReport type
-- [ ] Update billing-config types
+## Implementation Status
 
-### Phase 2: Asset Onboarding
-- [ ] Update plant asset creation to capture owner email
-- [ ] Add owner masterAccountId for free users
-- [ ] Update marketplace to show owner type
+### Completed
+- [x] Extended PlantAsset type with owner fields
+- [x] Created EPHReport type (`types/ephReport.ts`)
+- [x] Created EPH report manager (`utils/ephReportManager.ts`)
+- [x] Created EPH inbox screen (`app/eph-inbox.tsx`)
+- [x] Free user routing aligned with enterprise workflow
 
-### Phase 3: EPH Generation Updates
-- [ ] Detect owner type (subcontractor vs free user)
-- [ ] Group assets by owner
-- [ ] Create EPH report records
-- [ ] Support both email types
+### Pending
+- [ ] Update billing-config.tsx to use EPH report system
+- [ ] Add EPH inbox navigation for free users in settings
+- [ ] Deploy Firebase indexes
+- [ ] Deploy Firebase security rules
+- [ ] End-to-end testing
 
-### Phase 4: Free User Inbox
-- [ ] Create EPH inbox screen
-- [ ] Query reports by recipientMasterAccountId
-- [ ] Display report cards
-- [ ] Detail view with all timesheet data
+---
 
-### Phase 5: Response Actions
-- [ ] Approve EPH button
-- [ ] Dispute EPH with notes
-- [ ] Send notifications back to enterprise
+## Testing Checklist
 
-### Phase 6: Enterprise Monitoring
-- [ ] Show EPH status in billing-config
-- [ ] Handle disputed reports
-- [ ] Resend edited reports
+### Scenario 1: Enterprise → Free User EPH Flow
+1. Enterprise has a site with allocated plant assets from free user
+2. Enterprise goes to Billing Config → EPH tab
+3. Selects date range and free user's assets
+4. Clicks "Send to Owner"
+5. **Expected:** EPH report created, email sent, free user sees report in inbox
 
-### Phase 7: Testing
-- [ ] Test subcontractor workflow (existing)
-- [ ] Test free user workflow (new)
-- [ ] Test mixed scenarios (some sub, some free)
-- [ ] Test notifications
-- [ ] Test dispute resolution
+### Scenario 2: Free User Approves EPH
+1. Free user logs in
+2. Opens EPH Inbox
+3. Reviews pending report
+4. Clicks "Approve"
+5. **Expected:** Status changes to "agreed", enterprise notified
 
-## Benefits
+### Scenario 3: Free User Disputes EPH
+1. Free user opens report
+2. Clicks "Dispute"
+3. Enters notes
+4. **Expected:** Status changes to "disputed", notes saved
 
-1. **Unified Workflow:** One EPH system for both subcontractors and free users
-2. **Transparency:** Free users see exactly what they'll be paid
-3. **Automation:** Less manual communication needed
-4. **Audit Trail:** Complete history of reports, approvals, disputes
-5. **Scalability:** Free users can work with multiple enterprise clients
-6. **Professional:** Proper invoicing and approval workflow
+### Scenario 4: Mixed Owners
+1. Site has assets from both subcontractor and free user
+2. Enterprise generates EPH for all
+3. **Expected:** Separate reports created for each owner
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|-------|----------|
+| Email not sent | Check `ownerEmail` is set on PlantAsset |
+| EPH Inbox empty | Verify `ownerMasterAccountId` matches user's master account |
+| Assets not showing | Ensure assets have timesheets and are verified |
+| Cannot group by owner | Check all assets have proper owner info |
+
+---
+
+## Key Files
+
+| File | Purpose |
+|------|---------|
+| `app/billing-config.tsx` | Enterprise generates/sends EPH |
+| `app/eph-inbox.tsx` | Free user receives/reviews EPH |
+| `types/ephReport.ts` | EPH report type definitions |
+| `utils/ephReportManager.ts` | EPH report CRUD operations |
+| `types/index.ts` | PlantAsset type with owner fields |
+
+---
 
 ## Future Enhancements
 
-1. **Auto-approval:** If no response in X days, auto-approve
-2. **Partial approval:** Approve some assets, dispute others
-3. **Payment tracking:** Link to payment confirmation
-4. **Analytics:** Free user dashboard showing income by client
-5. **Contract terms:** Store agreed rates and terms
-6. **Multi-currency:** Support different currencies
-7. **Tax documents:** Generate tax invoices automatically
-
-## Support
-
-For questions or implementation help, refer to:
-- `docs/EPH-AGREEMENT-WORKFLOW-COMPLETE.md`
-- `docs/PLANT-HOURS-BILLING-SYSTEM-COMPLETE.md`
-- `app/billing-config.tsx`
+1. **Auto-approval** - If no response in X days
+2. **Partial approval** - Approve some assets, dispute others
+3. **Payment tracking** - Link to payment confirmation
+4. **Analytics dashboard** - Free user income by client
+5. **Contract terms** - Store agreed rates
+6. **Multi-currency** - Support different currencies
+7. **Tax documents** - Auto-generate invoices
