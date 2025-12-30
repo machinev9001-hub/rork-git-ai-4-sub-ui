@@ -18,7 +18,6 @@ import { ArrowLeft, Save, Building2, Plus, Trash2, ChevronDown, ChevronUp, Packa
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import { CompanySettings } from '@/types';
 
 export default function CompanySettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -39,33 +38,35 @@ export default function CompanySettingsScreen() {
   const [showPlantTypesSection, setShowPlantTypesSection] = useState(false);
 
   const loadCompanySettings = useCallback(async () => {
-    if (!user?.siteId) {
-      console.log('[CompanySettings] No siteId found');
+    const companyId = user?.currentCompanyId;
+    if (!companyId) {
+      console.log('[CompanySettings] No currentCompanyId found');
       setIsFetching(false);
       return;
     }
 
     try {
       setIsFetching(true);
-      console.log('[CompanySettings] Loading settings for siteId:', user.siteId);
-      const siteRef = doc(db, 'sites', user.siteId);
-      const siteDoc = await getDoc(siteRef);
+      console.log('[CompanySettings] Loading settings for companyId:', companyId);
+      const companyRef = doc(db, 'companies', companyId);
+      const companyDoc = await getDoc(companyRef);
       
-      if (siteDoc.exists()) {
-        const data = siteDoc.data();
-        const settings = data.companySettings as CompanySettings | undefined;
+      if (companyDoc.exists()) {
+        const data = companyDoc.data();
+        console.log('[CompanySettings] Company data loaded:', data.alias);
         
-        if (settings) {
-          setLegalEntityName(settings.legalEntityName || '');
-          setAlias(settings.alias || '');
-          setAddress(settings.address || '');
-          setContact(settings.contact || '');
-          setAdminContact(settings.adminContact || '');
-          setAdminEmail(settings.adminEmail || '');
-          setCompanyRegistrationNr(settings.companyRegistrationNr || '');
-          setVatNr(settings.vatNr || '');
-          setPlantTypes(settings.plantTypes || []);
-        }
+        setLegalEntityName(data.legalEntityName || '');
+        setAlias(data.alias || '');
+        setAddress(data.address || '');
+        setContact(data.contactNumber || '');
+        setAdminContact(data.adminContact || '');
+        setAdminEmail(data.adminEmail || '');
+        setCompanyRegistrationNr(data.companyRegistrationNr || '');
+        setVatNr(data.vatNumber || '');
+        setPlantTypes(data.plantTypes || []);
+      } else {
+        console.log('[CompanySettings] Company document not found');
+        Alert.alert('Error', 'Company not found');
       }
       console.log('[CompanySettings] Settings loaded successfully');
     } catch (error) {
@@ -74,7 +75,7 @@ export default function CompanySettingsScreen() {
     } finally {
       setIsFetching(false);
     }
-  }, [user?.siteId]);
+  }, [user?.currentCompanyId]);
 
   useEffect(() => {
     if (user?.role !== 'master') {
@@ -92,29 +93,32 @@ export default function CompanySettingsScreen() {
       return;
     }
     
-    if (!user?.siteId) {
-      Alert.alert('Error', 'No site ID found');
+    const companyId = user?.currentCompanyId;
+    if (!companyId) {
+      Alert.alert('Error', 'No company selected');
       return;
     }
 
     setIsLoading(true);
 
     try {
-      const settings: CompanySettings = {
+      console.log('[CompanySettings] Saving settings for companyId:', companyId);
+      
+      const companyRef = doc(db, 'companies', companyId);
+      await setDoc(companyRef, {
         legalEntityName: legalEntityName.trim(),
         alias: alias.trim(),
         address: address.trim(),
-        contact: contact.trim(),
+        contactNumber: contact.trim(),
         adminContact: adminContact.trim(),
         adminEmail: adminEmail.trim(),
         companyRegistrationNr: companyRegistrationNr.trim(),
-        vatNr: vatNr.trim(),
+        vatNumber: vatNr.trim(),
         plantTypes,
-      };
+        updatedAt: new Date(),
+      }, { merge: true });
 
-      const siteRef = doc(db, 'sites', user.siteId);
-      await setDoc(siteRef, { companySettings: settings }, { merge: true });
-
+      console.log('[CompanySettings] Settings saved successfully');
       Alert.alert('Success', 'Company settings saved successfully');
       router.back();
     } catch (error) {
