@@ -51,13 +51,8 @@ export default function CompanySelectorScreen() {
       console.log('[CompanySelector] Account type:', company.accountType);
       
       if (user?.role === 'master' || masterAccount) {
-        if (company.accountType === 'free') {
-          console.log('[CompanySelector] Free account → navigating to plant marketplace');
-          router.replace('/plant-asset-marketplace');
-        } else {
-          console.log('[CompanySelector] Enterprise master account → navigating to /master-sites');
-          router.replace('/master-sites');
-        }
+        console.log('[CompanySelector] Master account → navigating to home tabs');
+        router.replace('/(tabs)');
       } else if (user) {
         console.log('[CompanySelector] User role:', user.role);
         
