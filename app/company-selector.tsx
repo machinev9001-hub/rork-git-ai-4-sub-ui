@@ -47,8 +47,27 @@ export default function CompanySelectorScreen() {
     
     if (result.success) {
       console.log('[CompanySelector] Company selected successfully');
-      console.log('[CompanySelector] User role:', user?.role, 'MasterAccount:', !!masterAccount);
-      console.log('[CompanySelector] Account type:', company.accountType);
+      console.log('[CompanySelector] Checking for sites...');
+      
+      try {
+        const sitesRef = collection(db, 'sites');
+        const sitesQuery = query(
+          sitesRef,
+          where('companyId', '==', company.id),
+          where('status', '==', 'Active')
+        );
+        const sitesSnapshot = await getDocs(sitesQuery);
+        
+        if (!sitesSnapshot.empty) {
+          console.log('[CompanySelector] Sites found, navigating to site selector');
+          router.replace('/site-selector');
+          return;
+        }
+        
+        console.log('[CompanySelector] No sites found, navigating to home');
+      } catch (error) {
+        console.error('[CompanySelector] Error checking sites:', error);
+      }
       
       if (user?.role === 'master' || masterAccount) {
         console.log('[CompanySelector] Master account → navigating to home tabs');
