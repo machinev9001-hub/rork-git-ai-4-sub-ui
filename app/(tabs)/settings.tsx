@@ -1,7 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, Info, CreditCard, ChevronRight, MapPin } from 'lucide-react-native';
+import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, Info, CreditCard, MapPin } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
 import { useAccountType } from '@/utils/hooks/useFeatureFlags';
@@ -15,6 +15,7 @@ export default function SettingsScreen() {
   const [isAssetManagementExpanded, setIsAssetManagementExpanded] = useState(false);
   const [isMasterControlsExpanded, setIsMasterControlsExpanded] = useState(false);
   const [isSiteSetupExpanded, setIsSiteSetupExpanded] = useState(false);
+  const [isCompanySiteExpanded, setIsCompanySiteExpanded] = useState(false);
   const roleAccentColor = getRoleAccentColor(user?.role);
 
   const isMasterOrPlanner = user?.role === 'master' || user?.role === 'Planner';
@@ -105,78 +106,83 @@ export default function SettingsScreen() {
             <Text style={styles.sectionTitle}>Company & Site</Text>
             
             <View style={styles.menuCard}>
-              {/* Current Company Display */}
-              {user?.companyName && (
-                <View style={styles.contextDisplay}>
-                  <Building2 size={20} color={Colors.accent} />
-                  <View style={styles.contextInfo}>
-                    <Text style={styles.contextLabel}>Current Company</Text>
-                    <Text style={styles.contextValue}>{user.companyName}</Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Current Site Display */}
-              {user?.siteName && (
-                <View style={styles.contextDisplay}>
-                  <MapPin size={20} color={Colors.accent} />
-                  <View style={styles.contextInfo}>
-                    <Text style={styles.contextLabel}>Current Site</Text>
-                    <Text style={styles.contextValue}>{user.siteName}</Text>
-                  </View>
-                </View>
-              )}
-
-              {/* Master Company Profile */}
               <TouchableOpacity 
-                style={styles.menuButton}
-                onPress={() => router.push('/master-company-profile' as any)}
+                style={styles.expandableHeader}
+                onPress={() => setIsCompanySiteExpanded(!isCompanySiteExpanded)}
               >
-                <View style={styles.menuButtonContent}>
+                <View style={styles.expandableHeaderContent}>
                   <View style={styles.menuIcon}>
                     <Building2 size={24} color="#3b82f6" />
                   </View>
                   <View style={styles.menuContent}>
-                    <Text style={styles.menuTitle}>Master Company Profile</Text>
-                    <Text style={styles.menuDescription}>Manage company-level settings</Text>
+                    <Text style={styles.menuTitle}>{user?.companyName || 'Company'}</Text>
+                    <Text style={styles.menuDescription}>{user?.siteName || 'Select a site'}</Text>
                   </View>
-                  <ChevronRight size={20} color={Colors.textSecondary} />
                 </View>
+                {isCompanySiteExpanded ? (
+                  <ChevronUp size={20} color="#64748b" />
+                ) : (
+                  <ChevronDown size={20} color="#64748b" />
+                )}
               </TouchableOpacity>
 
-              {/* Switch Company */}
-              <TouchableOpacity 
-                style={styles.menuButton}
-                onPress={() => router.push('/company-selector' as any)}
-              >
-                <View style={styles.menuButtonContent}>
-                  <View style={styles.menuIcon}>
-                    <Building2 size={24} color="#10b981" />
+              {isCompanySiteExpanded && (
+                <View style={styles.expandedContent}>
+                  {/* Master Company Profile */}
+                  <View style={styles.subMenuCard}>
+                    <TouchableOpacity 
+                      style={styles.subMenuItem}
+                      onPress={() => router.push('/master-company-profile' as any)}
+                    >
+                      <View style={styles.subMenuIcon}>
+                        <Building2 size={20} color="#3b82f6" />
+                      </View>
+                      <View style={styles.subMenuContent}>
+                        <Text style={styles.subMenuTitle}>Master Company Profile</Text>
+                        <Text style={styles.subMenuDescription}>Manage company-level settings</Text>
+                      </View>
+                    </TouchableOpacity>
                   </View>
-                  <View style={styles.menuContent}>
-                    <Text style={styles.menuTitle}>Switch Company</Text>
-                    <Text style={styles.menuDescription}>Change current company context</Text>
-                  </View>
-                  <ChevronRight size={20} color={Colors.textSecondary} />
-                </View>
-              </TouchableOpacity>
 
-              {/* Manage Sites */}
-              <TouchableOpacity 
-                style={styles.menuButton}
-                onPress={() => router.push('/master-sites' as any)}
-              >
-                <View style={styles.menuButtonContent}>
-                  <View style={styles.menuIcon}>
-                    <MapPin size={24} color="#f59e0b" />
+                  {/* Switch Company */}
+                  <View style={styles.subMenuCard}>
+                    <TouchableOpacity 
+                      style={styles.subMenuItem}
+                      onPress={() => {
+                        console.log('Navigating to company-selector');
+                        router.push('/company-selector' as any);
+                      }}
+                    >
+                      <View style={styles.subMenuIcon}>
+                        <Building2 size={20} color="#10b981" />
+                      </View>
+                      <View style={styles.subMenuContent}>
+                        <Text style={styles.subMenuTitle}>Switch Company</Text>
+                        <Text style={styles.subMenuDescription}>Change current company context</Text>
+                      </View>
+                    </TouchableOpacity>
                   </View>
-                  <View style={styles.menuContent}>
-                    <Text style={styles.menuTitle}>Manage Sites</Text>
-                    <Text style={styles.menuDescription}>View and manage company sites</Text>
+
+                  {/* Manage & Switch Site */}
+                  <View style={styles.subMenuCard}>
+                    <TouchableOpacity 
+                      style={styles.subMenuItem}
+                      onPress={() => {
+                        console.log('Navigating to master-sites');
+                        router.push('/master-sites' as any);
+                      }}
+                    >
+                      <View style={styles.subMenuIcon}>
+                        <MapPin size={20} color="#f59e0b" />
+                      </View>
+                      <View style={styles.subMenuContent}>
+                        <Text style={styles.subMenuTitle}>Manage & Switch Site</Text>
+                        <Text style={styles.subMenuDescription}>View and manage company sites</Text>
+                      </View>
+                    </TouchableOpacity>
                   </View>
-                  <ChevronRight size={20} color={Colors.textSecondary} />
                 </View>
-              </TouchableOpacity>
+              )}
             </View>
           </View>
         )}
