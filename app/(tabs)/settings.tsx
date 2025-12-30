@@ -115,8 +115,8 @@ export default function SettingsScreen() {
                     <Building2 size={24} color="#3b82f6" />
                   </View>
                   <View style={styles.menuContent}>
-                    <Text style={styles.menuTitle}>{user?.companyName || 'Company'}</Text>
-                    <Text style={styles.menuDescription}>{user?.siteName || 'Select a site'}</Text>
+                    <Text style={styles.menuTitle}>Company & Sites</Text>
+                    <Text style={styles.menuDescription}>{user?.companyName || 'No company'} • {user?.siteName || 'No site'}</Text>
                   </View>
                 </View>
                 {isCompanySiteExpanded ? (
