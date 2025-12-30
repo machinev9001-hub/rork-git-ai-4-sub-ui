@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 32,
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.cardBg,
     borderBottomWidth: 1,
     borderBottomColor: Colors.border,
   },
@@ -730,7 +730,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 16,
@@ -771,7 +771,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   menuCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.cardBg,
     borderRadius: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
@@ -825,7 +825,7 @@ const styles = StyleSheet.create({
     borderTopColor: Colors.border,
   },
   subMenuCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: Colors.surface,
     borderRadius: 10,
     marginTop: 8,
     shadowColor: '#000',
@@ -843,7 +843,7 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.background,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -854,7 +854,7 @@ const styles = StyleSheet.create({
   subMenuTitle: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#1E1E1E',
+    color: Colors.text,
     marginBottom: 2,
   },
   subMenuDescription: {
@@ -865,7 +865,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -876,7 +876,7 @@ const styles = StyleSheet.create({
   menuTitle: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1E1E1E',
+    color: Colors.text,
     marginBottom: 2,
   },
   menuDescription: {
@@ -898,7 +898,7 @@ const styles = StyleSheet.create({
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#fee2e2',
+    backgroundColor: '#7F1D1D',
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
@@ -928,7 +928,7 @@ const styles = StyleSheet.create({
   accountTypeLabel: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: '#1E1E1E',
+    color: Colors.text,
   },
   accountTypeBadge: {
     paddingHorizontal: 12,
@@ -936,10 +936,10 @@ const styles = StyleSheet.create({
     borderRadius: 6,
   },
   accountTypeBadgeEnterprise: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#1e3a5f',
   },
   accountTypeBadgeFree: {
-    backgroundColor: '#fef3c7',
+    backgroundColor: '#78350F',
   },
   accountTypeBadgeText: {
     fontSize: 12,
@@ -948,10 +948,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   accountTypeBadgeTextEnterprise: {
-    color: '#1e40af',
+    color: '#93c5fd',
   },
   accountTypeBadgeTextFree: {
-    color: '#92400e',
+    color: '#FCD34D',
   },
   vasManagementButton: {
     paddingTop: 12,
