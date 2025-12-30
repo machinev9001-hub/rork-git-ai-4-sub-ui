@@ -258,10 +258,10 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       }
       
       if (hasSelectedCompany && !hasSelectedSite && !publicPaths.includes(currentPath) && !navigationAttempted.current) {
-        // Both free and enterprise users follow the same workflow - select a site first
-        console.log('[RootLayout] ✅ Master with selected company but no site → Routing to /master-sites');
-        if (currentPath !== '/master-sites') {
-          performNavigation('/master-sites');
+        // After company selection, go directly to main tabs - site creation is optional and done in settings
+        console.log('[RootLayout] ✅ Master with selected company (no site required) → Routing to /(tabs)');
+        if (currentPath !== '/(tabs)' && !currentPath.startsWith('/(tabs)')) {
+          performNavigation('/(tabs)');
         }
       }
       return () => { isActive = false; };
