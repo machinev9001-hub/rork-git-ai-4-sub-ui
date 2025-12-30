@@ -12,10 +12,10 @@ export default function SettingsScreen() {
   const accountType = useAccountType();
   const [isControlSystemsExpanded, setIsControlSystemsExpanded] = useState(false);
   const [isReportsExpanded, setIsReportsExpanded] = useState(false);
-  const [isAssetManagementExpanded, setIsAssetManagementExpanded] = useState(false);
   const [isMasterControlsExpanded, setIsMasterControlsExpanded] = useState(false);
   const [isSiteSetupExpanded, setIsSiteSetupExpanded] = useState(false);
   const [isCompanySiteExpanded, setIsCompanySiteExpanded] = useState(false);
+  const [isAssetsPoolExpanded, setIsAssetsPoolExpanded] = useState(false);
   const roleAccentColor = getRoleAccentColor(user?.role);
 
   const isMasterOrPlanner = user?.role === 'master' || user?.role === 'Planner';
@@ -319,21 +319,6 @@ export default function SettingsScreen() {
                   <View style={styles.subMenuCard}>
                     <TouchableOpacity 
                       style={styles.subMenuItem}
-                      onPress={() => router.push('/plant-asset-types' as any)}
-                    >
-                      <View style={styles.subMenuIcon}>
-                        <Package size={20} color="#10B981" />
-                      </View>
-                      <View style={styles.subMenuContent}>
-                        <Text style={styles.subMenuTitle}>Plant Asset Types</Text>
-                        <Text style={styles.subMenuDescription}>Manage plant asset types</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.subMenuCard}>
-                    <TouchableOpacity 
-                      style={styles.subMenuItem}
                       onPress={() => router.push('/manage-users' as any)}
                     >
                       <View style={styles.subMenuIcon}>
@@ -520,26 +505,41 @@ export default function SettingsScreen() {
               <View style={styles.menuCard}>
                 <TouchableOpacity 
                   style={styles.expandableHeader}
-                  onPress={() => setIsAssetManagementExpanded(!isAssetManagementExpanded)}
+                  onPress={() => setIsAssetsPoolExpanded(!isAssetsPoolExpanded)}
                 >
                   <View style={styles.expandableHeaderContent}>
                     <View style={styles.menuIcon}>
                       <Package size={24} color="#10B981" />
                     </View>
                     <View style={styles.menuContent}>
-                      <Text style={styles.menuTitle}>Market Place</Text>
-                      <Text style={styles.menuDescription}>Plant assets and marketplace</Text>
+                      <Text style={styles.menuTitle}>Assets & Pool</Text>
+                      <Text style={styles.menuDescription}>Your company and market place assets</Text>
                     </View>
                   </View>
-                  {isAssetManagementExpanded ? (
+                  {isAssetsPoolExpanded ? (
                     <ChevronUp size={20} color="#64748b" />
                   ) : (
                     <ChevronDown size={20} color="#64748b" />
                   )}
                 </TouchableOpacity>
 
-                {isAssetManagementExpanded && (
+                {isAssetsPoolExpanded && (
                   <View style={styles.expandedContent}>
+                    <View style={styles.subMenuCard}>
+                      <TouchableOpacity 
+                        style={styles.subMenuItem}
+                        onPress={() => router.push('/plant-asset-types' as any)}
+                      >
+                        <View style={styles.subMenuIcon}>
+                          <Package size={20} color="#10B981" />
+                        </View>
+                        <View style={styles.subMenuContent}>
+                          <Text style={styles.subMenuTitle}>Plant Asset Types</Text>
+                          <Text style={styles.subMenuDescription}>Manage plant asset types</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+
                     <View style={styles.subMenuCard}>
                       <TouchableOpacity 
                         style={styles.subMenuItem}
