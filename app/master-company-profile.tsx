@@ -559,11 +559,11 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: 20,
   },
-  section: {
+  formSection: {
     paddingHorizontal: 16,
     paddingVertical: 12,
   },
-  sectionTitle: {
+  formSectionTitle: {
     fontSize: 18,
     fontWeight: '600' as const,
     color: Colors.text,

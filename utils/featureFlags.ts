@@ -47,6 +47,7 @@ const VAS_TO_FEATURE_MAP: Record<VASFeatureId, keyof FeatureFlags> = {
   advanced_integrations: 'advanced_integrations',
   custom_branding: 'custom_branding',
   priority_support: 'priority_support',
+  marketplace_access: 'asset_management', // Maps to asset_management feature flag
 };
 
 /**
@@ -228,6 +229,21 @@ export function getVASFeatureMetadata(): Record<VASFeatureId, VASFeatureMetadata
       ],
       price: '$79/month',
       learnMoreUrl: 'https://machineapp.com/features/priority-support',
+    },
+    marketplace_access: {
+      id: 'marketplace_access',
+      name: 'Marketplace Access',
+      description: 'List your plant assets on the marketplace for other companies to discover and hire.',
+      valueSummary: 'Expand your reach and generate additional revenue by making your assets visible to other companies in need of plant and equipment.',
+      benefits: [
+        'List assets on the marketplace',
+        'Receive hire requests from other companies',
+        'Set your own rates and availability',
+        'Track marketplace performance',
+        'Grow your rental business',
+      ],
+      price: '$49/month',
+      learnMoreUrl: 'https://machineapp.com/features/marketplace',
     },
   };
 }

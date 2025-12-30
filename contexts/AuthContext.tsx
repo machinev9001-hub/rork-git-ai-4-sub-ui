@@ -242,11 +242,15 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
             console.log('[Auth] Session expired due to inactivity, clearing...');
             await AsyncStorage.removeItem(STORAGE_KEYS.USER);
             await AsyncStorage.removeItem(STORAGE_KEYS.LAST_ACTIVITY);
-            if (isMounted.current) {
-              setUser(null);
-              setMasterAccount(null);
-              setIsLoading(false);
-            }
+            // Defer state updates to next tick
+            setTimeout(() => {
+              if (isMounted.current) {
+                setUser(null);
+                setMasterAccount(null);
+                setIsLoading(false);
+                setAuthInitializing(false);
+              }
+            }, 0);
             return;
           }
         }
@@ -273,8 +277,10 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         // Update last activity time
         await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString());
         
-        // Set user state only if still mounted
-        if (isMounted.current) {
+        // Defer state updates to next tick to prevent state updates during render
+        setTimeout(() => {
+          if (!isMounted.current) return;
+          
           setUser(userData);
           
           // If it's a master account, also set masterAccount state
@@ -296,23 +302,29 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           console.log('[Auth] Session restored successfully');
           setIsLoading(false);
           setAuthInitializing(false);
-        }
+        }, 0);
       } else {
+        // Defer state updates to next tick
+        setTimeout(() => {
+          if (isMounted.current) {
+            setUser(null);
+            setMasterAccount(null);
+            setIsLoading(false);
+            setAuthInitializing(false);
+          }
+        }, 0);
+      }
+    } catch (error) {
+      console.error('[Auth] Load error:', error);
+      // Defer state updates to next tick
+      setTimeout(() => {
         if (isMounted.current) {
           setUser(null);
           setMasterAccount(null);
           setIsLoading(false);
           setAuthInitializing(false);
         }
-      }
-    } catch (error) {
-      console.error('[Auth] Load error:', error);
-      if (isMounted.current) {
-        setUser(null);
-        setMasterAccount(null);
-        setIsLoading(false);
-        setAuthInitializing(false);
-      }
+      }, 0);
     }
   }, []);
 
@@ -386,6 +398,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       return;
     }
     hasInitialized.current = true;
+    isMounted.current = true;
     
     console.log('[Auth] Initializing auth system...');
     console.log('[Auth] Current timestamp:', new Date().toISOString());
@@ -399,30 +412,23 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         console.log('[Auth] Component unmounted or inactive, skipping state update');
         return;
       }
-      // Defer state updates to next tick to avoid state updates during render
-      setTimeout(() => {
-        if (!isActive || !isMounted.current) return;
-        console.log('[Auth] Force completing initialization');
-        setIsLoading(false);
-        setAuthInitializing(false);
-      }, 0);
+      console.log('[Auth] Force completing initialization');
+      setIsLoading(false);
+      setAuthInitializing(false);
     };
     
     // Ultra-aggressive timeout - complete in 500ms max
+    // Use a nested setTimeout to ensure we're past the initial render
     const emergencyTimeout = setTimeout(() => {
       if (!isActive || !isMounted.current) {
         console.log('[Auth] Component unmounted or inactive, skipping emergency timeout state update');
         return;
       }
       console.error('[Auth] 🚨 EMERGENCY TIMEOUT (500ms) - Force completing');
-      // Defer state updates to next tick
-      setTimeout(() => {
-        if (!isActive || !isMounted.current) return;
-        setUser(null);
-        setMasterAccount(null);
-        setIsLoading(false);
-        setAuthInitializing(false);
-      }, 0);
+      setUser(null);
+      setMasterAccount(null);
+      setIsLoading(false);
+      setAuthInitializing(false);
     }, 500);
     
     console.log('[Auth] Starting loadUserFromStorage (timeout: 500ms)...');
@@ -436,7 +442,12 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         if (!isActive) return;
         console.error('[Auth] ✗ Load failed:', err?.message || 'Unknown error');
         clearTimeout(emergencyTimeout);
-        forceComplete();
+        // Defer forceComplete to next tick
+        setTimeout(() => {
+          if (isActive && isMounted.current) {
+            forceComplete();
+          }
+        }, 0);
       });
     
     return () => {

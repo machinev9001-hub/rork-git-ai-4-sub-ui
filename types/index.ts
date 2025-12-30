@@ -85,7 +85,6 @@ export type Company = {
   billingEmail?: string;
   subscriptionStartDate?: any;
   subscriptionEndDate?: any;
-  accountType: AccountType;
   createdAt: any;
   updatedAt?: any;
   createdBy: string;
@@ -447,9 +446,6 @@ export type Employee = {
   companyId: string; // Company-level ownership (required)
   masterAccountId: string;
   siteId?: string; // DEPRECATED: Use EmployeeSiteLink instead
-  siteId: string; // Deprecated - kept for backward compatibility. Use EmployeeSite linking table instead
-  masterAccountId: string;
-  companyId?: string; // Company-level ownership - single source of truth
   type?: 'employee' | 'subcontractor';
   subcontractorCompany?: string;
   employerName?: string;
@@ -509,6 +505,29 @@ export type EmployeeSite = {
   unlinkedAt?: any;
   unlinkedBy?: string;
   isActive: boolean;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+/**
+ * AssetSite - Junction table for company-level assets and site allocations
+ * Assets are created once at company level, then linked to sites via this table
+ */
+export type AssetSite = {
+  id?: string;
+  assetId: string;
+  assetName: string;
+  assetType: string;
+  siteId: string;
+  siteName: string;
+  companyId: string;
+  masterAccountId: string;
+  linkedAt: any;
+  linkedBy: string;
+  unlinkedAt?: any;
+  unlinkedBy?: string;
+  isActive: boolean;
+  allocationNotes?: string;
   createdAt: any;
   updatedAt?: any;
 };
@@ -750,16 +769,12 @@ export type PlantAsset = {
   siteId?: string | null; // DEPRECATED: Use PlantAssetAllocation instead
   masterAccountId: string;
   companyId: string; // Company-level ownership (required)
-  siteId?: string | null; // Deprecated - kept for backward compatibility. Use AssetSite linking table instead
-  masterAccountId: string;
-  companyId?: string; // Company-level ownership - single source of truth
   allocationStatus: AllocationStatus;
   currentAllocation?: CurrentAllocation;
   allocationHistory?: AllocationHistoryEntry[];
   allocatedPvArea?: string;
   allocatedBlockNumber?: string;
   allocationDate?: any;
-  isAvailableForVAS?: boolean;
   breakdownStatus?: boolean;
   breakdownStartDate?: string;
   breakdownEndDate?: string | null;
@@ -788,7 +803,7 @@ export type PlantAsset = {
   // New marketplace fields
   internalAllocationEnabled?: boolean; // Can be allocated to own sites
   marketplaceVisibilityEnabled?: boolean; // Listed in marketplace (VAS-gated)
-  isAvailableForVAS?: boolean; // Legacy field (deprecated)
+  isAvailableForVAS?: boolean; // Visible in VAS marketplace
   availability?: 'available' | 'allocated' | 'maintenance';
   createdAt: any;
   updatedAt?: any;

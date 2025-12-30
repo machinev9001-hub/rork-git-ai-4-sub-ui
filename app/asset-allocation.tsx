@@ -1,5 +1,5 @@
 import { Stack, router, useLocalSearchParams } from 'expo-router';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   View,
@@ -51,11 +51,7 @@ export default function AssetAllocationScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user?.currentCompanyId || !user?.masterAccountId) {
       Alert.alert('Error', 'Missing company information');
       return;
@@ -99,7 +95,11 @@ export default function AssetAllocationScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user?.currentCompanyId, user?.masterAccountId, assetId]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const toggleAllocation = (siteId: string) => {
     const newAllocations = new Map(allocations);
@@ -154,7 +154,7 @@ export default function AssetAllocationScreen() {
       }
 
       // Process all changes
-      for (const [siteId, allocation] of allocations.entries()) {
+      for (const [, allocation] of allocations.entries()) {
         if (allocation.id) {
           // Update existing allocation
           const allocationDoc = doc(db, 'plantAssetAllocations', allocation.id);
@@ -223,16 +223,16 @@ export default function AssetAllocationScreen() {
           disabled={isSaving || !hasChanges}
         >
           {isSaving ? (
-            <ActivityIndicator size="small" color={Colors.primary} />
+            <ActivityIndicator size="small" color={Colors.accent} />
           ) : (
-            <Save size={24} color={hasChanges ? Colors.primary : '#94a3b8'} />
+            <Save size={24} color={hasChanges ? Colors.accent : '#94a3b8'} />
           )}
         </TouchableOpacity>
       </View>
 
       {isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={Colors.primary} />
+          <ActivityIndicator size="large" color={Colors.accent} />
           <Text style={styles.loadingText}>Loading sites...</Text>
         </View>
       ) : (
