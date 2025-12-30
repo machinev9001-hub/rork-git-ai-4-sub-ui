@@ -580,21 +580,6 @@ export default function SettingsScreen() {
                   <View style={styles.subMenuCard}>
                     <TouchableOpacity 
                       style={styles.subMenuItem}
-                      onPress={() => router.push('/master-sites' as any)}
-                    >
-                      <View style={styles.subMenuIcon}>
-                        <Building2 size={20} color="#10B981" />
-                      </View>
-                      <View style={styles.subMenuContent}>
-                        <Text style={styles.subMenuTitle}>Sites</Text>
-                        <Text style={styles.subMenuDescription}>Manage site locations</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={styles.subMenuCard}>
-                    <TouchableOpacity 
-                      style={styles.subMenuItem}
                       onPress={() => router.push('/account-info' as any)}
                     >
                       <View style={styles.subMenuIcon}>
