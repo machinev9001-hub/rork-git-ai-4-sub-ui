@@ -16,6 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft, Shield } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { AppTheme } from '@/constants/colors';
+import { validateActivationCode } from '@/utils/activationCode';
 
 export default function MasterSignupScreen() {
   const { createMasterAccount } = useAuth();
@@ -61,17 +62,27 @@ export default function MasterSignupScreen() {
     console.log('[MasterSignup] Starting master account creation...');
 
     try {
+      const codeValidation = await validateActivationCode(activationCode.trim());
+      if (!codeValidation.isValid) {
+        setIsLoading(false);
+        Alert.alert('Invalid Code', codeValidation.error || 'Invalid activation code');
+        return;
+      }
+
+      const accountType = codeValidation.activationCode?.accountType || 'enterprise';
       console.log('[MasterSignup] Calling createMasterAccount with:', {
         name: name.trim(),
         masterId: masterId.trim(),
-        activationCode: activationCode.trim().substring(0, 4) + '***'
+        activationCode: activationCode.trim().substring(0, 4) + '***',
+        accountType
       });
 
       const result = await createMasterAccount(
         name.trim(),
         masterId.trim(),
         pin.trim(),
-        activationCode.trim()
+        activationCode.trim(),
+        accountType
       );
 
       console.log('[MasterSignup] Result received:', JSON.stringify(result));

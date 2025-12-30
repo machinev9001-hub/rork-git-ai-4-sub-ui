@@ -13,6 +13,7 @@ export type ActivationCode = {
   updatedAt?: Date;
   maxRedemptions?: number;
   currentRedemptions?: number;
+  accountType?: 'enterprise' | 'free';
 };
 
 export type ActivationValidationResult = {

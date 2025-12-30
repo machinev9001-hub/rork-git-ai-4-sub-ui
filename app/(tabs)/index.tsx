@@ -7,10 +7,14 @@ import { Colors, getRoleAccentColor } from '@/constants/colors';
 import { 
   Users, ClipboardList, 
   CheckCircle2, Wrench, Truck,
-  HardHat, UserCheck
+  HardHat, UserCheck, Lock
 } from 'lucide-react-native';
 import { StandardHeaderRight, StandardSiteIndicator } from '@/components/HeaderSyncStatus';
 import { normalizeRole } from '@/utils/roles';
+import { useFeatureFlags } from '@/utils/hooks/useFeatureFlags';
+import { FeatureFlags, VASFeatureId } from '@/types';
+import { VASPromptModal } from '@/components/VASPromptModal';
+import { getVASFeatureMetadata } from '@/utils/featureFlags';
 
 type MenuItem = {
   title: string;
@@ -19,6 +23,8 @@ type MenuItem = {
   roles: string[];
   bgColor: string;
   iconColor: string;
+  featureKey?: keyof FeatureFlags;
+  vasFeatureId?: VASFeatureId;
 };
 
 const MENU_ITEMS: MenuItem[] = [
@@ -29,6 +35,7 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Planner'],
     bgColor: '#34A853',
     iconColor: '#fff',
+    featureKey: 'task_management',
   },
   {
     title: 'Supervisor',
@@ -37,8 +44,8 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Supervisor'],
     bgColor: '#FBBC04',
     iconColor: '#fff',
+    featureKey: 'task_management',
   },
-
   {
     title: 'QC Requests',
     icon: CheckCircle2,
@@ -46,6 +53,7 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'QC'],
     bgColor: '#ec4899',
     iconColor: '#fff',
+    featureKey: 'task_management',
   },
   {
     title: 'Plant Manager',
@@ -54,6 +62,7 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Plant Manager'],
     bgColor: '#f59e0b',
     iconColor: '#fff',
+    featureKey: 'asset_management',
   },
   {
     title: 'Staff Manager',
@@ -62,6 +71,7 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Staff Manager', 'HR'],
     bgColor: '#8b5cf6',
     iconColor: '#fff',
+    featureKey: 'employee_management',
   },
   {
     title: 'Logistics',
@@ -70,6 +80,8 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Logistics Manager'],
     bgColor: '#0ea5e9',
     iconColor: '#fff',
+    featureKey: 'advanced_integrations',
+    vasFeatureId: 'advanced_integrations',
   },
   {
     title: 'Onboarding',
@@ -78,6 +90,7 @@ const MENU_ITEMS: MenuItem[] = [
     roles: ['master', 'Admin', 'HSE', 'Onboarding & Inductions'],
     bgColor: '#3b82f6',
     iconColor: '#fff',
+    featureKey: 'employee_management',
   },
 ];
 
@@ -86,7 +99,9 @@ export default function HomeScreen() {
   const roleAccentColor = getRoleAccentColor(user?.role);
   const queryClient = useQueryClient();
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [selectedVASFeature, setSelectedVASFeature] = useState<VASFeatureId | null>(null);
   const normalizedRole = useMemo(() => normalizeRole(user?.role), [user?.role]);
+  const featureFlags = useFeatureFlags();
 
   const filteredMenuItems = useMemo(() => (
     MENU_ITEMS.filter((item) =>
@@ -94,9 +109,22 @@ export default function HomeScreen() {
     )
   ), [normalizedRole]);
 
-  const handleMenuPress = (route: string) => {
-    router.push(route as any);
+  const handleMenuPress = (item: MenuItem) => {
+    if (item.featureKey && !featureFlags[item.featureKey]) {
+      if (item.vasFeatureId) {
+        setSelectedVASFeature(item.vasFeatureId);
+      } else {
+        setSelectedVASFeature('analytics');
+      }
+      return;
+    }
+    router.push(item.route as any);
   };
+
+  const isItemLocked = useCallback((item: MenuItem): boolean => {
+    if (!item.featureKey) return false;
+    return !featureFlags[item.featureKey];
+  }, [featureFlags]);
 
   const handleRefresh = useCallback(async () => {
     console.log('HomeScreen: pull-to-refresh triggered');
@@ -142,21 +170,40 @@ export default function HomeScreen() {
         <View style={styles.grid}>
           {filteredMenuItems.map((item, index) => {
             const Icon = item.icon;
+            const locked = isItemLocked(item);
             return (
               <TouchableOpacity
                 key={index}
-                style={styles.menuCard}
-                onPress={() => handleMenuPress(item.route)}
+                style={[styles.menuCard, locked && styles.menuCardLocked]}
+                onPress={() => handleMenuPress(item)}
                 activeOpacity={0.7}
               >
-                <View style={[styles.iconContainer, { backgroundColor: item.bgColor }]}>
-                  <Icon size={36} color={item.iconColor} strokeWidth={2.5} />
+                <View style={[styles.iconContainer, { backgroundColor: locked ? '#9ca3af' : item.bgColor }]}>
+                  {locked ? (
+                    <Lock size={36} color={item.iconColor} strokeWidth={2.5} />
+                  ) : (
+                    <Icon size={36} color={item.iconColor} strokeWidth={2.5} />
+                  )}
                 </View>
                 <Text style={styles.menuTitle}>{item.title}</Text>
+                {locked && (
+                  <View style={styles.lockedBadge}>
+                    <Lock size={10} color="#92400e" strokeWidth={2.5} />
+                    <Text style={styles.lockedText}>Locked</Text>
+                  </View>
+                )}
               </TouchableOpacity>
             );
           })}
         </View>
+        
+        {selectedVASFeature && (
+          <VASPromptModal
+            visible={!!selectedVASFeature}
+            onClose={() => setSelectedVASFeature(null)}
+            feature={getVASFeatureMetadata()[selectedVASFeature]}
+          />
+        )}
       </ScrollView>
     </View>
   );
@@ -235,5 +282,23 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Colors.text,
     textAlign: 'center' as const,
+  },
+  menuCardLocked: {
+    opacity: 0.8,
+  },
+  lockedBadge: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    backgroundColor: '#fef3c7',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 8,
+    gap: 4,
+  },
+  lockedText: {
+    fontSize: 10,
+    color: '#92400e',
+    fontWeight: '600' as const,
   },
 });

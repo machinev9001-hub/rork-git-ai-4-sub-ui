@@ -37,6 +37,7 @@ export async function validateActivationCode(code: string): Promise<ActivationVa
       updatedAt: data.updatedAt?.toDate() || null,
       maxRedemptions: data.maxRedemptions || 1,
       currentRedemptions: data.currentRedemptions || 0,
+      accountType: data.accountType || 'enterprise',
     };
     
     if (activationCode.status === 'redeemed') {
@@ -146,6 +147,7 @@ export async function createFreeAccountActivationCode(): Promise<{ success: bool
       updatedAt: Timestamp.now(),
       maxRedemptions: 1,
       currentRedemptions: 0,
+      accountType: 'free',
     });
     
     console.log('[ActivationCode] Free account activation code created:', code);
