@@ -15,7 +15,7 @@ import { ArrowLeft, Save, MapPin, CheckCircle2, XCircle, Package } from 'lucide-
 import { useAuth } from '@/contexts/AuthContext';
 import { collection, getDocs, query, where, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
-import Colors from '@/constants/colors';
+import { Colors } from '@/constants/colors';
 
 type Site = {
   id: string;
