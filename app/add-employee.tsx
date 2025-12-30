@@ -82,6 +82,7 @@ export default function AddEmployeeScreen() {
   const [accessScope, setAccessScope] = useState<'company-level' | 'all-sites' | 'selected-sites' | 'no-sites'>('no-sites');
   const [canAccessMasterCompanyProfile, setCanAccessMasterCompanyProfile] = useState(false);
   const [showAccessScopeDropdown, setShowAccessScopeDropdown] = useState(false);
+  const [hasMasterAccess, setHasMasterAccess] = useState(false);
   
   // Detect if creating from company level (no site selected)
   const isCompanyLevelCreation = !user?.siteId && user?.currentCompanyId;
