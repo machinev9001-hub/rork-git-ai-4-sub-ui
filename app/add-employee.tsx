@@ -472,9 +472,6 @@ export default function AddEmployeeScreen() {
         companyId: user.currentCompanyId, // Required for both modes
         accessScope: isCompanyLevelCreation ? accessScope : 'no-sites', // Only set for company-level creation
         canAccessMasterCompanyProfile: isCompanyLevelCreation ? canAccessMasterCompanyProfile : false,
-        siteId: user.siteId, // Kept for backward compatibility
-        masterAccountId: user.masterAccountId,
-        companyId: user.currentCompanyId || null, // Company-level ownership
         hasMasterAccess: hasMasterAccess, // Master Company Management access toggle
         inductionStatus,
         inductionNotes: inductionNotes.trim(),
