@@ -325,7 +325,7 @@ export default function SettingsScreen() {
                         <UserIcon size={20} color="#8B5CF6" />
                       </View>
                       <View style={styles.subMenuContent}>
-                        <Text style={styles.subMenuTitle}>Users</Text>
+                        <Text style={styles.subMenuTitle}>User Roles</Text>
                         <Text style={styles.subMenuDescription}>Add and manage site users</Text>
                       </View>
                     </TouchableOpacity>
