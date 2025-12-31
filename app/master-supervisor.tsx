@@ -353,7 +353,7 @@ export default function MasterSupervisorScreen() {
     <View style={[commonStyles.container, styles.container]}>
       <Stack.Screen
         options={{
-          headerTitle: () => <HeaderTitleWithSync title="Supervisor" />,
+          headerTitle: () => <HeaderTitleWithSync title="Progress Tracking" />,
           headerRight: () => (
             <View style={styles.headerRightContainer}>
               <TouchableOpacity

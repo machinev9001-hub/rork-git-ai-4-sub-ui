@@ -39,7 +39,7 @@ const MENU_ITEMS: MenuItem[] = [
     vasFeatureId: 'operations_bundle',
   },
   {
-    title: 'Supervisor',
+    title: 'Progress Tracking',
     icon: UserCheck,
     route: '/master-supervisor',
     roles: ['master', 'Supervisor'],
@@ -192,6 +192,9 @@ export default function HomeScreen() {
                   )}
                 </View>
                 <Text style={styles.menuTitle}>{item.title}</Text>
+                {item.title === 'Progress Tracking' && (
+                  <Text style={styles.menuSubtitle}>supervisors</Text>
+                )}
                 {locked && (
                   <View style={styles.lockedBadge}>
                     <Lock size={10} color="#92400e" strokeWidth={2.5} />
@@ -288,6 +291,14 @@ const styles = StyleSheet.create({
     fontWeight: '600' as const,
     color: Colors.text,
     textAlign: 'center' as const,
+  },
+  menuSubtitle: {
+    fontSize: 10,
+    fontWeight: '400' as const,
+    color: Colors.textSecondary,
+    textAlign: 'center' as const,
+    marginTop: 2,
+    fontStyle: 'italic' as const,
   },
   menuCardLocked: {
     opacity: 0.8,
