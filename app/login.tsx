@@ -160,8 +160,8 @@ export default function LoginScreen() {
             <TouchableOpacity
               testID="login-logo-button"
               activeOpacity={0.7}
-              onPress={() => {
-                console.log('[Login] Logo button pressed!');
+              onLongPress={() => {
+                console.log('[Login] Logo long pressed!');
                 console.log('[Login] Navigating to admin-pin-verify');
                 try {
                   router.push('/admin-pin-verify');
@@ -171,6 +171,7 @@ export default function LoginScreen() {
                   Alert.alert('Error', 'Failed to open admin panel');
                 }
               }}
+              delayLongPress={2000}
               style={styles.logoPlaceholder}
             >
               <Image
