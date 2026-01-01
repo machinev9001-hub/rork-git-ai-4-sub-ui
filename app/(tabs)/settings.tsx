@@ -1,10 +1,11 @@
 import { Stack, useRouter } from 'expo-router';
-import { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
 import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, CreditCard, MapPin, Plus } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
 import { useAccountType } from '@/utils/hooks/useFeatureFlags';
+import { getLocalTemplate } from '@/utils/secureFaceStore';
 
 export default function SettingsScreen() {
   const { user, logout } = useAuth();
@@ -16,7 +17,23 @@ export default function SettingsScreen() {
   const [isSiteSetupExpanded, setIsSiteSetupExpanded] = useState(false);
   const [isCompanySiteExpanded, setIsCompanySiteExpanded] = useState(false);
   const [isAssetsPoolExpanded, setIsAssetsPoolExpanded] = useState(false);
+  const [facePhotoUri, setFacePhotoUri] = useState<string | null>(null);
   const roleAccentColor = getRoleAccentColor(user?.role);
+
+  useEffect(() => {
+    const loadFacePhoto = async () => {
+      if (!user?.id) return;
+      try {
+        const template = await getLocalTemplate(user.id);
+        if (template?.facePhotoUri) {
+          setFacePhotoUri(template.facePhotoUri);
+        }
+      } catch (error) {
+        console.error('[Settings] Error loading face photo:', error);
+      }
+    };
+    loadFacePhoto();
+  }, [user?.id]);
 
   const isMasterOrPlanner = user?.role === 'master' || user?.role === 'Planner';
   const isMaster = user?.role === 'master';
@@ -181,7 +198,15 @@ export default function SettingsScreen() {
         {!isMasterOrPlanner && (
           <View style={styles.profileHeader}>
             <View style={styles.profileIconContainer}>
-              <UserIcon size={48} color="#3b82f6" />
+              {facePhotoUri ? (
+                <Image 
+                  source={{ uri: facePhotoUri }} 
+                  style={styles.profilePhoto}
+                  resizeMode="cover"
+                />
+              ) : (
+                <UserIcon size={48} color="#3b82f6" />
+              )}
             </View>
             <Text style={styles.profileName}>{user?.name}</Text>
             <Text style={styles.profileRole}>{user?.role}</Text>
@@ -710,6 +735,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderWidth: 3,
     borderColor: Colors.accent,
+    overflow: 'hidden',
+  },
+  profilePhoto: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 48,
   },
   profileName: {
     fontSize: 24,

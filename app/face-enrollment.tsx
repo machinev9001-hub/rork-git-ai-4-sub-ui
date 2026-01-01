@@ -74,7 +74,8 @@ export default function FaceEnrollmentScreen() {
         embeddingResult.embedding,
         user.masterAccountId,
         user.currentCompanyId,
-        user.siteId
+        user.siteId,
+        image.uri
       );
 
       if (result.success) {

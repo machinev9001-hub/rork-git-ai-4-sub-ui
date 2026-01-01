@@ -12,6 +12,7 @@ export type EncryptedTemplate = {
   version: number;
   enrolledAt: string;
   isActive: boolean;
+  facePhotoUri?: string;
 };
 
 function simpleEncrypt(data: number[], salt: string): string {
@@ -58,7 +59,8 @@ export async function saveLocalTemplate(
   embedding: number[],
   masterAccountId: string,
   companyId?: string,
-  siteId?: string
+  siteId?: string,
+  facePhotoUri?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     console.log('[SecureFaceStore] Saving face template for user:', userId);
@@ -74,6 +76,7 @@ export async function saveLocalTemplate(
       version: 1,
       enrolledAt: new Date().toISOString(),
       isActive: true,
+      facePhotoUri: facePhotoUri,
     };
     
     const storedTemplates = await AsyncStorage.getItem(FACE_TEMPLATE_KEY);
@@ -102,6 +105,7 @@ export async function saveLocalTemplate(
           encryptionSalt: salt,
           version: 1,
           isActive: true,
+          facePhotoUri: facePhotoUri || null,
           updatedAt: serverTimestamp(),
         });
         console.log('[SecureFaceStore] Template updated in Firestore');
@@ -115,6 +119,7 @@ export async function saveLocalTemplate(
           enrolledBy: userId,
           version: 1,
           isActive: true,
+          facePhotoUri: facePhotoUri || null,
           masterAccountId,
           companyId: companyId || null,
           siteId: siteId || null,
@@ -157,6 +162,7 @@ export async function getLocalTemplate(userId: string): Promise<EncryptedTemplat
             version: data.version || 1,
             enrolledAt: data.enrolledAt?.toDate?.()?.toISOString() || new Date().toISOString(),
             isActive: data.isActive,
+            facePhotoUri: data.facePhotoUri,
           };
           
           const templates: EncryptedTemplate[] = [];
