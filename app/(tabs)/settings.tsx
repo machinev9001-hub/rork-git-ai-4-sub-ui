@@ -814,15 +814,15 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: '#404040',
-    backgroundColor: '#181818',
+    borderTopColor: Colors.border,
+    backgroundColor: Colors.background,
   },
   subMenuCard: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#FFFFFF',
     borderRadius: 10,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#404040',
+    borderColor: '#E5E5E5',
   },
   subMenuItem: {
     flexDirection: 'row',
@@ -830,12 +830,6 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   subMenuIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#1A1A1A',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: 12,
   },
   subMenuContent: {
@@ -844,12 +838,12 @@ const styles = StyleSheet.create({
   subMenuTitle: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#FFFFFF',
+    color: '#000000',
     marginBottom: 2,
   },
   subMenuDescription: {
     fontSize: 12,
-    color: '#B0B0B0',
+    color: '#666666',
   },
   menuIcon: {
     width: 48,
