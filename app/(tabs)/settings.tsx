@@ -1,7 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, Info, CreditCard, MapPin } from 'lucide-react-native';
+import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, Info, CreditCard } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
 import { useAccountType } from '@/utils/hooks/useFeatureFlags';
@@ -128,7 +128,6 @@ export default function SettingsScreen() {
 
               {isCompanySiteExpanded && (
                 <View style={styles.expandedContent}>
-                  {/* Company Profile */}
                   <View style={styles.subMenuCard}>
                     <TouchableOpacity 
                       style={styles.subMenuItem}
@@ -140,44 +139,6 @@ export default function SettingsScreen() {
                       <View style={styles.subMenuContent}>
                         <Text style={styles.subMenuTitle}>Company Profile</Text>
                         <Text style={styles.subMenuDescription}>Manage company-level settings</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Switch Company */}
-                  <View style={styles.subMenuCard}>
-                    <TouchableOpacity 
-                      style={styles.subMenuItem}
-                      onPress={() => {
-                        console.log('Navigating to company-selector');
-                        router.push('/company-selector' as any);
-                      }}
-                    >
-                      <View style={styles.subMenuIcon}>
-                        <Building2 size={20} color="#10b981" />
-                      </View>
-                      <View style={styles.subMenuContent}>
-                        <Text style={styles.subMenuTitle}>Switch Company</Text>
-                        <Text style={styles.subMenuDescription}>Change current company context</Text>
-                      </View>
-                    </TouchableOpacity>
-                  </View>
-
-                  {/* Manage & Switch Site */}
-                  <View style={styles.subMenuCard}>
-                    <TouchableOpacity 
-                      style={styles.subMenuItem}
-                      onPress={() => {
-                        console.log('Navigating to master-sites');
-                        router.push('/master-sites' as any);
-                      }}
-                    >
-                      <View style={styles.subMenuIcon}>
-                        <MapPin size={20} color="#f59e0b" />
-                      </View>
-                      <View style={styles.subMenuContent}>
-                        <Text style={styles.subMenuTitle}>Manage & Switch Site</Text>
-                        <Text style={styles.subMenuDescription}>View and manage company sites</Text>
                       </View>
                     </TouchableOpacity>
                   </View>
