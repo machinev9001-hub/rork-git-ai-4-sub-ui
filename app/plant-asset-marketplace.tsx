@@ -377,13 +377,13 @@ export default function PlantAssetMarketplaceScreen() {
               <Text style={styles.statLabel}>Total in Database</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: '#10B981' }]}>
+              <Text style={styles.statValue}>
                 {allAssets.filter(a => a.isAvailableForVAS && a.allocationStatus !== 'ALLOCATED').length}
               </Text>
               <Text style={styles.statLabel}>Available for Hire</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: '#3b82f6' }]}>
+              <Text style={styles.statValue}>
                 {filteredAssets.length}
               </Text>
               <Text style={styles.statLabel}>In Current View</Text>
@@ -630,25 +630,25 @@ const styles = StyleSheet.create({
   },
   statCard: {
     flex: 1,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     padding: 16,
     alignItems: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
     elevation: 2,
   },
   statValue: {
     fontSize: 24,
     fontWeight: '700' as const,
-    color: '#3b82f6',
+    color: '#000000',
     marginBottom: 4,
   },
   statLabel: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: '#000000',
     textAlign: 'center',
   },
   section: {
@@ -663,14 +663,14 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   groupContainer: {
-    backgroundColor: Colors.cardBg,
+    backgroundColor: '#ffffff',
     borderRadius: 12,
     marginBottom: 12,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
     elevation: 2,
   },
   groupHeader: {
@@ -685,23 +685,17 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   groupIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#dbeafe',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: 12,
   },
   groupName: {
     fontSize: 16,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: '#000000',
     marginBottom: 2,
   },
   groupCount: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: '#666666',
   },
   chevron: {
     transform: [{ rotate: '0deg' }],
@@ -739,18 +733,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   typeIconContainer: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#d1fae5',
-    alignItems: 'center',
-    justifyContent: 'center',
     marginRight: 8,
   },
   typeName: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: '#000000',
   },
   countBadge: {
     backgroundColor: '#3b82f6',
@@ -769,11 +757,11 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   assetCard: {
-    backgroundColor: Colors.cardBg,
+    backgroundColor: '#ffffff',
     borderRadius: 8,
     padding: 12,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: '#e5e7eb',
   },
   assetCardHeader: {
     flexDirection: 'row',
@@ -786,13 +774,13 @@ const styles = StyleSheet.create({
   },
   ownerName: {
     fontSize: 12,
-    color: Colors.textSecondary,
+    color: '#666666',
     marginTop: 2,
   },
   assetId: {
     fontSize: 15,
     fontWeight: '600' as const,
-    color: Colors.background,
+    color: '#000000',
   },
   availabilityBadge: {
     flexDirection: 'row',
@@ -820,7 +808,7 @@ const styles = StyleSheet.create({
   },
   assetLocationText: {
     fontSize: 13,
-    color: Colors.textSecondary,
+    color: '#666666',
     flex: 1,
   },
   lockedBadge: {
@@ -882,7 +870,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    backgroundColor: Colors.cardBg,
+    backgroundColor: '#ffffff',
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderRadius: 8,
@@ -890,8 +878,8 @@ const styles = StyleSheet.create({
     borderColor: Colors.accent,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
     elevation: 2,
   },
   filterButtonText: {
