@@ -11,7 +11,7 @@ import {
   Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Save, Building2, Users, Package } from 'lucide-react-native';
+import { ArrowLeft, Save, Building2 } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -317,37 +317,6 @@ export default function MasterCompanyProfileScreen() {
               editable={!isLoading}
             />
           </View>
-        </View>
-
-        {/* Quick Links Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Links</Text>
-          
-          <TouchableOpacity
-            style={styles.quickLinkCard}
-            onPress={() => router.push('/master-staff-manager' as any)}
-          >
-            <Users size={24} color={Colors.accent} />
-            <View style={styles.quickLinkContent}>
-              <Text style={styles.quickLinkTitle}>Employee Management</Text>
-              <Text style={styles.quickLinkDescription}>
-                Manage company employees and site assignments
-              </Text>
-            </View>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.quickLinkCard}
-            onPress={() => router.push('/master-plant-manager' as any)}
-          >
-            <Package size={24} color={Colors.accent} />
-            <View style={styles.quickLinkContent}>
-              <Text style={styles.quickLinkTitle}>Asset Management</Text>
-              <Text style={styles.quickLinkDescription}>
-                Manage company assets and site allocations
-              </Text>
-            </View>
-          </TouchableOpacity>
         </View>
 
         <View style={{ height: 40 }} />
