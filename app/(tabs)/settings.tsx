@@ -1,7 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert } from 'react-native';
-import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, Info, CreditCard, MapPin, Plus } from 'lucide-react-native';
+import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, CreditCard, MapPin, Plus } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
 import { useAccountType } from '@/utils/hooks/useFeatureFlags';
@@ -562,7 +562,7 @@ export default function SettingsScreen() {
                     </View>
                     <View style={styles.menuContent}>
                       <Text style={styles.menuTitle}>Master Controls</Text>
-                      <Text style={styles.menuDescription}>Company and permissions</Text>
+                      <Text style={styles.menuDescription}>Personal credentials and permissions</Text>
                     </View>
                   </View>
                   {isMasterControlsExpanded ? (
@@ -580,31 +580,14 @@ export default function SettingsScreen() {
                       onPress={() => router.push('/account-info' as any)}
                     >
                       <View style={styles.subMenuIcon}>
-                        <Info size={20} color="#10B981" />
+                        <UserIcon size={20} color="#10B981" />
                       </View>
                       <View style={styles.subMenuContent}>
-                        <Text style={styles.subMenuTitle}>Account Information</Text>
-                        <Text style={styles.subMenuDescription}>View your account details</Text>
+                        <Text style={styles.subMenuTitle}>User Credentials</Text>
+                        <Text style={styles.subMenuDescription}>View and manage personal information</Text>
                       </View>
                     </TouchableOpacity>
                   </View>
-
-                  {isMaster && (
-                    <View style={styles.subMenuCard}>
-                      <TouchableOpacity 
-                        style={styles.subMenuItem}
-                        onPress={() => router.push('/company-settings' as any)}
-                      >
-                        <View style={styles.subMenuIcon}>
-                          <Building2 size={20} color="#3b82f6" />
-                        </View>
-                        <View style={styles.subMenuContent}>
-                          <Text style={styles.subMenuTitle}>Company Settings</Text>
-                          <Text style={styles.subMenuDescription}>Configure company details (Master Only)</Text>
-                        </View>
-                      </TouchableOpacity>
-                    </View>
-                  )}
 
                   {user?.role === 'master' && (
                     <View style={styles.subMenuCard}>
