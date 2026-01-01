@@ -503,8 +503,8 @@ export default function SettingsScreen() {
                       <Package size={24} color="#10B981" />
                     </View>
                     <View style={styles.menuContent}>
-                      <Text style={styles.menuTitle}>Assets & Pool</Text>
-                      <Text style={styles.menuDescription}>Your company and market place assets</Text>
+                      <Text style={styles.menuTitle}>Asset Pool</Text>
+                      <Text style={styles.menuDescription}>List Your assets for Hire</Text>
                     </View>
                   </View>
                   {isAssetsPoolExpanded ? (
