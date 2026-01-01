@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,10 +10,12 @@ import {
 } from 'react-native';
 import { Stack } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Package, MapPin, Lock, Unlock, ChevronRight } from 'lucide-react-native';
-import { collection, query, getDocs } from 'firebase/firestore';
+import { Package, MapPin, Lock, Unlock, ChevronRight, Filter } from 'lucide-react-native';
+import { collection, query, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Colors } from '@/constants/colors';
+import { useAuth } from '@/contexts/AuthContext';
+import type { Company } from '@/types';
 
 interface PlantAssetGroup {
   id: string;
@@ -39,7 +41,10 @@ interface PlantAsset {
   ownerAddress?: string;
   ownerId: string;
   ownerType: 'company' | 'subcontractor';
+  ownerCompanyId?: string;
+  ownerCompanyName?: string;
   allocationStatus?: 'UNALLOCATED' | 'ALLOCATED' | 'IN_TRANSIT';
+  isAvailableForVAS?: boolean;
   siteId?: string;
   createdAt: any;
 }
@@ -57,20 +62,27 @@ interface GroupedAssets {
 }
 
 export default function PlantAssetMarketplaceScreen() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [vasAssets, setVasAssets] = useState<PlantAsset[]>([]);
+  const [allAssets, setAllAssets] = useState<PlantAsset[]>([]);
+  const [filteredAssets, setFilteredAssets] = useState<PlantAsset[]>([]);
   const [groupedAssets, setGroupedAssets] = useState<GroupedAssets>({});
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [expandedTypes, setExpandedTypes] = useState<Set<string>>(new Set());
   const [hasVasAccess] = useState(false);
+  const [filterMode, setFilterMode] = useState<'all' | 'available'>('all');
+  const [currentCompany, setCurrentCompany] = useState<Company | null>(null);
 
-  useEffect(() => {
-    loadMarketplaceData();
-  }, []);
-
-  const loadMarketplaceData = async () => {
+  const loadMarketplaceData = useCallback(async () => {
     try {
       setLoading(true);
+
+      if (user?.currentCompanyId) {
+        const companyDoc = await getDoc(doc(db, 'companies', user.currentCompanyId));
+        if (companyDoc.exists()) {
+          setCurrentCompany({ id: companyDoc.id, ...companyDoc.data() } as Company);
+        }
+      }
 
       const groupsQuery = query(collection(db, 'plantAssetGroups'));
       const groupsSnapshot = await getDocs(groupsQuery);
@@ -94,25 +106,91 @@ export default function PlantAssetMarketplaceScreen() {
         id: doc.id,
         ...doc.data()
       })) as PlantAsset[];
-      console.log('Loaded assets:', assets.length);
-      console.log('First asset sample:', assets[0]);
+      console.log('Loaded all assets globally:', assets.length);
+
+      const companiesQuery = query(collection(db, 'companies'));
+      const companiesSnapshot = await getDocs(companiesQuery);
+      const companiesMap = new Map();
+      companiesSnapshot.docs.forEach(doc => {
+        companiesMap.set(doc.id, doc.data());
+      });
 
       const assetsWithDetails = assets.map(asset => {
         const type = allTypes.find(t => t.id === asset.typeId);
         const group = allGroups.find(g => g.id === asset.groupId);
-        console.log('Asset:', asset.assetId, 'has typeId:', asset.typeId, 'groupId:', asset.groupId);
+        const ownerCompany = asset.ownerType === 'company' && asset.ownerId 
+          ? companiesMap.get(asset.ownerId) 
+          : null;
+        
         return {
           ...asset,
           typeName: type?.name,
           groupName: group?.name,
+          ownerCompanyId: ownerCompany ? asset.ownerId : undefined,
+          ownerCompanyName: ownerCompany?.alias || ownerCompany?.legalEntityName,
+          ownerProvince: asset.ownerProvince || ownerCompany?.plantAvailabilityProvince,
+          ownerAddress: asset.ownerAddress || ownerCompany?.address,
         };
       });
 
       console.log('Assets with details:', assetsWithDetails.length);
-      setVasAssets(assetsWithDetails);
+      setAllAssets(assetsWithDetails);
 
-      const grouped: GroupedAssets = {};
-      assetsWithDetails.forEach(asset => {
+    } catch (error) {
+      console.error('Error loading marketplace data:', error);
+      Alert.alert('Error', 'Failed to load marketplace data');
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.currentCompanyId]);
+
+  const applyFilters = useCallback(() => {
+    let filtered = [...allAssets];
+
+    if (filterMode === 'available') {
+      filtered = filtered.filter(asset => asset.isAvailableForVAS === true);
+      console.log('Filtering to available only:', filtered.length);
+    }
+
+    if (currentCompany && currentCompany.plantAvailabilityGeoType) {
+      if (currentCompany.plantAvailabilityGeoType === 'province' && currentCompany.plantAvailabilityProvince) {
+        filtered = filtered.filter(asset => 
+          asset.ownerProvince === currentCompany.plantAvailabilityProvince
+        );
+        console.log('Filtering by province:', currentCompany.plantAvailabilityProvince, filtered.length);
+      }
+    }
+
+    setFilteredAssets(filtered);
+    groupAssets(filtered);
+  }, [allAssets, filterMode, currentCompany]);
+
+  useEffect(() => {
+    loadMarketplaceData();
+  }, [loadMarketplaceData]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [applyFilters]);
+
+  const groupAssets = (assets: PlantAsset[]) => {
+    const groupsQuery = collection(db, 'plantAssetGroups');
+    const typesQuery = collection(db, 'plantAssetTypes');
+    
+    getDocs(groupsQuery).then(groupsSnapshot => {
+      const allGroups = groupsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      })) as PlantAssetGroup[];
+
+      getDocs(typesQuery).then(typesSnapshot => {
+        const allTypes = typesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as PlantAssetType[];
+
+        const grouped: GroupedAssets = {};
+        assets.forEach(asset => {
         if (!asset.groupId || !asset.typeId) {
           console.log('Skipping asset without groupId/typeId:', asset.assetId);
           return;
@@ -142,27 +220,22 @@ export default function PlantAssetMarketplaceScreen() {
           };
         }
 
-        grouped[asset.groupId].types[asset.typeId].assets.push(asset);
-      });
+          grouped[asset.groupId].types[asset.typeId].assets.push(asset);
+        });
 
-      console.log('Grouped assets:', Object.keys(grouped).length, 'groups');
-      setGroupedAssets(grouped);
+        console.log('Grouped assets:', Object.keys(grouped).length, 'groups');
+        setGroupedAssets(grouped);
 
-      if (Object.keys(grouped).length > 0) {
-        const firstGroupId = Object.keys(grouped)[0];
-        setExpandedGroups(new Set([firstGroupId]));
-        const firstTypeId = Object.keys(grouped[firstGroupId].types)[0];
-        if (firstTypeId) {
-          setExpandedTypes(new Set([firstTypeId]));
+        if (Object.keys(grouped).length > 0) {
+          const firstGroupId = Object.keys(grouped)[0];
+          setExpandedGroups(new Set([firstGroupId]));
+          const firstTypeId = Object.keys(grouped[firstGroupId].types)[0];
+          if (firstTypeId) {
+            setExpandedTypes(new Set([firstTypeId]));
+          }
         }
-      }
-
-    } catch (error) {
-      console.error('Error loading marketplace data:', error);
-      Alert.alert('Error', 'Failed to load marketplace data');
-    } finally {
-      setLoading(false);
-    }
+      });
+    });
   };
 
   const toggleGroup = (groupId: string) => {
@@ -232,9 +305,13 @@ export default function PlantAssetMarketplaceScreen() {
 
   const getAvailabilityText = (allocationStatus?: string): string => {
     if (allocationStatus === 'ALLOCATED') {
-      return '🔴 Currently Allocated';
+      return 'Allocated';
     }
-    return '🟢 Available';
+    return 'Available';
+  };
+
+  const toggleFilterMode = () => {
+    setFilterMode(prev => prev === 'all' ? 'available' : 'all');
   };
 
   return (
@@ -282,22 +359,34 @@ export default function PlantAssetMarketplaceScreen() {
             )}
           </View>
 
+          <View style={styles.filterSection}>
+            <TouchableOpacity
+              style={styles.filterButton}
+              onPress={toggleFilterMode}
+            >
+              <Filter size={20} color={Colors.accent} />
+              <Text style={styles.filterButtonText}>
+                {filterMode === 'all' ? 'Showing All Assets' : 'Showing Available Only'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={styles.statsContainer}>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{vasAssets.length}</Text>
-              <Text style={styles.statLabel}>Total Assets</Text>
+              <Text style={styles.statValue}>{allAssets.length}</Text>
+              <Text style={styles.statLabel}>Total in Database</Text>
             </View>
             <View style={styles.statCard}>
               <Text style={[styles.statValue, { color: '#10B981' }]}>
-                {vasAssets.filter(a => a.allocationStatus !== 'ALLOCATED').length}
+                {allAssets.filter(a => a.isAvailableForVAS && a.allocationStatus !== 'ALLOCATED').length}
               </Text>
-              <Text style={styles.statLabel}>🟢 Available</Text>
+              <Text style={styles.statLabel}>Available for Hire</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={[styles.statValue, { color: '#EF4444' }]}>
-                {vasAssets.filter(a => a.allocationStatus === 'ALLOCATED').length}
+              <Text style={[styles.statValue, { color: '#3b82f6' }]}>
+                {filteredAssets.length}
               </Text>
-              <Text style={styles.statLabel}>🔴 Allocated</Text>
+              <Text style={styles.statLabel}>In Current View</Text>
             </View>
           </View>
 
@@ -393,6 +482,11 @@ export default function PlantAssetMarketplaceScreen() {
                                           <Text style={styles.assetId}>
                                             {hasVasAccess ? asset.assetId : `***${asset.assetId.slice(-4)}`}
                                           </Text>
+                                          {asset.ownerCompanyName && (
+                                            <Text style={styles.ownerName}>
+                                              Owner: {hasVasAccess ? asset.ownerCompanyName : '***'}
+                                            </Text>
+                                          )}
                                         </View>
                                         <View
                                           style={[
@@ -402,6 +496,7 @@ export default function PlantAssetMarketplaceScreen() {
                                             }
                                           ]}
                                         >
+                                          <View style={styles.availabilityDot} />
                                           <Text
                                             style={[
                                               styles.availabilityText,
@@ -448,18 +543,21 @@ export default function PlantAssetMarketplaceScreen() {
           )}
 
           <View style={styles.infoSection}>
-            <Text style={styles.infoTitle}>About VAS Marketplace</Text>
+            <Text style={styles.infoTitle}>About Plant Asset Marketplace</Text>
             <Text style={styles.infoText}>
-              Browse all plant assets from subcontractors in our database.
+              Browse all plant assets in the database from across all companies and subcontractors.
             </Text>
             <Text style={styles.infoText}>
-              🟢 Green: Available for hire
+              • <Text style={{ color: '#10B981', fontWeight: '600' as const }}>Available</Text> - Free for hire
             </Text>
             <Text style={styles.infoText}>
-              🔴 Red: Currently allocated/unavailable
+              • <Text style={{ color: '#EF4444', fontWeight: '600' as const }}>Allocated</Text> - Currently in use
             </Text>
             <Text style={styles.infoText}>
-              Activate VAS to view full subcontractor details and contact information.
+              Toggle the filter to show all assets or only those marked as available for hire.
+            </Text>
+            <Text style={styles.infoText}>
+              Activate VAS to view full owner details and contact information.
             </Text>
           </View>
         </ScrollView>
@@ -686,15 +784,29 @@ const styles = StyleSheet.create({
   assetIdContainer: {
     flex: 1,
   },
+  ownerName: {
+    fontSize: 12,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
   assetId: {
     fontSize: 15,
     fontWeight: '600' as const,
     color: Colors.background,
   },
   availabilityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 8,
+  },
+  availabilityDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: 'currentColor',
   },
   availabilityText: {
     fontSize: 11,
@@ -761,5 +873,30 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     lineHeight: 20,
     marginBottom: 8,
+  },
+  filterSection: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  filterButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: Colors.cardBg,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: Colors.accent,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  filterButtonText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: Colors.accent,
   },
 });

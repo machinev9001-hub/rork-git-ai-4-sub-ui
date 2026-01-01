@@ -14,7 +14,7 @@ import {
   Alert,
 } from 'react-native';
 
-import { ArrowLeft, Save, Building2, Plus, Trash2, ChevronDown, ChevronUp, Package, Users, ChevronRight } from 'lucide-react-native';
+import { ArrowLeft, Save, Building2, Plus, Trash2, ChevronDown, ChevronUp, Package, Users, ChevronRight, MapPin } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
@@ -36,6 +36,10 @@ export default function CompanySettingsScreen() {
   const [plantTypes, setPlantTypes] = useState<string[]>([]);
   const [newPlantType, setNewPlantType] = useState('');
   const [showPlantTypesSection, setShowPlantTypesSection] = useState(false);
+  const [showPlantAvailabilitySection, setShowPlantAvailabilitySection] = useState(false);
+  const [plantAvailabilityProvince, setPlantAvailabilityProvince] = useState('');
+  const [plantAvailabilityRadiusKm, setPlantAvailabilityRadiusKm] = useState('');
+  const [plantAvailabilityGeoType, setPlantAvailabilityGeoType] = useState<'province' | 'radius' | ''>('');
 
   const loadCompanySettings = useCallback(async () => {
     const companyId = user?.currentCompanyId;
@@ -64,6 +68,9 @@ export default function CompanySettingsScreen() {
         setCompanyRegistrationNr(data.companyRegistrationNr || '');
         setVatNr(data.vatNumber || '');
         setPlantTypes(data.plantTypes || []);
+        setPlantAvailabilityProvince(data.plantAvailabilityProvince || '');
+        setPlantAvailabilityRadiusKm(data.plantAvailabilityRadiusKm?.toString() || '');
+        setPlantAvailabilityGeoType(data.plantAvailabilityGeoType || '');
       } else {
         console.log('[CompanySettings] Company document not found');
         Alert.alert('Error', 'Company not found');
@@ -105,7 +112,7 @@ export default function CompanySettingsScreen() {
       console.log('[CompanySettings] Saving settings for companyId:', companyId);
       
       const companyRef = doc(db, 'companies', companyId);
-      await setDoc(companyRef, {
+      const updateData: any = {
         legalEntityName: legalEntityName.trim(),
         alias: alias.trim(),
         address: address.trim(),
@@ -116,7 +123,24 @@ export default function CompanySettingsScreen() {
         vatNumber: vatNr.trim(),
         plantTypes,
         updatedAt: new Date(),
-      }, { merge: true });
+      };
+
+      if (plantAvailabilityGeoType) {
+        updateData.plantAvailabilityGeoType = plantAvailabilityGeoType;
+        if (plantAvailabilityGeoType === 'province') {
+          updateData.plantAvailabilityProvince = plantAvailabilityProvince;
+          updateData.plantAvailabilityRadiusKm = null;
+        } else if (plantAvailabilityGeoType === 'radius') {
+          updateData.plantAvailabilityRadiusKm = parseFloat(plantAvailabilityRadiusKm) || null;
+          updateData.plantAvailabilityProvince = null;
+        }
+      } else {
+        updateData.plantAvailabilityGeoType = null;
+        updateData.plantAvailabilityProvince = null;
+        updateData.plantAvailabilityRadiusKm = null;
+      }
+
+      await setDoc(companyRef, updateData, { merge: true });
 
       console.log('[CompanySettings] Settings saved successfully');
       Alert.alert('Success', 'Company settings saved successfully');
@@ -308,6 +332,103 @@ export default function CompanySettingsScreen() {
               </View>
               <ChevronRight size={24} color="#94a3b8" />
             </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.expandableCard}
+              onPress={() => setShowPlantAvailabilitySection(!showPlantAvailabilitySection)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.expandableHeader}>
+                <View style={styles.expandableTitleWithBadge}>
+                  <MapPin size={20} color="#10B981" />
+                  <Text style={styles.expandableTitle}>Plant Asset Geographic Availability</Text>
+                </View>
+                {showPlantAvailabilitySection ? (
+                  <ChevronUp size={24} color="#64748b" />
+                ) : (
+                  <ChevronDown size={24} color="#64748b" />
+                )}
+              </View>
+            </TouchableOpacity>
+
+            {showPlantAvailabilitySection && (
+              <View style={styles.plantTypesSection}>
+                <Text style={styles.sectionDescription}>
+                  Configure where your plant assets are available for hire in the marketplace. This helps enterprise clients find assets available in their region.
+                </Text>
+
+                <View style={styles.inputGroup}>
+                  <Text style={styles.label}>Geographic Filter Type</Text>
+                  <View style={styles.radioGroup}>
+                    <TouchableOpacity
+                      style={styles.radioOption}
+                      onPress={() => setPlantAvailabilityGeoType('province')}
+                      disabled={isLoading}
+                    >
+                      <View style={[styles.radio, plantAvailabilityGeoType === 'province' && styles.radioSelected]}>
+                        {plantAvailabilityGeoType === 'province' && <View style={styles.radioDot} />}
+                      </View>
+                      <Text style={styles.radioLabel}>Province/County</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.radioOption}
+                      onPress={() => setPlantAvailabilityGeoType('radius')}
+                      disabled={isLoading}
+                    >
+                      <View style={[styles.radio, plantAvailabilityGeoType === 'radius' && styles.radioSelected]}>
+                        {plantAvailabilityGeoType === 'radius' && <View style={styles.radioDot} />}
+                      </View>
+                      <Text style={styles.radioLabel}>Radius from Location</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={styles.radioOption}
+                      onPress={() => setPlantAvailabilityGeoType('')}
+                      disabled={isLoading}
+                    >
+                      <View style={[styles.radio, !plantAvailabilityGeoType && styles.radioSelected]}>
+                        {!plantAvailabilityGeoType && <View style={styles.radioDot} />}
+                      </View>
+                      <Text style={styles.radioLabel}>No Filter (Nationwide)</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {plantAvailabilityGeoType === 'province' && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Province/County</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="Enter province or county name"
+                      value={plantAvailabilityProvince}
+                      onChangeText={setPlantAvailabilityProvince}
+                      editable={!isLoading}
+                    />
+                    <Text style={styles.helpText}>
+                      Enter the province/county where your assets are available
+                    </Text>
+                  </View>
+                )}
+
+                {plantAvailabilityGeoType === 'radius' && (
+                  <View style={styles.inputGroup}>
+                    <Text style={styles.label}>Radius (in kilometers)</Text>
+                    <TextInput
+                      style={styles.input}
+                      placeholder="e.g., 400"
+                      value={plantAvailabilityRadiusKm}
+                      onChangeText={setPlantAvailabilityRadiusKm}
+                      keyboardType="numeric"
+                      editable={!isLoading}
+                    />
+                    <Text style={styles.helpText}>
+                      Assets will be available within this radius from your company address
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
 
             {showPlantTypesSection && (
               <View style={styles.plantTypesSection}>
@@ -641,5 +762,42 @@ const styles = StyleSheet.create({
   navigationSubtitle: {
     fontSize: 13,
     color: '#64748b',
+  },
+  radioGroup: {
+    gap: 12,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 8,
+  },
+  radio: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#cbd5e1',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  radioSelected: {
+    borderColor: '#3b82f6',
+  },
+  radioDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#3b82f6',
+  },
+  radioLabel: {
+    fontSize: 15,
+    color: '#1e293b',
+  },
+  helpText: {
+    fontSize: 13,
+    color: '#64748b',
+    marginLeft: 4,
+    marginTop: 4,
   },
 });

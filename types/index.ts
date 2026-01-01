@@ -93,6 +93,10 @@ export type Company = {
   billingEmail?: string;
   subscriptionStartDate?: any;
   subscriptionEndDate?: any;
+  // Geographic availability settings for marketplace
+  plantAvailabilityProvince?: string; // Province/County where assets are available
+  plantAvailabilityRadiusKm?: number; // Radius in KM from company location
+  plantAvailabilityGeoType?: 'province' | 'radius'; // Type of geographic filter
   createdAt: any;
   updatedAt?: any;
   createdBy: string;
