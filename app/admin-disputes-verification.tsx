@@ -156,7 +156,7 @@ export default function AdminDisputesVerificationScreen() {
         {
           text: 'Reject',
           style: 'destructive',
-          onPress: async (reason) => {
+          onPress: async (reason?: string) => {
             if (!reason || reason.trim() === '') {
               Alert.alert('Error', 'Please provide a reason for rejection');
               return;

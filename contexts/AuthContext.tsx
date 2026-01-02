@@ -794,50 +794,6 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
 
       console.log('[Auth] Login attempt - userId:', normalizedUserId, 'userIdLower:', normalizedUserIdLower);
 
-      // Super Admin hardcoded login (for app owner to manage VAS and subscriptions)
-      if (normalizedUserIdLower === 'admin') {
-        console.log('[Auth] ⭐ Super admin login detected');
-        console.log('[Auth]   userId input:', userId);
-        console.log('[Auth]   normalized:', normalizedUserId);
-        console.log('[Auth]   lowercase:', normalizedUserIdLower);
-        console.log('[Auth]   PIN provided:', normalizedPin ? 'YES' : 'NO');
-        
-        if (!normalizedPin) {
-          console.log('[Auth] ❌ Super admin - no PIN provided');
-          return { success: false, requiresPin: true };
-        }
-        console.log('[Auth]   Checking PIN...');
-        if (normalizedPin !== '3002') {
-          console.log('[Auth] ❌ Super admin - incorrect PIN (expected: 3002, got:', normalizedPin, ')');
-          return { success: false, error: 'Incorrect PIN' };
-        }
-        
-        console.log('[Auth] ✅ Super admin PIN correct');
-        // Create super admin user object
-        const superAdminUser: User = {
-          id: 'super_admin',
-          userId: 'admin',
-          name: 'Super Admin',
-          role: 'Admin',
-          companyIds: [],
-          currentCompanyId: undefined,
-          accountType: 'enterprise',
-          vasFeatures: [],
-          createdAt: new Date(),
-          disabledMenus: [],
-        };
-        
-        console.log('[Auth] ✅ Super admin user object created');
-        console.log('[Auth]   Saving to AsyncStorage...');
-        await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(superAdminUser));
-        await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString());
-        console.log('[Auth]   Setting user state...');
-        setUser(superAdminUser);
-        setIsOffline(false);
-        console.log('[Auth] ✅ SUPER ADMIN LOGIN SUCCESSFUL');
-        return { success: true, user: superAdminUser };
-      }
-
       if (isDemoFirebaseProject) {
         console.log('[Auth] Demo environment detected, using in-memory dataset');
         const resolvedMasterLookupId = DEMO_MASTER_ALIASES[normalizedUserIdLower] ?? normalizedUserIdLower;
