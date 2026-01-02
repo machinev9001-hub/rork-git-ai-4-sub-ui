@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LogIn, UserPlus, ScanLine } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
@@ -173,9 +174,12 @@ export default function LoginScreen() {
               delayLongPress={2000}
               style={styles.logoPlaceholder}
             >
-              <View style={styles.logoFallback}>
-                <Text style={styles.logoFallbackText}>M</Text>
-              </View>
+              <Image
+                source={require('@/assets/images/icon.png')}
+                style={styles.logoImage}
+                contentFit="contain"
+                transition={200}
+              />
             </TouchableOpacity>
             <Text style={styles.appTitle}>Machine</Text>
             <Text style={styles.appSubtitle}>Business Management and Tracking</Text>
@@ -344,19 +348,7 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 120,
     height: 120,
-  },
-  logoFallback: {
-    width: 120,
-    height: 120,
-    backgroundColor: Colors.accent,
-    borderRadius: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoFallbackText: {
-    fontSize: 48,
-    fontWeight: '700' as const,
-    color: Colors.background,
+    borderRadius: 20,
   },
   accentBar: {
     width: 60,
