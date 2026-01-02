@@ -97,9 +97,12 @@ export type Company = {
   plantAvailabilityProvince?: string; // Province/County where assets are available
   plantAvailabilityRadiusKm?: number; // Radius in KM from company location
   plantAvailabilityGeoType?: 'province' | 'radius'; // Type of geographic filter
+  // Multi-owner support
+  totalOwnershipPercentage?: number; // Total ownership percentage allocated
+  ownerCount?: number; // Number of active owners
   createdAt: any;
   updatedAt?: any;
-  createdBy: string;
+  createdBy: string; // Primary creator (still supported for legacy)
 };
 
 export type CompanyUser = {
@@ -131,16 +134,49 @@ export type SubContractorUser = {
   isLocked?: boolean;
 };
 
+/**
+ * ID Verification Status
+ */
+export type IDVerificationStatus = 
+  | 'unverified' 
+  | 'pending_review' 
+  | 'verified' 
+  | 'rejected' 
+  | 'expired';
+
+/**
+ * Duplicate ID Status
+ */
+export type DuplicateIDStatus = 
+  | 'none' 
+  | 'detected' 
+  | 'under_investigation' 
+  | 'resolved' 
+  | 'blocked';
+
 export type MasterAccount = {
   id: string;
   masterId: string;
   name: string;
+  surname?: string; // Surname for credentials
+  username?: string; // Username for credentials
   pin: string;
+  nationalIdNumber?: string; // National ID number for verification
+  idVerificationStatus?: IDVerificationStatus; // ID verification status
+  idVerifiedAt?: any; // When ID was verified
+  idVerifiedBy?: string; // Admin who verified ID
+  idDocumentUrl?: string; // URL to uploaded ID document
+  duplicateIdStatus?: DuplicateIDStatus; // Duplicate ID detection status
+  canOwnCompanies?: boolean; // Can own companies (requires verified ID)
+  canReceivePayouts?: boolean; // Can receive financial payouts
+  canApproveOwnershipChanges?: boolean; // Can approve ownership changes
+  restrictionReason?: string; // Reason for any restrictions
   companyIds: string[];
   currentCompanyId?: string;
   accountType?: AccountType;
   vasFeatures?: VASFeatureId[];
   createdAt: any;
+  updatedAt?: any;
 };
 
 export type AccessScope = 'company-level' | 'all-sites' | 'selected-sites' | 'no-sites';
@@ -1173,26 +1209,6 @@ export type TimesheetEntry = {
 // ============================================================================
 // MASTER ACCOUNT & COMPANY OWNERSHIP SYSTEM
 // ============================================================================
-
-/**
- * ID Verification Status
- */
-export type IDVerificationStatus = 
-  | 'unverified' 
-  | 'pending_review' 
-  | 'verified' 
-  | 'rejected' 
-  | 'expired';
-
-/**
- * Duplicate ID Status
- */
-export type DuplicateIDStatus = 
-  | 'none' 
-  | 'detected' 
-  | 'under_investigation' 
-  | 'resolved' 
-  | 'blocked';
 
 /**
  * Company Ownership - Defines ownership percentages for master accounts
