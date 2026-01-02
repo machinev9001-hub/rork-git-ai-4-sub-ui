@@ -436,11 +436,8 @@ export default function MasterSupervisorScreen() {
                     activeOpacity={0.7}
                     onPress={() => handleMainMenuPress(item, color, iconName)}
                   >
-                    <View style={[styles.iconContainer, { backgroundColor: color }]}>
-                      <IconComponent size={28} color="#fff" strokeWidth={2.5} />
-                    </View>
+                    <IconComponent size={40} color="#fff" strokeWidth={2} />
                     <Text style={styles.activityName}>{item.menuItem.name}</Text>
-
                   </TouchableOpacity>
                 );
               })}
@@ -518,41 +515,17 @@ const styles = StyleSheet.create({
   },
   activityCard: {
     width: '47.5%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    paddingVertical: 20,
+    padding: 20,
+    paddingVertical: 28,
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-      web: {
-        boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-      },
-    }),
-  },
-  iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
   },
   activityName: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 15,
     fontWeight: '600' as const,
     textAlign: 'center' as const,
     letterSpacing: 0.1,
-    marginBottom: 8,
+    marginTop: 12,
   },
   progressContainer: {
     width: '100%',

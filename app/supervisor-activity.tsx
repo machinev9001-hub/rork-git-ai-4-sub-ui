@@ -27,14 +27,13 @@ type MenuItem = {
 };
 
 export default function SupervisorActivityScreen() {
-  const { activity, menuId, parentColor, parentIcon } = useLocalSearchParams<{ 
+  const { activity, menuId, parentIcon } = useLocalSearchParams<{ 
     activity: string; 
     menuId: string;
-    parentColor?: string;
     parentIcon?: string;
   }>();
   const { user } = useAuth();
-  const { theme, roleAccentColor, commonStyles } = useTheme();
+  const { theme, commonStyles } = useTheme();
   const router = useRouter();
 
   const [mainMenu, setMainMenu] = useState<MenuItem | null>(null);
@@ -147,7 +146,6 @@ export default function SupervisorActivityScreen() {
   }));
 
   const title = mainMenu?.name || 'Activity';
-  const color = parentColor || roleAccentColor;
 
   const handleSubActivityPress = (subActivity: SubActivity) => {
     console.log(`Sub-activity pressed: ${subActivity.id}`, subActivity.name);
@@ -225,13 +223,11 @@ export default function SupervisorActivityScreen() {
                 return (
                   <TouchableOpacity
                     key={subActivity.id}
-                    style={[styles.activityCard, { backgroundColor: theme.cardBg }]}
+                    style={styles.activityCard}
                     activeOpacity={0.7}
                     onPress={() => handleSubActivityPress(subActivity)}
                   >
-                    <View style={[styles.iconContainer, { backgroundColor: color }]}>
-                      <ParentIconComponent size={28} color="#fff" strokeWidth={2.5} />
-                    </View>
+                    <ParentIconComponent size={40} color="#fff" strokeWidth={2} />
                     <Text style={styles.activityName}>{subActivity.name}</Text>
                   </TouchableOpacity>
                 );
@@ -330,32 +326,9 @@ const styles = StyleSheet.create({
   },
   activityCard: {
     width: '47.5%',
-    borderRadius: 16,
     padding: 20,
     paddingVertical: 28,
     alignItems: 'center',
-    ...Platform.select({
-      ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.08,
-        shadowRadius: 12,
-      },
-      android: {
-        elevation: 3,
-      },
-      web: {
-        boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-      },
-    }),
-  },
-  iconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 12,
   },
   activityName: {
     fontSize: 15,
@@ -363,7 +336,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 0.1,
     width: '100%',
-    color: '#000000',
+    color: '#FFFFFF',
+    marginTop: 12,
   },
   headerRight: {
     marginRight: 16,
