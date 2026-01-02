@@ -7,39 +7,39 @@ firebase deploy --only firestore:indexes
 
 ## Total New Indexes: 26
 
-### Master Accounts (3)
+### masterAccounts (3)
 1. `nationalIdNumber` (ASC)
 2. `idVerificationStatus` (ASC) + `createdAt` (DESC)
 3. `duplicateIdStatus` (ASC) + `createdAt` (DESC)
 
-### Company Ownership (4)
+### companyOwnership (4)
 4. `companyId` (ASC) + `status` (ASC) + `grantedAt` (DESC)
 5. `masterAccountId` (ASC) + `status` (ASC) + `grantedAt` (DESC)
 6. `companyId` (ASC) + `masterAccountId` (ASC) + `status` (ASC)
 7. `companyId` (ASC) + `ownershipPercentage` (DESC)
 
-### Company Roles (3)
+### companyRoles (3)
 8. `companyId` (ASC) + `status` (ASC) + `assignedAt` (DESC)
 9. `masterAccountId` (ASC) + `status` (ASC) + `assignedAt` (DESC)
 10. `companyId` (ASC) + `masterAccountId` (ASC) + `role` (ASC)
 
-### Master ID Verification (3)
+### masterIDVerification (3)
 11. `masterAccountId` (ASC) + `status` (ASC) + `submittedAt` (DESC)
 12. `nationalIdNumber` (ASC) + `status` (ASC)
 13. `status` (ASC) + `submittedAt` (ASC)
 
-### Fraud Disputes (4)
+### fraudDisputes (4)
 14. `nationalIdNumber` (ASC) + `status` (ASC)
 15. `status` (ASC) + `priority` (DESC) + `reportedAt` (DESC)
 16. `reportedBy` (ASC) + `status` (ASC) + `reportedAt` (DESC)
 17. `existingAccountId` (ASC) + `status` (ASC)
 
-### Ownership Change Requests (3)
+### ownershipChangeRequests (3)
 18. `companyId` (ASC) + `status` (ASC) + `createdAt` (DESC)
 19. `requestedBy` (ASC) + `status` (ASC) + `createdAt` (DESC)
 20. `targetMasterAccountId` (ASC) + `status` (ASC) + `createdAt` (DESC)
 
-### Master Account Audit Logs (6)
+### masterAccountAuditLogs (6)
 21. `masterAccountId` (ASC) + `timestamp` (DESC)
 22. `companyId` (ASC) + `timestamp` (DESC)
 23. `actionType` (ASC) + `timestamp` (DESC)
