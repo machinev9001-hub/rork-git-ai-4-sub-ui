@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Key, Copy, Share2, Plus, AlertTriangle, Shield } from 'lucide-react-native';
+import { X, Key, Copy, Share2, Plus, AlertTriangle, Shield, CreditCard } from 'lucide-react-native';
 import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { generateActivationCode } from '@/utils/activationCode';
@@ -271,6 +271,20 @@ export default function AdminPanelScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          <TouchableOpacity
+            style={styles.managementButton}
+            onPress={() => router.push('/admin-vas-management' as any)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.managementButtonContent}>
+              <CreditCard size={24} color="#8b5cf6" />
+              <View style={styles.managementButtonText}>
+                <Text style={styles.managementButtonTitle}>VAS & Subscriptions</Text>
+                <Text style={styles.managementButtonSubtitle}>Manage subscriptions and value-added services</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.managementButton}
