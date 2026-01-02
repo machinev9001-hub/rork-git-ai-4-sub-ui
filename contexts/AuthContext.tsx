@@ -783,6 +783,38 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const normalizedUserIdLower = normalizedUserId.toLowerCase();
       const normalizedPin: string | undefined = typeof pin === 'string' ? pin.trim() : undefined;
 
+      // Super Admin hardcoded login (for app owner to manage VAS and subscriptions)
+      if (normalizedUserIdLower === 'admin') {
+        console.log('[Auth] Super admin login attempt');
+        if (!normalizedPin) {
+          return { success: false, requiresPin: true };
+        }
+        if (normalizedPin !== '3002') {
+          return { success: false, error: 'Incorrect PIN' };
+        }
+        
+        // Create super admin user object
+        const superAdminUser: User = {
+          id: 'super_admin',
+          userId: 'admin',
+          name: 'Super Admin',
+          role: 'Admin',
+          companyIds: [],
+          currentCompanyId: undefined,
+          accountType: 'enterprise',
+          vasFeatures: [],
+          createdAt: new Date(),
+          disabledMenus: [],
+        };
+        
+        console.log('[Auth] Super admin login successful');
+        await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(superAdminUser));
+        await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString());
+        setUser(superAdminUser);
+        setIsOffline(false);
+        return { success: true, user: superAdminUser };
+      }
+
       if (isDemoFirebaseProject) {
         console.log('[Auth] Demo environment detected, using in-memory dataset');
         const resolvedMasterLookupId = DEMO_MASTER_ALIASES[normalizedUserIdLower] ?? normalizedUserIdLower;

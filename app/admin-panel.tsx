@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Key, Copy, Share2, Plus, AlertTriangle } from 'lucide-react-native';
+import { X, Key, Copy, Share2, Plus, AlertTriangle, Shield, CreditCard } from 'lucide-react-native';
 import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { generateActivationCode } from '@/utils/activationCode';
@@ -271,6 +271,34 @@ export default function AdminPanelScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          <TouchableOpacity
+            style={styles.managementButton}
+            onPress={() => router.push('/admin-vas-management' as any)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.managementButtonContent}>
+              <CreditCard size={24} color="#8b5cf6" />
+              <View style={styles.managementButtonText}>
+                <Text style={styles.managementButtonTitle}>VAS & Subscriptions</Text>
+                <Text style={styles.managementButtonSubtitle}>Manage subscriptions and value-added services</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.managementButton}
+            onPress={() => router.push('/admin-disputes-verification' as any)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.managementButtonContent}>
+              <Shield size={24} color="#3b82f6" />
+              <View style={styles.managementButtonText}>
+                <Text style={styles.managementButtonTitle}>Disputes & Verification</Text>
+                <Text style={styles.managementButtonSubtitle}>Manage duplicate account disputes and ID verification</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.diagnosticButton}
@@ -558,6 +586,36 @@ const styles = StyleSheet.create({
     color: '#1e293b',
   },
   diagnosticButtonSubtitle: {
+    fontSize: 13,
+    color: '#64748b',
+  },
+  managementButton: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 2,
+    borderColor: '#dbeafe',
+  },
+  managementButtonContent: {
+    flexDirection: 'row' as const,
+    alignItems: 'center' as const,
+    gap: 16,
+  },
+  managementButtonText: {
+    flex: 1,
+    gap: 4,
+  },
+  managementButtonTitle: {
+    fontSize: 16,
+    fontWeight: '600' as const,
+    color: '#1e293b',
+  },
+  managementButtonSubtitle: {
     fontSize: 13,
     color: '#64748b',
   },
