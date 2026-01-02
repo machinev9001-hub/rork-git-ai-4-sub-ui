@@ -175,10 +175,11 @@ export default function LoginScreen() {
               style={styles.logoPlaceholder}
             >
               <Image
-                source={require('@/assets/images/icon.png')}
+                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ix20dqx7pqjtxa1iq9hb6' }}
                 style={styles.logoImage}
                 contentFit="contain"
                 transition={200}
+                cachePolicy="memory-disk"
               />
             </TouchableOpacity>
             <Text style={styles.appTitle}>Machine</Text>
