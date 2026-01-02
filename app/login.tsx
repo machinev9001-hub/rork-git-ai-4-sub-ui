@@ -175,7 +175,7 @@ export default function LoginScreen() {
               style={styles.logoPlaceholder}
             >
               <Image
-                source={require('@/assets/images/icon.png')}
+                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/mounktczoga5o2xw99z4g' }}
                 style={styles.logoImage}
                 resizeMode="contain"
               />
