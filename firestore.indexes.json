@@ -1778,6 +1778,9 @@
       "fields": [
         { "fieldPath": "assetId", "order": "ASCENDING" },
         { "fieldPath": "isActive", "order": "ASCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "emhPendingEdits",
       "queryScope": "COLLECTION",
       "fields": [
