@@ -10,7 +10,6 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LogIn, UserPlus, ScanLine } from 'lucide-react-native';
@@ -174,11 +173,9 @@ export default function LoginScreen() {
               delayLongPress={2000}
               style={styles.logoPlaceholder}
             >
-              <Image
-                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/mounktczoga5o2xw99z4g' }}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
+              <View style={styles.logoFallback}>
+                <Text style={styles.logoFallbackText}>M</Text>
+              </View>
             </TouchableOpacity>
             <Text style={styles.appTitle}>Machine</Text>
             <Text style={styles.appSubtitle}>Business Management and Tracking</Text>
