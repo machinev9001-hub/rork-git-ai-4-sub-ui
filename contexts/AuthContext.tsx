@@ -614,7 +614,16 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       console.log('[Auth]   AccountType:', accountType || 'default-enterprise');
       console.log('[Auth] ========================================');
       
-      console.log('[Auth] Step 1: Validating activation code...');
+      console.log('[Auth] Step 1: Checking for reserved master IDs...');
+      const reservedIds = ['admin', 'root', 'system', 'superadmin', 'administrator'];
+      const normalizedMasterId = masterId.trim().toLowerCase();
+      if (reservedIds.includes(normalizedMasterId)) {
+        console.log('[Auth] ❌ Attempted to use reserved master ID:', masterId);
+        return { success: false, error: `The ID "${masterId}" is reserved and cannot be used. Please choose a different ID.` };
+      }
+      console.log('[Auth] ✓ Master ID is not reserved');
+      
+      console.log('[Auth] Step 2: Validating activation code...');
       const codeValidation = await validateActivationCode(activationCode);
       if (!codeValidation.isValid) {
         console.log('[Auth] ❌ Activation code validation failed:', codeValidation.error);
@@ -624,7 +633,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       console.log('[Auth]   Company:', codeValidation.activationCode?.companyName || 'N/A');
       console.log('[Auth]   CompanyId:', codeValidation.activationCode?.companyId || 'N/A');
 
-      console.log('[Auth] Step 2: Checking if master ID already exists...');
+      console.log('[Auth] Step 3: Checking if master ID already exists...');
       const masterAccountsRef = collection(db, 'masterAccounts');
       const masterQuery = query(masterAccountsRef, where('masterId', '==', masterId));
       const masterSnapshot = await getDocs(masterQuery);
@@ -635,13 +644,13 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       }
       console.log('[Auth] ✓ Master ID is available');
 
-      console.log('[Auth] Step 3: Hashing PIN...');
+      console.log('[Auth] Step 4: Hashing PIN...');
       const { hash: pinHash, salt: pinSalt } = hashPin(pin);
       console.log('[Auth] ✓ PIN hashed successfully');
 
       let newMasterDocId: string | null = null;
 
-      console.log('[Auth] Step 4: Creating master account document in transaction...');
+      console.log('[Auth] Step 5: Creating master account document in transaction...');
       try {
         await runTransaction(db, async (transaction) => {
           console.log('[Auth]   Transaction started');
@@ -710,7 +719,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         throw new Error('Failed to create master account document - no ID returned');
       }
 
-      console.log('[Auth] Step 5: Marking activation code as redeemed...');
+      console.log('[Auth] Step 6: Marking activation code as redeemed...');
       if (codeValidation.activationCode?.id) {
         const redeemResult = await markActivationCodeAsRedeemed(
           codeValidation.activationCode.id,
@@ -739,7 +748,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
         createdAt: serverTimestamp(),
       };
 
-      console.log('[Auth] Step 6: Setting state and saving to storage...');
+      console.log('[Auth] Step 7: Setting state and saving to storage...');
       setMasterAccount(newMasterAccount);
       await AsyncStorage.setItem(STORAGE_KEYS.LAST_KNOWN_USER, JSON.stringify(newMasterAccount));
       console.log('[Auth] ✓ State updated and saved');
@@ -783,16 +792,27 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
       const normalizedUserIdLower = normalizedUserId.toLowerCase();
       const normalizedPin: string | undefined = typeof pin === 'string' ? pin.trim() : undefined;
 
+      console.log('[Auth] Login attempt - userId:', normalizedUserId, 'userIdLower:', normalizedUserIdLower);
+
       // Super Admin hardcoded login (for app owner to manage VAS and subscriptions)
       if (normalizedUserIdLower === 'admin') {
-        console.log('[Auth] Super admin login attempt');
+        console.log('[Auth] ⭐ Super admin login detected');
+        console.log('[Auth]   userId input:', userId);
+        console.log('[Auth]   normalized:', normalizedUserId);
+        console.log('[Auth]   lowercase:', normalizedUserIdLower);
+        console.log('[Auth]   PIN provided:', normalizedPin ? 'YES' : 'NO');
+        
         if (!normalizedPin) {
+          console.log('[Auth] ❌ Super admin - no PIN provided');
           return { success: false, requiresPin: true };
         }
+        console.log('[Auth]   Checking PIN...');
         if (normalizedPin !== '3002') {
+          console.log('[Auth] ❌ Super admin - incorrect PIN (expected: 3002, got:', normalizedPin, ')');
           return { success: false, error: 'Incorrect PIN' };
         }
         
+        console.log('[Auth] ✅ Super admin PIN correct');
         // Create super admin user object
         const superAdminUser: User = {
           id: 'super_admin',
@@ -807,11 +827,14 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
           disabledMenus: [],
         };
         
-        console.log('[Auth] Super admin login successful');
+        console.log('[Auth] ✅ Super admin user object created');
+        console.log('[Auth]   Saving to AsyncStorage...');
         await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(superAdminUser));
         await AsyncStorage.setItem(STORAGE_KEYS.LAST_ACTIVITY, Date.now().toString());
+        console.log('[Auth]   Setting user state...');
         setUser(superAdminUser);
         setIsOffline(false);
+        console.log('[Auth] ✅ SUPER ADMIN LOGIN SUCCESSFUL');
         return { success: true, user: superAdminUser };
       }
 
