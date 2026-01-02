@@ -10,8 +10,8 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
-  Image,
 } from 'react-native';
+import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LogIn, UserPlus, ScanLine } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,6 +28,7 @@ export default function LoginScreen() {
   const [verifyPin, setVerifyPin] = useState('');
   const [isFirstTime, setIsFirstTime] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   
   const pinInputRef = useRef<TextInput>(null);
 
@@ -174,11 +175,25 @@ export default function LoginScreen() {
               delayLongPress={2000}
               style={styles.logoPlaceholder}
             >
-              <Image
-                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/wjyzdmzawoz057grvyis8' }}
-                style={styles.logoImage}
-                resizeMode="contain"
-              />
+              {!logoError ? (
+                <Image
+                  source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/wjyzdmzawoz057grvyis8' }}
+                  style={styles.logoImage}
+                  contentFit="contain"
+                  transition={200}
+                  onError={(error) => {
+                    console.error('[Login] Logo failed to load:', error);
+                    setLogoError(true);
+                  }}
+                  onLoad={() => {
+                    console.log('[Login] Logo loaded successfully');
+                  }}
+                />
+              ) : (
+                <View style={styles.logoFallback}>
+                  <Text style={styles.logoFallbackText}>M</Text>
+                </View>
+              )}
             </TouchableOpacity>
             <Text style={styles.appTitle}>Machine</Text>
             <Text style={styles.appSubtitle}>Business Management and Tracking</Text>
@@ -347,6 +362,19 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 120,
     height: 120,
+  },
+  logoFallback: {
+    width: 120,
+    height: 120,
+    backgroundColor: Colors.accent,
+    borderRadius: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoFallbackText: {
+    fontSize: 48,
+    fontWeight: '700' as const,
+    color: Colors.background,
   },
   accentBar: {
     width: 60,
