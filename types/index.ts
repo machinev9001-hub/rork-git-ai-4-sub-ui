@@ -1175,6 +1175,26 @@ export type TimesheetEntry = {
 // ============================================================================
 
 /**
+ * ID Verification Status
+ */
+export type IDVerificationStatus = 
+  | 'unverified' 
+  | 'pending_review' 
+  | 'verified' 
+  | 'rejected' 
+  | 'expired';
+
+/**
+ * Duplicate ID Status
+ */
+export type DuplicateIDStatus = 
+  | 'none' 
+  | 'detected' 
+  | 'under_investigation' 
+  | 'resolved' 
+  | 'blocked';
+
+/**
  * Company Ownership - Defines ownership percentages for master accounts
  * Supports multi-owner companies with percentage-based ownership
  */

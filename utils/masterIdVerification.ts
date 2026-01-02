@@ -78,7 +78,7 @@ export async function submitIdVerification(params: {
       // Update master account with duplicate flag
       const masterAccountRef = doc(db, 'masterAccounts', params.masterAccountId);
       await updateDoc(masterAccountRef, {
-        duplicateIdStatus: 'DUPLICATE_DETECTED' as DuplicateIDStatus,
+        duplicateIdStatus: 'detected' as DuplicateIDStatus,
         nationalIdNumber: params.nationalIdNumber,
         updatedAt: serverTimestamp()
       });
@@ -96,7 +96,7 @@ export async function submitIdVerification(params: {
       documentType: params.documentType,
       documentUrl: params.documentUrl,
       storagePath: params.storagePath,
-      status: 'PENDING_REVIEW',
+      status: 'pending_review',
       submittedAt: serverTimestamp(),
       metadata: params.metadata
     };
@@ -111,9 +111,9 @@ export async function submitIdVerification(params: {
     const masterAccountRef = doc(db, 'masterAccounts', params.masterAccountId);
     await updateDoc(masterAccountRef, {
       nationalIdNumber: params.nationalIdNumber,
-      idVerificationStatus: 'PENDING_REVIEW' as IDVerificationStatus,
+      idVerificationStatus: 'pending_review' as IDVerificationStatus,
       idDocumentUrl: params.documentUrl,
-      duplicateIdStatus: 'NONE' as DuplicateIDStatus,
+      duplicateIdStatus: 'none' as DuplicateIDStatus,
       updatedAt: serverTimestamp()
     });
     
@@ -147,7 +147,7 @@ export async function approveIdVerification(
       
       // Update verification record
       transaction.update(verificationRef, {
-        status: 'VERIFIED' as IDVerificationStatus,
+        status: 'verified' as IDVerificationStatus,
         reviewedAt: serverTimestamp(),
         reviewedBy: adminId,
         reviewNotes: notes || 'ID verified successfully',
@@ -158,7 +158,7 @@ export async function approveIdVerification(
       // Update master account - lift all restrictions
       const masterAccountRef = doc(db, 'masterAccounts', verificationData.masterAccountId);
       transaction.update(masterAccountRef, {
-        idVerificationStatus: 'VERIFIED' as IDVerificationStatus,
+        idVerificationStatus: 'verified' as IDVerificationStatus,
         idVerifiedAt: serverTimestamp(),
         idVerifiedBy: adminId,
         canOwnCompanies: true,
@@ -213,7 +213,7 @@ export async function rejectIdVerification(
       
       // Update verification record
       transaction.update(verificationRef, {
-        status: 'REJECTED' as IDVerificationStatus,
+        status: 'rejected' as IDVerificationStatus,
         reviewedAt: serverTimestamp(),
         reviewedBy: adminId,
         rejectionReason: reason,
@@ -223,7 +223,7 @@ export async function rejectIdVerification(
       // Update master account - keep restrictions
       const masterAccountRef = doc(db, 'masterAccounts', verificationData.masterAccountId);
       transaction.update(masterAccountRef, {
-        idVerificationStatus: 'REJECTED' as IDVerificationStatus,
+        idVerificationStatus: 'rejected' as IDVerificationStatus,
         restrictionReason: reason,
         updatedAt: serverTimestamp()
       });
@@ -276,7 +276,6 @@ export async function reportFraudDispute(params: {
     }
     
     // Get the new account trying to use this ID
-    const masterAccountRef = doc(db, 'masterAccounts', params.reportedBy);
     const masterAccountSnap = await getDocs(query(collection(db, 'masterAccounts'), where('nationalIdNumber', '==', params.nationalIdNumber)));
     
     const newAccount = masterAccountSnap.docs.find(d => d.id !== duplicateCheck.masterAccountId);
