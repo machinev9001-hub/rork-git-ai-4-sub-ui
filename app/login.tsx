@@ -175,7 +175,7 @@ export default function LoginScreen() {
               style={styles.logoPlaceholder}
             >
               <Image
-                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/ix20dqx7pqjtxa1iq9hb6' }}
+                source={{ uri: 'https://rork.app/pa/a6nricbie4k46krkbi3f1/mounktczoga5o2xw99z4g' }}
                 style={styles.logoImage}
                 contentFit="contain"
                 transition={200}
@@ -183,7 +183,7 @@ export default function LoginScreen() {
               />
             </TouchableOpacity>
             <Text style={styles.appTitle}>Machine</Text>
-            <Text style={styles.appSubtitle}>Business Management and Tracking</Text>
+            <Text style={styles.appSubtitle}>business management, Asset, Resource & Workforce Control</Text>
             <View style={styles.accentBar} />
             {isOffline && (
               <View style={styles.offlineBadge}>
