@@ -382,6 +382,66 @@ The Theme Settings feature allows MASTER users to customize the visual appearanc
 6. Theme applies instantly
 7. Changes sync across all devices
 
+### Company Assets & Employees (Global Pool)
+
+Access: **Settings → Asset & Employee Pool**
+
+**Available to:** Master Users only
+
+#### Overview
+
+Master users can manage company-wide assets and employees from a centralized location. This global pool allows you to:
+- View all assets and employees across all sites
+- Add new resources to the company pool
+- Allocate resources to specific sites
+- Track allocation history and current assignments
+
+#### Accessing Company Assets
+
+**Steps:**
+1. Navigate to Settings
+2. Scroll to "Asset & Employee Pool" section
+3. Tap "Company Assets"
+4. View all company assets (allocated and unallocated)
+
+**Features:**
+- Search assets by name, plant number, or registration
+- Filter by allocation status
+- View current site assignments
+- Add new assets to company pool
+- Allocate/deallocate assets to/from sites
+
+#### Accessing Company Employees
+
+**Steps:**
+1. Navigate to Settings
+2. Scroll to "Asset & Employee Pool" section
+3. Tap "Company Employees"
+4. View all company employees (assigned and unassigned)
+
+**Features:**
+- Search employees by name or ID number
+- Filter by site assignment
+- View current site assignments
+- Add new employees to company pool
+- Assign/unassign employees to/from sites
+
+#### Difference from Site-Level Management
+
+**Company-Level (Settings Menu):**
+- Shows ALL resources across ALL sites
+- Used for global company management
+- Master users only
+- Focus: Which site has this resource?
+
+**Site-Level (Within Site Context):**
+- Shows only resources at current site
+- Used for day-to-day operations
+- Multiple role types
+- Focus: Where within the site?
+
+---
+
 ### Manage Users
 
 Access: **Settings → Manage Users**
@@ -656,6 +716,75 @@ Supervisors manage activities, submit progress, and coordinate with other teams 
 2. Tap "Share" button
 3. Choose recipients
 4. Confirm share
+
+---
+
+## Progress Dashboard & Reporting
+
+### Time Range Filtering
+
+The Progress Dashboard supports flexible time range filtering for comprehensive progress tracking and historical analysis.
+
+#### Available Time Ranges
+
+**All Time:**
+- Shows complete project history
+- No date filtering applied
+- Use for: Long-term trend analysis, total cumulative progress
+
+**Current Week:**
+- Shows this week's progress (Monday to Sunday)
+- Default view when opening dashboard
+- Use for: Monitoring ongoing work, tracking current team performance
+
+**Historical Week:**
+- Shows any past week's progress
+- Select week using calendar picker
+- Use for: Reviewing past performance, comparing week-over-week, generating weekly reports
+
+**Monthly:**
+- Shows aggregated monthly progress
+- Select month and year using picker
+- Use for: Monthly reports, long-term tracking, budget planning, invoicing
+
+#### Using Time Range Filters
+
+**Viewing Current Week Progress:**
+1. Open Dashboard (home screen)
+2. Default view shows current week data
+3. Charts display daily progress (Mon-Sun)
+4. Summary cards show week-to-date totals
+
+**Reviewing Historical Week:**
+1. Open Dashboard Filter Sidebar
+2. Expand "Time Range" section
+3. Tap "Historical Week"
+4. Calendar picker opens
+5. Select any date from desired week
+6. Tap "Apply"
+7. Dashboard shows selected week's data
+
+**Generating Monthly Report:**
+1. Open Dashboard Filter Sidebar
+2. Expand "Time Range" section
+3. Tap "Monthly"
+4. Select month and year
+5. Tap "Apply"
+6. Dashboard shows monthly aggregated data with weekly breakdown
+
+#### Combining Filters
+
+Time range filters work with other dashboard filters:
+- Site Selection
+- PV Area filtering
+- Block Area filtering
+- Supervisor filtering
+
+**Example:**
+View PV-A1 progress for week of Dec 11-17, 2024:
+1. Select PV Area: PV-A1
+2. Select Historical Week: Dec 11, 2024
+3. Dashboard shows only PV-A1 progress for that week
 
 ---
 

@@ -454,6 +454,91 @@ const q = query(
 
 ---
 
+## Navigation & Access to Company-Level Management
+
+### Accessing Company Assets & Employees
+
+**Location:** Settings Menu → Asset & Employee Pool Section
+
+**Available to:** Master Users only (when signed into a company)
+
+**Menu Items:**
+1. **Company Assets** - Navigate to `/company-assets`
+   - View all assets in company pool (across all sites)
+   - Filter by allocation status (Allocated/Unallocated)
+   - Search by asset name, plant number, or registration
+   - Add new assets to company pool
+   - View asset details and allocation history
+   - Allocate/deallocate assets to/from sites
+
+2. **Company Employees** - Navigate to `/company-employees`
+   - View all employees in company pool (across all sites)
+   - Filter by site allocation status
+   - Search by employee name or ID number
+   - Add new employees to company pool
+   - View employee details and site assignments
+   - Assign/unassign employees to/from sites
+
+### Workflow for Company-Level Management
+
+#### Adding Assets to Company Pool
+
+**Steps:**
+1. Navigate to Settings → Company Assets
+2. Tap "+ ADD ASSET" button
+3. Fill in asset details (redirects to `/add-asset` screen)
+4. Asset is created in company pool (siteId = null, allocationStatus = 'UNALLOCATED')
+5. Asset appears in company assets list
+
+#### Allocating Asset to Site
+
+**Steps:**
+1. Navigate to Settings → Company Assets
+2. Find unallocated asset in list
+3. Tap asset card to view details
+4. Tap "Allocate to Site" button
+5. Select site from dropdown
+6. Confirm allocation
+7. Asset's siteId updated, allocationStatus = 'ALLOCATED'
+
+#### Adding Employees to Company Pool
+
+**Steps:**
+1. Navigate to Settings → Company Employees
+2. Tap "+ ADD EMPLOYEE" button
+3. Fill in employee details (redirects to `/add-employee` screen)
+4. Employee is created in company pool (siteId = null)
+5. Employee appears in company employees list
+
+#### Assigning Employee to Site
+
+**Steps:**
+1. Navigate to Settings → Company Employees
+2. Find unassigned employee in list
+3. Tap employee card to view details
+4. Tap "Assign to Site" button
+5. Select site from dropdown
+6. Confirm assignment
+7. Employee's siteId updated
+
+### Difference Between Company-Level and Site-Level Screens
+
+**Company-Level Screens** (`/company-assets`, `/company-employees`):
+- Show ALL assets/employees across ALL sites
+- Used for global company management
+- Available only to Master users
+- Access from Settings menu
+- Focus: Site allocation (which site has this resource?)
+
+**Site-Level Screens** (Within site context):
+- Show only assets/employees at current site
+- Used for day-to-day site operations
+- Available to multiple role types
+- Access from site-specific menus
+- Focus: Area allocation (where within the site?)
+
+---
+
 ## Summary of Required Changes
 
 ### ✅ Already Implemented
@@ -462,6 +547,9 @@ const q = query(
 2. ✅ Company-level allocation indexes for plantAssets (lines 289-312 in firestore.indexes.json)
 3. ✅ Employees have `siteId` field
 4. ✅ Basic employee indexes by siteId
+5. ✅ Company Assets screen (`/company-assets`) - Global asset management
+6. ✅ Company Employees screen (`/company-employees`) - Global employee management
+7. ✅ Settings menu integration for Master users
 
 ### ❌ Missing - Need to Add
 
