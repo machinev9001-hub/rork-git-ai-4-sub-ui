@@ -94,10 +94,20 @@ export default function LoginScreen() {
         console.log('[Login] Using result.user for routing decision');
         loginSuccess = true;
         
-        const isManagement = isManagementRole(result.user.role);
-        const isOperator = isOperatorRole(result.user.role);
-        const isDieselClerk = isDieselClerkRole(result.user.role);
-        const destination = isManagement ? '/(tabs)' : isOperator ? '/operator-home' : isDieselClerk ? '/diesel-clerk-home' : '/employee-timesheet';
+        const hasCompanies = result.user.companyIds && result.user.companyIds.length > 0;
+        const hasSelectedCompany = !!result.user.currentCompanyId;
+        
+        let destination: string;
+        if (hasCompanies && !hasSelectedCompany) {
+          console.log('[Login] User has companies but none selected, routing to company selector');
+          destination = '/company-selector';
+        } else {
+          const isManagement = isManagementRole(result.user.role);
+          const isOperator = isOperatorRole(result.user.role);
+          const isDieselClerk = isDieselClerkRole(result.user.role);
+          destination = isManagement ? '/(tabs)' : isOperator ? '/operator-home' : isDieselClerk ? '/diesel-clerk-home' : '/employee-timesheet';
+        }
+        
         console.log('[Login] Scheduled navigation to:', destination, '(based on role:', result.user.role, ')');
         
         setTimeout(() => {
