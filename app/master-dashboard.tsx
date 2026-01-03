@@ -36,7 +36,7 @@ export default function MasterDashboardScreen() {
     level: 'ALL',
   });
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const [timeRange, setTimeRange] = useState<TimeRangeType>('CURRENT_WEEK');
+  const [timeRange, setTimeRange] = useState<TimeRangeType>('ALL_TIME');
   const [customWeekDate, setCustomWeekDate] = useState<Date | undefined>(undefined);
   const [selectedMonthYear, setSelectedMonthYear] = useState<{ month: number; year: number } | undefined>(undefined);
 
@@ -50,8 +50,12 @@ export default function MasterDashboardScreen() {
     }
   };
 
-  const getDateRangeForQuery = (): { startDate: Date; endDate: Date } => {
+  const getDateRangeForQuery = (): { startDate: Date; endDate: Date } | null => {
     const now = new Date();
+    
+    if (timeRange === 'ALL_TIME') {
+      return null;
+    }
     
     if (timeRange === 'CURRENT_WEEK') {
       const startOfWeek = new Date(now);
@@ -118,8 +122,13 @@ export default function MasterDashboardScreen() {
         };
       }
       const dateRange = getDateRangeForQuery();
-      console.log('[Dashboard] Fetching BOQ progress for date range:', dateRange.startDate.toISOString(), '-', dateRange.endDate.toISOString());
-      return await calculateBOQProgress(user.siteId, dateRange.startDate, dateRange.endDate);
+      if (dateRange) {
+        console.log('[Dashboard] Fetching BOQ progress for date range:', dateRange.startDate.toISOString(), '-', dateRange.endDate.toISOString());
+        return await calculateBOQProgress(user.siteId, dateRange.startDate, dateRange.endDate);
+      } else {
+        console.log('[Dashboard] Fetching BOQ progress for ALL TIME');
+        return await calculateBOQProgress(user.siteId);
+      }
     },
     enabled: !!user?.siteId,
     staleTime: 30000,
@@ -135,8 +144,13 @@ export default function MasterDashboardScreen() {
     queryFn: async () => {
       if (!user?.siteId) return [];
       const dateRange = getDateRangeForQuery();
-      console.log('[Dashboard] Fetching supervisor progress for date range:', dateRange.startDate.toISOString(), '-', dateRange.endDate.toISOString());
-      return await calculatePerUserScopeProgress(user.siteId, dateRange.startDate, dateRange.endDate);
+      if (dateRange) {
+        console.log('[Dashboard] Fetching supervisor progress for date range:', dateRange.startDate.toISOString(), '-', dateRange.endDate.toISOString());
+        return await calculatePerUserScopeProgress(user.siteId, dateRange.startDate, dateRange.endDate);
+      } else {
+        console.log('[Dashboard] Fetching supervisor progress for ALL TIME');
+        return await calculatePerUserScopeProgress(user.siteId);
+      }
     },
     enabled: !!user?.siteId && currentSection === 'PROGRESS',
     staleTime: 30000,

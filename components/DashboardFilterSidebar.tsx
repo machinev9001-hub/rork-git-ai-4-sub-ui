@@ -15,7 +15,7 @@ import {
 
 export type FilterLevel = 'ALL' | 'PV_AREA' | 'PV_AREA_BLOCK' | 'SUPERVISOR';
 export type ViewType = 'TASKS_PROGRESS' | 'ACTIVITY_PROGRESS' | 'BOQ_PROGRESS';
-export type TimeRangeType = 'CURRENT_WEEK' | 'CUSTOM_WEEK' | 'MONTHLY';
+export type TimeRangeType = 'ALL_TIME' | 'CURRENT_WEEK' | 'CUSTOM_WEEK' | 'MONTHLY';
 export type DashboardSection = 'PROGRESS' | 'BOQ' | 'PLANT' | 'STAFF' | 'LOGISTICS';
 
 interface FilterState {
@@ -266,6 +266,19 @@ export default function DashboardFilterSidebar({
 
               {expandedTimeRange && (
                 <View style={styles.timeRangeOptions}>
+                  <TouchableOpacity
+                    style={[styles.filterOption, currentTimeRange === 'ALL_TIME' && styles.filterOptionActive]}
+                    onPress={() => onTimeRangeChange('ALL_TIME')}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.radio, currentTimeRange === 'ALL_TIME' && styles.radioActive]}>
+                      {currentTimeRange === 'ALL_TIME' && <View style={styles.radioDot} />}
+                    </View>
+                    <Text style={[styles.filterOptionText, currentTimeRange === 'ALL_TIME' && styles.filterOptionTextActive]}>
+                      All Time (Overview)
+                    </Text>
+                  </TouchableOpacity>
+
                   <TouchableOpacity
                     style={[styles.filterOption, currentTimeRange === 'CURRENT_WEEK' && styles.filterOptionActive]}
                     onPress={() => onTimeRangeChange('CURRENT_WEEK')}
