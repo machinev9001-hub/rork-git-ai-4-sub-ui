@@ -169,7 +169,7 @@ export default function SettingsScreen() {
                         <MapPin size={20} color="#10B981" />
                       </View>
                       <View style={styles.subMenuContent}>
-                        <Text style={styles.subMenuTitle}>Switch Site Profile</Text>
+                        <Text style={styles.subMenuTitle}>Switch Site</Text>
                         <Text style={styles.subMenuDescription}>Change active site</Text>
                       </View>
                     </TouchableOpacity>
