@@ -41,6 +41,7 @@ export default function MasterDashboardScreen() {
   const [selectedMonthYear, setSelectedMonthYear] = useState<{ month: number; year: number } | undefined>(undefined);
 
   const handleTimeRangeChange = (range: TimeRangeType, customDate?: Date, monthYear?: { month: number; year: number }) => {
+    console.log('[Dashboard] Time range changed:', range, customDate, monthYear);
     setTimeRange(range);
     if (range === 'CUSTOM_WEEK' && customDate) {
       setCustomWeekDate(customDate);
@@ -49,12 +50,60 @@ export default function MasterDashboardScreen() {
     }
   };
 
+  const getDateRangeForQuery = (): { startDate: Date; endDate: Date } => {
+    const now = new Date();
+    
+    if (timeRange === 'CURRENT_WEEK') {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      
+      return { startDate: startOfWeek, endDate: endOfWeek };
+    }
+    
+    if (timeRange === 'CUSTOM_WEEK' && customWeekDate) {
+      const startOfWeek = new Date(customWeekDate);
+      startOfWeek.setDate(customWeekDate.getDate() - customWeekDate.getDay());
+      startOfWeek.setHours(0, 0, 0, 0);
+      
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setHours(23, 59, 59, 999);
+      
+      return { startDate: startOfWeek, endDate: endOfWeek };
+    }
+    
+    if (timeRange === 'MONTHLY' && selectedMonthYear) {
+      const startOfMonth = new Date(selectedMonthYear.year, selectedMonthYear.month - 1, 1);
+      startOfMonth.setHours(0, 0, 0, 0);
+      
+      const endOfMonth = new Date(selectedMonthYear.year, selectedMonthYear.month, 0);
+      endOfMonth.setHours(23, 59, 59, 999);
+      
+      return { startDate: startOfMonth, endDate: endOfMonth };
+    }
+    
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    startOfWeek.setHours(0, 0, 0, 0);
+    
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    endOfWeek.setHours(23, 59, 59, 999);
+    
+    return { startDate: startOfWeek, endDate: endOfWeek };
+  };
+
   const {
     data: boqProgress,
     isLoading: boqLoading,
     error: boqError,
   } = useQuery<BOQProgress>({
-    queryKey: ['boqProgress', user?.siteId],
+    queryKey: ['boqProgress', user?.siteId, timeRange, customWeekDate?.toISOString(), selectedMonthYear],
     queryFn: async () => {
       if (!user?.siteId) {
         return {
@@ -68,7 +117,9 @@ export default function MasterDashboardScreen() {
           byMainMenu: {},
         };
       }
-      return await calculateBOQProgress(user.siteId);
+      const dateRange = getDateRangeForQuery();
+      console.log('[Dashboard] Fetching BOQ progress for date range:', dateRange.startDate.toISOString(), '-', dateRange.endDate.toISOString());
+      return await calculateBOQProgress(user.siteId, dateRange.startDate, dateRange.endDate);
     },
     enabled: !!user?.siteId,
     staleTime: 30000,
@@ -80,10 +131,12 @@ export default function MasterDashboardScreen() {
     isLoading: progressLoading,
     error: progressError,
   } = useQuery<SupervisorScopeProgress[]>({
-    queryKey: ['supervisorScopeProgress', user?.siteId],
+    queryKey: ['supervisorScopeProgress', user?.siteId, timeRange, customWeekDate?.toISOString(), selectedMonthYear],
     queryFn: async () => {
       if (!user?.siteId) return [];
-      return await calculatePerUserScopeProgress(user.siteId);
+      const dateRange = getDateRangeForQuery();
+      console.log('[Dashboard] Fetching supervisor progress for date range:', dateRange.startDate.toISOString(), '-', dateRange.endDate.toISOString());
+      return await calculatePerUserScopeProgress(user.siteId, dateRange.startDate, dateRange.endDate);
     },
     enabled: !!user?.siteId && currentSection === 'PROGRESS',
     staleTime: 30000,

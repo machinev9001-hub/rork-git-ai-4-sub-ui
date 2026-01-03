@@ -80,10 +80,13 @@ export function calculateWeightedAverage(items: { qc: number; scope: number }[])
   return totalScope > 0 ? (totalQC / totalScope) * 100 : 0;
 }
 
-export async function calculateBOQProgress(siteId: string): Promise<BOQProgress> {
+export async function calculateBOQProgress(siteId: string, startDate?: Date, endDate?: Date): Promise<BOQProgress> {
   console.log('\n📊 ============================================== 📊');
   console.log('📊 BOQ PROGRESS TRACKING - START');
   console.log('📊 Site ID:', siteId);
+  if (startDate && endDate) {
+    console.log('📊 Date Range:', startDate.toISOString(), '-', endDate.toISOString());
+  }
   console.log('📊 ============================================== 📊\n');
   
   try {
@@ -168,6 +171,15 @@ export async function calculateBOQProgress(siteId: string): Promise<BOQProgress>
     
     for (const activityDoc of allActivities) {
       const activityData = activityDoc.data();
+      
+      // Date filtering: Skip activities outside the date range
+      if (startDate && endDate) {
+        const activityDate = activityData.lastUpdated?.toDate?.() || activityData.updatedAt?.toDate?.() || activityData.qc?.date?.toDate?.();
+        if (activityDate && (activityDate < startDate || activityDate > endDate)) {
+          console.log('📊 ⏭️ SKIPPED - Activity outside date range:', activityData.name, '| Date:', activityDate.toISOString());
+          continue;
+        }
+      }
       
       const subMenuKey = (activityData.subMenuKey || '').toLowerCase().trim();
       const mainMenu = subMenuToMainMenuMap.get(subMenuKey) || '';
@@ -454,10 +466,13 @@ export async function calculateAllocatedScopeProgress(siteId: string): Promise<A
   }
 }
 
-export async function calculatePerUserScopeProgress(siteId: string): Promise<SupervisorScopeProgress[]> {
+export async function calculatePerUserScopeProgress(siteId: string, startDate?: Date, endDate?: Date): Promise<SupervisorScopeProgress[]> {
   console.log('\n👥 ============================================== 👥');
   console.log('👥 PER USER SCOPE PROGRESS - START');
   console.log('👥 Site ID:', siteId);
+  if (startDate && endDate) {
+    console.log('👥 Date Range:', startDate.toISOString(), '-', endDate.toISOString());
+  }
   console.log('👥 ============================================== 👥\n');
   
   try {
@@ -606,6 +621,15 @@ export async function calculatePerUserScopeProgress(siteId: string): Promise<Sup
     
     for (const activityDoc of allActivities) {
       const activityData = activityDoc.data();
+      
+      // Date filtering: Skip activities outside the date range
+      if (startDate && endDate) {
+        const activityDate = activityData.lastUpdated?.toDate?.() || activityData.updatedAt?.toDate?.() || activityData.qc?.date?.toDate?.();
+        if (activityDate && (activityDate < startDate || activityDate > endDate)) {
+          console.log('👥 ⏭️ SKIPPED - Activity outside date range:', activityData.name, '| Date:', activityDate.toISOString());
+          continue;
+        }
+      }
       
       const supervisorUserId = activityData.supervisorInputBy || '';
       const taskId = activityData.taskId || '';
