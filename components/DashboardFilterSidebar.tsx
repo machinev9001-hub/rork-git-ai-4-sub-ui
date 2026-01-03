@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
 import { 
   LayoutDashboard, 
   BarChart3,
@@ -9,11 +9,13 @@ import {
   Truck,
   ChevronDown,
   ChevronRight,
-  Database
+  Database,
+  Calendar
 } from 'lucide-react-native';
 
 export type FilterLevel = 'ALL' | 'PV_AREA' | 'PV_AREA_BLOCK' | 'SUPERVISOR';
 export type ViewType = 'TASKS_PROGRESS' | 'ACTIVITY_PROGRESS' | 'BOQ_PROGRESS';
+export type TimeRangeType = 'CURRENT_WEEK' | 'CUSTOM_WEEK' | 'MONTHLY';
 export type DashboardSection = 'PROGRESS' | 'BOQ' | 'PLANT' | 'STAFF' | 'LOGISTICS';
 
 interface FilterState {
@@ -27,9 +29,13 @@ interface Props {
   onFilterChange: (filter: FilterState) => void;
   onViewChange: (viewType: ViewType) => void;
   onSectionChange: (section: DashboardSection) => void;
+  onTimeRangeChange: (timeRange: TimeRangeType, customDate?: Date, monthYear?: { month: number; year: number }) => void;
   currentSection: DashboardSection;
   currentView: ViewType;
   currentFilter: FilterState;
+  currentTimeRange: TimeRangeType;
+  customWeekDate?: Date;
+  selectedMonthYear?: { month: number; year: number };
   pvAreas: { id: string; name: string }[];
   blockAreas: { id: string; name: string; pvAreaId: string }[];
   supervisors: { id: string; name: string; role: string }[];
@@ -39,15 +45,23 @@ export default function DashboardFilterSidebar({
   onFilterChange,
   onViewChange,
   onSectionChange,
+  onTimeRangeChange,
   currentSection,
   currentView,
   currentFilter,
+  currentTimeRange,
+  customWeekDate,
+  selectedMonthYear,
   pvAreas,
   blockAreas,
   supervisors,
 }: Props) {
   const [expandedProgress, setExpandedProgress] = useState(true);
   const [expandedViews, setExpandedViews] = useState(false);
+  const [expandedTimeRange, setExpandedTimeRange] = useState(true);
+  const [weekDateInput, setWeekDateInput] = useState('');
+  const [monthInput, setMonthInput] = useState('');
+  const [yearInput, setYearInput] = useState('');
   
   const supervisorUsers = supervisors.filter(s => s.role === 'Supervisor');
 
@@ -89,6 +103,27 @@ export default function DashboardFilterSidebar({
   const filteredBlockAreas = currentFilter.pvAreaId
     ? blockAreas.filter(b => b.pvAreaId === currentFilter.pvAreaId)
     : blockAreas;
+
+  const handleWeekDateSubmit = () => {
+    if (!weekDateInput) return;
+    const date = new Date(weekDateInput);
+    if (!isNaN(date.getTime())) {
+      onTimeRangeChange('CUSTOM_WEEK', date);
+    }
+  };
+
+  const handleMonthYearSubmit = () => {
+    const month = parseInt(monthInput);
+    const year = parseInt(yearInput);
+    if (month >= 1 && month <= 12 && year >= 2020 && year <= 2030) {
+      onTimeRangeChange('MONTHLY', undefined, { month, year });
+    }
+  };
+
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
 
   return (
     <View style={styles.sidebar}>
@@ -215,6 +250,124 @@ export default function DashboardFilterSidebar({
         {currentSection === 'PROGRESS' && expandedProgress && (
           <>
             <View style={styles.filterOptionsInline}>
+              <TouchableOpacity
+                style={styles.expandableHeader}
+                onPress={() => setExpandedTimeRange(!expandedTimeRange)}
+                activeOpacity={0.7}
+              >
+                <Calendar size={16} color="#5f6368" strokeWidth={2} />
+                <Text style={styles.sectionLabel}>TIME RANGE</Text>
+                {expandedTimeRange ? (
+                  <ChevronDown size={18} color="#5f6368" strokeWidth={2} />
+                ) : (
+                  <ChevronRight size={18} color="#5f6368" strokeWidth={2} />
+                )}
+              </TouchableOpacity>
+
+              {expandedTimeRange && (
+                <View style={styles.timeRangeOptions}>
+                  <TouchableOpacity
+                    style={[styles.filterOption, currentTimeRange === 'CURRENT_WEEK' && styles.filterOptionActive]}
+                    onPress={() => onTimeRangeChange('CURRENT_WEEK')}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.radio, currentTimeRange === 'CURRENT_WEEK' && styles.radioActive]}>
+                      {currentTimeRange === 'CURRENT_WEEK' && <View style={styles.radioDot} />}
+                    </View>
+                    <Text style={[styles.filterOptionText, currentTimeRange === 'CURRENT_WEEK' && styles.filterOptionTextActive]}>
+                      Current Week
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.filterOption, currentTimeRange === 'CUSTOM_WEEK' && styles.filterOptionActive]}
+                    onPress={() => onTimeRangeChange('CUSTOM_WEEK', customWeekDate || new Date())}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.radio, currentTimeRange === 'CUSTOM_WEEK' && styles.radioActive]}>
+                      {currentTimeRange === 'CUSTOM_WEEK' && <View style={styles.radioDot} />}
+                    </View>
+                    <Text style={[styles.filterOptionText, currentTimeRange === 'CUSTOM_WEEK' && styles.filterOptionTextActive]}>
+                      Historical Week
+                    </Text>
+                  </TouchableOpacity>
+
+                  {currentTimeRange === 'CUSTOM_WEEK' && (
+                    <View style={styles.dateInputContainer}>
+                      <Text style={styles.dateInputLabel}>Select Week Date</Text>
+                      <TextInput
+                        style={styles.dateInput}
+                        placeholder="YYYY-MM-DD"
+                        placeholderTextColor="#9ca3af"
+                        value={weekDateInput}
+                        onChangeText={setWeekDateInput}
+                        onSubmitEditing={handleWeekDateSubmit}
+                      />
+                      <TouchableOpacity style={styles.dateSubmitButton} onPress={handleWeekDateSubmit}>
+                        <Text style={styles.dateSubmitButtonText}>Apply</Text>
+                      </TouchableOpacity>
+                      {customWeekDate && (
+                        <Text style={styles.selectedDateText}>
+                          Week of {customWeekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+
+                  <TouchableOpacity
+                    style={[styles.filterOption, currentTimeRange === 'MONTHLY' && styles.filterOptionActive]}
+                    onPress={() => {
+                      const now = new Date();
+                      onTimeRangeChange('MONTHLY', undefined, selectedMonthYear || { month: now.getMonth() + 1, year: now.getFullYear() });
+                    }}
+                    activeOpacity={0.7}
+                  >
+                    <View style={[styles.radio, currentTimeRange === 'MONTHLY' && styles.radioActive]}>
+                      {currentTimeRange === 'MONTHLY' && <View style={styles.radioDot} />}
+                    </View>
+                    <Text style={[styles.filterOptionText, currentTimeRange === 'MONTHLY' && styles.filterOptionTextActive]}>
+                      Monthly View
+                    </Text>
+                  </TouchableOpacity>
+
+                  {currentTimeRange === 'MONTHLY' && (
+                    <View style={styles.dateInputContainer}>
+                      <Text style={styles.dateInputLabel}>Select Month & Year</Text>
+                      <View style={styles.monthYearRow}>
+                        <TextInput
+                          style={[styles.dateInput, styles.monthInput]}
+                          placeholder="MM"
+                          placeholderTextColor="#9ca3af"
+                          value={monthInput}
+                          onChangeText={setMonthInput}
+                          keyboardType="number-pad"
+                          maxLength={2}
+                        />
+                        <TextInput
+                          style={[styles.dateInput, styles.yearInput]}
+                          placeholder="YYYY"
+                          placeholderTextColor="#9ca3af"
+                          value={yearInput}
+                          onChangeText={setYearInput}
+                          keyboardType="number-pad"
+                          maxLength={4}
+                        />
+                      </View>
+                      <TouchableOpacity style={styles.dateSubmitButton} onPress={handleMonthYearSubmit}>
+                        <Text style={styles.dateSubmitButtonText}>Apply</Text>
+                      </TouchableOpacity>
+                      {selectedMonthYear && (
+                        <Text style={styles.selectedDateText}>
+                          {monthNames[selectedMonthYear.month - 1]} {selectedMonthYear.year}
+                        </Text>
+                      )}
+                    </View>
+                  )}
+                </View>
+              )}
+            </View>
+
+            <View style={[styles.filterOptionsInline, { marginTop: 12 }]}>
               <Text style={styles.filterSubLabel}>Progress View</Text>
               
               <TouchableOpacity
@@ -644,5 +797,61 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#80868b',
     fontStyle: 'italic' as const,
+  },
+  timeRangeOptions: {
+    marginTop: 8,
+  },
+  dateInputContainer: {
+    marginTop: 12,
+    marginLeft: 28,
+    paddingLeft: 12,
+    borderLeftWidth: 2,
+    borderLeftColor: '#e8eaed',
+  },
+  dateInputLabel: {
+    fontSize: 11,
+    fontWeight: '600' as const,
+    color: '#5f6368',
+    marginBottom: 8,
+    textTransform: 'uppercase' as const,
+  },
+  dateInput: {
+    backgroundColor: '#ffffff',
+    borderWidth: 1,
+    borderColor: '#dadce0',
+    borderRadius: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    color: '#202124',
+    marginBottom: 8,
+  },
+  monthYearRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  monthInput: {
+    flex: 1,
+  },
+  yearInput: {
+    flex: 2,
+  },
+  dateSubmitButton: {
+    backgroundColor: '#4285F4',
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  dateSubmitButtonText: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600' as const,
+  },
+  selectedDateText: {
+    fontSize: 12,
+    color: '#34A853',
+    fontWeight: '600' as const,
   },
 });

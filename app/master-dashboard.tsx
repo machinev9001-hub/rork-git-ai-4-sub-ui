@@ -9,7 +9,7 @@ import { calculateBOQProgress, calculatePerUserScopeProgress, BOQProgress, Super
 import BottomTabBar from '../components/BottomTabBar';
 import BOQProgressDashboard from '../components/BOQProgressDashboard';
 import ProgressViewDashboard from '../components/ProgressViewDashboard';
-import DashboardFilterSidebar, { FilterLevel, ViewType, DashboardSection } from '../components/DashboardFilterSidebar';
+import DashboardFilterSidebar, { FilterLevel, ViewType, DashboardSection, TimeRangeType } from '../components/DashboardFilterSidebar';
 import { Search, User, Menu, X, MapPin } from 'lucide-react-native';
 import { useState } from 'react';
 
@@ -36,6 +36,18 @@ export default function MasterDashboardScreen() {
     level: 'ALL',
   });
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const [timeRange, setTimeRange] = useState<TimeRangeType>('CURRENT_WEEK');
+  const [customWeekDate, setCustomWeekDate] = useState<Date | undefined>(undefined);
+  const [selectedMonthYear, setSelectedMonthYear] = useState<{ month: number; year: number } | undefined>(undefined);
+
+  const handleTimeRangeChange = (range: TimeRangeType, customDate?: Date, monthYear?: { month: number; year: number }) => {
+    setTimeRange(range);
+    if (range === 'CUSTOM_WEEK' && customDate) {
+      setCustomWeekDate(customDate);
+    } else if (range === 'MONTHLY' && monthYear) {
+      setSelectedMonthYear(monthYear);
+    }
+  };
 
   const {
     data: boqProgress,
@@ -156,9 +168,13 @@ export default function MasterDashboardScreen() {
           onFilterChange={setFilter}
           onViewChange={setCurrentView}
           onSectionChange={setCurrentSection}
+          onTimeRangeChange={handleTimeRangeChange}
           currentSection={currentSection}
           currentView={currentView}
           currentFilter={filter}
+          currentTimeRange={timeRange}
+          customWeekDate={customWeekDate}
+          selectedMonthYear={selectedMonthYear}
           pvAreas={pvAreas}
           blockAreas={blockAreas}
           supervisors={supervisors}
@@ -344,9 +360,16 @@ export default function MasterDashboardScreen() {
                 setCurrentSection(s);
                 setSidebarVisible(false);
               }}
+              onTimeRangeChange={(range, customDate, monthYear) => {
+                handleTimeRangeChange(range, customDate, monthYear);
+                setSidebarVisible(false);
+              }}
               currentSection={currentSection}
               currentView={currentView}
               currentFilter={filter}
+              currentTimeRange={timeRange}
+              customWeekDate={customWeekDate}
+              selectedMonthYear={selectedMonthYear}
               pvAreas={pvAreas}
               blockAreas={blockAreas}
               supervisors={supervisors}

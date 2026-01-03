@@ -7,13 +7,10 @@ import {
   Platform,
   Alert,
   ActivityIndicator,
-  Modal,
-  ScrollView,
-  FlatList,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { FileText, BarChart3, List, Calendar, X } from 'lucide-react-native';
-import { collection, query, where, getDocs, orderBy } from 'firebase/firestore';
+import { FileText, BarChart3, List } from 'lucide-react-native';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 import { useAuth } from '@/contexts/AuthContext';
 import { db } from '@/config/firebase';
@@ -26,7 +23,7 @@ import type { ExportRequest } from '@/components/accounts/ExportRequestModal';
 import type { ExportJob } from '@/components/accounts/ExportJobsList';
 import { handleExportRequest, downloadFile } from '@/utils/accounts/exportHandler';
 import { calculatePerUserScopeProgress, SupervisorScopeProgress } from '@/utils/progressCalculations';
-import type { ViewType, FilterLevel, DashboardSection } from '@/components/DashboardFilterSidebar';
+import type { ViewType, FilterLevel, DashboardSection, TimeRangeType } from '@/components/DashboardFilterSidebar';
 
 type TabKey = 'assets' | 'progress' | 'jobs';
 
@@ -51,6 +48,18 @@ export default function AccountsIndexScreen() {
   const [pvAreas, setPvAreas] = useState<{ id: string; name: string }[]>([]);
   const [blockAreas, setBlockAreas] = useState<{ id: string; name: string; pvAreaId: string }[]>([]);
   const [supervisors, setSupervisors] = useState<{ id: string; name: string; role: string }[]>([]);
+  const [timeRange, setTimeRange] = useState<TimeRangeType>('CURRENT_WEEK');
+  const [customWeekDate, setCustomWeekDate] = useState<Date | undefined>(undefined);
+  const [selectedMonthYear, setSelectedMonthYear] = useState<{ month: number; year: number } | undefined>(undefined);
+
+  const handleTimeRangeChange = (range: TimeRangeType, customDate?: Date, monthYear?: { month: number; year: number }) => {
+    setTimeRange(range);
+    if (range === 'CUSTOM_WEEK' && customDate) {
+      setCustomWeekDate(customDate);
+    } else if (range === 'MONTHLY' && monthYear) {
+      setSelectedMonthYear(monthYear);
+    }
+  };
 
   const { user } = useAuth();
 
@@ -302,9 +311,13 @@ export default function AccountsIndexScreen() {
               onFilterChange={setFilterState}
               onViewChange={setViewType}
               onSectionChange={setDashboardSection}
+              onTimeRangeChange={handleTimeRangeChange}
               currentSection={dashboardSection}
               currentView={viewType}
               currentFilter={filterState}
+              currentTimeRange={timeRange}
+              customWeekDate={customWeekDate}
+              selectedMonthYear={selectedMonthYear}
               pvAreas={pvAreas}
               blockAreas={blockAreas}
               supervisors={supervisors}
