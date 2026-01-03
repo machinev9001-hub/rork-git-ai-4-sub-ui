@@ -150,7 +150,7 @@ MACHINE Business Tracker is a comprehensive cross-platform mobile application de
 
 **Free Account:**
 - Basic features
-- Up to 5 users
+- Up to 8 users
 - **Single site and single company profile only** (Additional sites require VAS)
 - Auto-generated activation
 - Instant setup
