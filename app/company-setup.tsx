@@ -20,6 +20,8 @@ import { addDoc, collection, serverTimestamp, doc, updateDoc, arrayUnion } from 
 import { db } from '@/config/firebase';
 import { INDUSTRY_SECTORS } from '@/constants/industrySectors';
 import { AppTheme } from '@/constants/colors';
+import { VASPromptModal } from '@/components/VASPromptModal';
+import { getVASFeatureMetadata } from '@/utils/featureFlags';
 
 export default function CompanySetupScreen() {
   const { masterAccount, user, refreshMasterAccount } = useAuth();
@@ -34,6 +36,7 @@ export default function CompanySetupScreen() {
   const [industrySector, setIndustrySector] = useState('');
   const [showSectorModal, setShowSectorModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [showVASModal, setShowVASModal] = useState(false);
 
   const handleCreateCompany = async () => {
     if (!legalEntityName.trim()) {
@@ -84,6 +87,16 @@ export default function CompanySetupScreen() {
     const creatorId = masterAccount?.id || user?.id;
     if (!creatorId) {
       Alert.alert('Error', 'You must be logged in to create a company');
+      return;
+    }
+
+    const accountType = masterAccount?.accountType || user?.accountType || 'enterprise';
+    const vasFeatures = masterAccount?.vasFeatures || user?.vasFeatures || [];
+    const existingCompanyCount = (masterAccount?.companyIds || user?.companyIds || []).length;
+
+    if (accountType === 'free' && existingCompanyCount >= 1 && !vasFeatures.includes('multiple_sites')) {
+      console.log('[CompanySetup] Free user attempting to create additional company without VAS');
+      setShowVASModal(true);
       return;
     }
 
@@ -182,9 +195,17 @@ export default function CompanySetupScreen() {
     }
   };
 
+  const vasMetadata = getVASFeatureMetadata();
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <Stack.Screen options={{ headerShown: false }} />
+
+      <VASPromptModal
+        visible={showVASModal}
+        onClose={() => setShowVASModal(false)}
+        feature={vasMetadata.multiple_sites}
+      />
 
       <Modal
         visible={showSectorModal}

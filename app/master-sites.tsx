@@ -17,6 +17,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { collection, query, where, getDocs, doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import type { Site } from '@/types';
+import { VASPromptModal } from '@/components/VASPromptModal';
+import { getVASFeatureMetadata } from '@/utils/featureFlags';
 
 export default function MasterSitesScreen() {
   const { user, masterAccount, createSite, updateSite, archiveSite, openSite } = useAuth();
@@ -27,6 +29,7 @@ export default function MasterSitesScreen() {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showArchiveModal, setShowArchiveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showVASModal, setShowVASModal] = useState(false);
   const [editingSite, setEditingSite] = useState<Site | null>(null);
   const [archivingSite, setArchivingSite] = useState<Site | null>(null);
   const [deletingSite, setDeletingSite] = useState<Site | null>(null);
@@ -86,6 +89,8 @@ export default function MasterSitesScreen() {
       companyIds: masterDataMemo.companyIds || [],
       currentCompanyId: masterDataMemo.currentCompanyId,
       masterIdentifier: 'masterId' in masterDataMemo ? masterDataMemo.masterId : masterDataMemo.userId,
+      accountType: masterDataMemo.accountType,
+      vasFeatures: masterDataMemo.vasFeatures || [],
     };
   }, [masterDataMemo]);
 
@@ -339,6 +344,16 @@ export default function MasterSitesScreen() {
       Alert.alert('Error', 'Please enter site name');
       return;
     }
+
+    const accountType = derivedMaster?.accountType || 'enterprise';
+    const vasFeatures = derivedMaster?.vasFeatures || [];
+    const activeSites = sitesQuery.data?.filter(s => s.status === 'Active') || [];
+
+    if (accountType === 'free' && activeSites.length >= 1 && !vasFeatures.includes('multiple_sites')) {
+      console.log('[MasterSites] Free user attempting to create additional site without VAS');
+      setShowVASModal(true);
+      return;
+    }
     
     createSiteMutation.mutate();
   };
@@ -442,6 +457,8 @@ export default function MasterSitesScreen() {
     }
   };
 
+  const vasMetadata = getVASFeatureMetadata();
+
   // Check for master role using the derived master data
   if (!derivedMaster) {
     return (
@@ -461,6 +478,12 @@ export default function MasterSitesScreen() {
           title: 'Site Management',
           headerShown: true,
         }} 
+      />
+
+      <VASPromptModal
+        visible={showVASModal}
+        onClose={() => setShowVASModal(false)}
+        feature={vasMetadata.multiple_sites}
       />
       
       <View style={styles.header}>

@@ -11,7 +11,8 @@ export type VASFeatureId =
   | 'plant_manager_access'
   | 'staff_manager_access'
   | 'logistics_access'
-  | 'operations_bundle';
+  | 'operations_bundle'
+  | 'multiple_sites';
 
 export type VASFeature = {
   id: VASFeatureId;

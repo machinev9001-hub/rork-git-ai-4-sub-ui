@@ -60,6 +60,7 @@ const VAS_TO_FEATURE_MAP: Record<VASFeatureId, keyof FeatureFlags> = {
   staff_manager_access: 'staff_manager_access',
   logistics_access: 'logistics_access',
   operations_bundle: 'operations_bundle',
+  multiple_sites: 'task_management',
 };
 
 /**
@@ -316,6 +317,21 @@ export function getVASFeatureMetadata(): Record<VASFeatureId, VASFeatureMetadata
       ],
       price: '$149/month',
       learnMoreUrl: 'https://machineapp.com/features/operations-bundle',
+    },
+    multiple_sites: {
+      id: 'multiple_sites',
+      name: 'Multiple Sites',
+      description: 'Unlock the ability to create and manage multiple sites and company profiles.',
+      valueSummary: 'Scale your operations by managing multiple sites and company profiles. Perfect for growing businesses that need to track multiple projects or locations simultaneously.',
+      benefits: [
+        'Create unlimited sites',
+        'Manage multiple company profiles',
+        'Independent site tracking and reporting',
+        'Cross-site resource allocation',
+        'Consolidated multi-site analytics',
+      ],
+      price: '$39/month',
+      learnMoreUrl: 'https://machineapp.com/features/multiple-sites',
     },
   };
 }
