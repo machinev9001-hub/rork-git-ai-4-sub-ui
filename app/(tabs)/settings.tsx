@@ -1,7 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
-import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, CreditCard, MapPin, Plus } from 'lucide-react-native';
+import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, CreditCard, MapPin, Plus, Users, Truck } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
 import { useAccountType } from '@/utils/hooks/useFeatureFlags';
@@ -17,6 +17,7 @@ export default function SettingsScreen() {
   const [isSiteSetupExpanded, setIsSiteSetupExpanded] = useState(false);
   const [isCompanySiteExpanded, setIsCompanySiteExpanded] = useState(false);
   const [isAssetsPoolExpanded, setIsAssetsPoolExpanded] = useState(false);
+  const [isAssetsEmployeesExpanded, setIsAssetsEmployeesExpanded] = useState(false);
   const [facePhotoUri, setFacePhotoUri] = useState<string | null>(null);
   const roleAccentColor = getRoleAccentColor(user?.role);
 
@@ -116,6 +117,97 @@ export default function SettingsScreen() {
             </View>
           </View>
         </View>
+
+        {/* Assets & Employees - Show for Master users */}
+        {isMaster && (
+          <View style={styles.section}>
+            <View style={styles.menuCard}>
+              <TouchableOpacity 
+                style={styles.expandableHeader}
+                onPress={() => setIsAssetsEmployeesExpanded(!isAssetsEmployeesExpanded)}
+              >
+                <View style={styles.expandableHeaderContent}>
+                  <View style={styles.menuIcon}>
+                    <Users size={24} color="#10B981" />
+                  </View>
+                  <View style={styles.menuContent}>
+                    <Text style={styles.menuTitle}>Assets & Employees</Text>
+                    <Text style={styles.menuDescription}>Manage company-wide assets and employees</Text>
+                  </View>
+                </View>
+                {isAssetsEmployeesExpanded ? (
+                  <ChevronUp size={20} color="#64748b" />
+                ) : (
+                  <ChevronDown size={20} color="#64748b" />
+                )}
+              </TouchableOpacity>
+
+              {isAssetsEmployeesExpanded && (
+                <View style={styles.expandedContent}>
+                  <View style={styles.subMenuCard}>
+                    <TouchableOpacity 
+                      style={styles.subMenuItem}
+                      onPress={() => router.push('/company-assets' as any)}
+                    >
+                      <View style={styles.subMenuIcon}>
+                        <Truck size={20} color="#f59e0b" />
+                      </View>
+                      <View style={styles.subMenuContent}>
+                        <Text style={styles.subMenuTitle}>Company Assets</Text>
+                        <Text style={styles.subMenuDescription}>Manage global asset pool</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.subMenuCard}>
+                    <TouchableOpacity 
+                      style={styles.subMenuItem}
+                      onPress={() => router.push('/company-employees' as any)}
+                    >
+                      <View style={styles.subMenuIcon}>
+                        <Users size={20} color="#10B981" />
+                      </View>
+                      <View style={styles.subMenuContent}>
+                        <Text style={styles.subMenuTitle}>Company Employees</Text>
+                        <Text style={styles.subMenuDescription}>Manage global employee pool</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.subMenuCard}>
+                    <TouchableOpacity 
+                      style={styles.subMenuItem}
+                      onPress={() => router.push('/add-asset' as any)}
+                    >
+                      <View style={styles.subMenuIcon}>
+                        <Plus size={20} color="#8b5cf6" />
+                      </View>
+                      <View style={styles.subMenuContent}>
+                        <Text style={styles.subMenuTitle}>Add New Asset</Text>
+                        <Text style={styles.subMenuDescription}>Add asset to company pool</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+
+                  <View style={styles.subMenuCard}>
+                    <TouchableOpacity 
+                      style={styles.subMenuItem}
+                      onPress={() => router.push('/add-employee' as any)}
+                    >
+                      <View style={styles.subMenuIcon}>
+                        <Plus size={20} color="#3b82f6" />
+                      </View>
+                      <View style={styles.subMenuContent}>
+                        <Text style={styles.subMenuTitle}>Add New Employee</Text>
+                        <Text style={styles.subMenuDescription}>Add employee to company pool</Text>
+                      </View>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
+          </View>
+        )}
 
         {/* Company & Site Context - Show for Master users */}
         {isMaster && (
