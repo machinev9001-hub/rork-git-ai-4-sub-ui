@@ -42,6 +42,7 @@ export async function sendRequestMessage(message: MessageData): Promise<void> {
     const messageData = {
       ...message,
       createdAt: Timestamp.now(),
+      delivered: false,
       read: false,
     };
     

@@ -14,6 +14,7 @@ type Message = {
   toUserId: string;
   message: string;
   timestamp: any;
+  delivered: boolean;
   read: boolean;
   siteId: string;
 };
@@ -62,6 +63,7 @@ export default function ChatScreen() {
           toUserId: data.toUserId,
           message: data.message,
           timestamp: data.timestamp,
+          delivered: data.delivered || false,
           read: data.read || false,
           siteId: data.siteId,
         };
@@ -93,6 +95,7 @@ export default function ChatScreen() {
           toUserId: data.toUserId,
           message: data.message,
           timestamp: data.timestamp,
+          delivered: data.delivered || false,
           read: data.read || false,
           siteId: data.siteId,
         };
@@ -103,11 +106,22 @@ export default function ChatScreen() {
           allMessages.push(message);
         }
 
-        if (data.toUserId === user.userId && !data.read) {
+        if (data.toUserId === user.userId) {
           const messageRef = doc(db, 'messages', docSnap.id);
-          updateDoc(messageRef, { read: true }).catch(err => 
-            console.error('Error marking message as read:', err)
-          );
+          const updates: any = {};
+          
+          if (!data.delivered) {
+            updates.delivered = true;
+          }
+          if (!data.read) {
+            updates.read = true;
+          }
+          
+          if (Object.keys(updates).length > 0) {
+            updateDoc(messageRef, updates).catch(err => 
+              console.error('Error updating message status:', err)
+            );
+          }
         }
       });
       
@@ -146,6 +160,7 @@ export default function ChatScreen() {
       toUserId: userId,
       message: messageText,
       timestamp: timestamp,
+      delivered: false,
       read: false,
       siteId: user.siteId,
     };
@@ -164,6 +179,7 @@ export default function ChatScreen() {
         toUserName: userName || userId,
         message: messageText,
         timestamp: timestamp,
+        delivered: false,
         read: false,
         siteId: user.siteId,
       });
@@ -261,9 +277,11 @@ export default function ChatScreen() {
               {isMyMessage && (
                 <View style={styles.messageStatus}>
                   {item.read ? (
-                    <CheckCheck size={16} color="rgba(0, 0, 0, 0.6)" strokeWidth={2.5} />
+                    <CheckCheck size={16} color="#FFD600" strokeWidth={2.5} />
+                  ) : item.delivered ? (
+                    <CheckCheck size={16} color="rgba(0, 0, 0, 0.4)" strokeWidth={2.5} />
                   ) : (
-                    <Check size={16} color="rgba(0, 0, 0, 0.6)" strokeWidth={2.5} />
+                    <Check size={16} color="rgba(0, 0, 0, 0.4)" strokeWidth={2.5} />
                   )}
                 </View>
               )}
