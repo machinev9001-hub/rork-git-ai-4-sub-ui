@@ -134,7 +134,7 @@ If you encounter bundling issues in the future:
    ```
 
 ## Related Documentation
-- See `OPTIMIZATION-GUIDE.md` for file watcher limits
+- See `docs/OPTIMIZATION-GUIDE.md` for file watcher limits
 - See Expo docs: https://docs.expo.dev/router/reference/static-rendering/
 - See Metro docs: https://metrobundler.dev/docs/configuration
 
