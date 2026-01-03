@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   LayoutDashboard, 
   BarChart3,
@@ -10,7 +11,8 @@ import {
   ChevronDown,
   ChevronRight,
   Database,
-  Calendar
+  Calendar,
+  X
 } from 'lucide-react-native';
 
 export type FilterLevel = 'ALL' | 'PV_AREA' | 'PV_AREA_BLOCK' | 'SUPERVISOR';
@@ -59,9 +61,10 @@ export default function DashboardFilterSidebar({
   const [expandedProgress, setExpandedProgress] = useState(true);
   const [expandedViews, setExpandedViews] = useState(false);
   const [expandedTimeRange, setExpandedTimeRange] = useState(true);
-  const [weekDateInput, setWeekDateInput] = useState('');
-  const [monthInput, setMonthInput] = useState('');
-  const [yearInput, setYearInput] = useState('');
+  const [showWeekPicker, setShowWeekPicker] = useState(false);
+  const [showMonthPicker, setShowMonthPicker] = useState(false);
+  const [tempWeekDate, setTempWeekDate] = useState(new Date());
+  const [tempMonthDate, setTempMonthDate] = useState(new Date());
   
   const supervisorUsers = supervisors.filter(s => s.role === 'Supervisor');
 
@@ -104,20 +107,31 @@ export default function DashboardFilterSidebar({
     ? blockAreas.filter(b => b.pvAreaId === currentFilter.pvAreaId)
     : blockAreas;
 
-  const handleWeekDateSubmit = () => {
-    if (!weekDateInput) return;
-    const date = new Date(weekDateInput);
-    if (!isNaN(date.getTime())) {
-      onTimeRangeChange('CUSTOM_WEEK', date);
-    }
+  const handleWeekDateConfirm = () => {
+    onTimeRangeChange('CUSTOM_WEEK', tempWeekDate);
+    setShowWeekPicker(false);
   };
 
-  const handleMonthYearSubmit = () => {
-    const month = parseInt(monthInput);
-    const year = parseInt(yearInput);
-    if (month >= 1 && month <= 12 && year >= 2020 && year <= 2030) {
-      onTimeRangeChange('MONTHLY', undefined, { month, year });
+  const handleMonthDateConfirm = () => {
+    const month = tempMonthDate.getMonth() + 1;
+    const year = tempMonthDate.getFullYear();
+    onTimeRangeChange('MONTHLY', undefined, { month, year });
+    setShowMonthPicker(false);
+  };
+
+  const handleWeekPickerOpen = () => {
+    setTempWeekDate(customWeekDate || new Date());
+    setShowWeekPicker(true);
+  };
+
+  const handleMonthPickerOpen = () => {
+    if (selectedMonthYear) {
+      const date = new Date(selectedMonthYear.year, selectedMonthYear.month - 1, 1);
+      setTempMonthDate(date);
+    } else {
+      setTempMonthDate(new Date());
     }
+    setShowMonthPicker(true);
   };
 
   const monthNames = [
@@ -294,7 +308,7 @@ export default function DashboardFilterSidebar({
 
                   <TouchableOpacity
                     style={[styles.filterOption, currentTimeRange === 'CUSTOM_WEEK' && styles.filterOptionActive]}
-                    onPress={() => onTimeRangeChange('CUSTOM_WEEK', customWeekDate || new Date())}
+                    onPress={handleWeekPickerOpen}
                     activeOpacity={0.7}
                   >
                     <View style={[styles.radio, currentTimeRange === 'CUSTOM_WEEK' && styles.radioActive]}>
@@ -305,34 +319,17 @@ export default function DashboardFilterSidebar({
                     </Text>
                   </TouchableOpacity>
 
-                  {currentTimeRange === 'CUSTOM_WEEK' && (
-                    <View style={styles.dateInputContainer}>
-                      <Text style={styles.dateInputLabel}>Select Week Date</Text>
-                      <TextInput
-                        style={styles.dateInput}
-                        placeholder="YYYY-MM-DD"
-                        placeholderTextColor="#9ca3af"
-                        value={weekDateInput}
-                        onChangeText={setWeekDateInput}
-                        onSubmitEditing={handleWeekDateSubmit}
-                      />
-                      <TouchableOpacity style={styles.dateSubmitButton} onPress={handleWeekDateSubmit}>
-                        <Text style={styles.dateSubmitButtonText}>Apply</Text>
-                      </TouchableOpacity>
-                      {customWeekDate && (
-                        <Text style={styles.selectedDateText}>
-                          Week of {customWeekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </Text>
-                      )}
+                  {currentTimeRange === 'CUSTOM_WEEK' && customWeekDate && (
+                    <View style={styles.selectedDateContainer}>
+                      <Text style={styles.selectedDateText}>
+                        Week of {customWeekDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                      </Text>
                     </View>
                   )}
 
                   <TouchableOpacity
                     style={[styles.filterOption, currentTimeRange === 'MONTHLY' && styles.filterOptionActive]}
-                    onPress={() => {
-                      const now = new Date();
-                      onTimeRangeChange('MONTHLY', undefined, selectedMonthYear || { month: now.getMonth() + 1, year: now.getFullYear() });
-                    }}
+                    onPress={handleMonthPickerOpen}
                     activeOpacity={0.7}
                   >
                     <View style={[styles.radio, currentTimeRange === 'MONTHLY' && styles.radioActive]}>
@@ -343,37 +340,11 @@ export default function DashboardFilterSidebar({
                     </Text>
                   </TouchableOpacity>
 
-                  {currentTimeRange === 'MONTHLY' && (
-                    <View style={styles.dateInputContainer}>
-                      <Text style={styles.dateInputLabel}>Select Month & Year</Text>
-                      <View style={styles.monthYearRow}>
-                        <TextInput
-                          style={[styles.dateInput, styles.monthInput]}
-                          placeholder="MM"
-                          placeholderTextColor="#9ca3af"
-                          value={monthInput}
-                          onChangeText={setMonthInput}
-                          keyboardType="number-pad"
-                          maxLength={2}
-                        />
-                        <TextInput
-                          style={[styles.dateInput, styles.yearInput]}
-                          placeholder="YYYY"
-                          placeholderTextColor="#9ca3af"
-                          value={yearInput}
-                          onChangeText={setYearInput}
-                          keyboardType="number-pad"
-                          maxLength={4}
-                        />
-                      </View>
-                      <TouchableOpacity style={styles.dateSubmitButton} onPress={handleMonthYearSubmit}>
-                        <Text style={styles.dateSubmitButtonText}>Apply</Text>
-                      </TouchableOpacity>
-                      {selectedMonthYear && (
-                        <Text style={styles.selectedDateText}>
-                          {monthNames[selectedMonthYear.month - 1]} {selectedMonthYear.year}
-                        </Text>
-                      )}
+                  {currentTimeRange === 'MONTHLY' && selectedMonthYear && (
+                    <View style={styles.selectedDateContainer}>
+                      <Text style={styles.selectedDateText}>
+                        {monthNames[selectedMonthYear.month - 1]} {selectedMonthYear.year}
+                      </Text>
                     </View>
                   )}
                 </View>
@@ -619,6 +590,127 @@ export default function DashboardFilterSidebar({
           </>
         )}
       </ScrollView>
+
+      <Modal
+        visible={showWeekPicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowWeekPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Week</Text>
+              <TouchableOpacity onPress={() => setShowWeekPicker(false)} style={styles.modalClose}>
+                <X size={20} color="#5f6368" />
+              </TouchableOpacity>
+            </View>
+            
+            {Platform.OS === 'web' ? (
+              <View style={styles.webDatePicker}>
+                <input
+                  type="date"
+                  value={tempWeekDate.toISOString().split('T')[0]}
+                  onChange={(e: any) => setTempWeekDate(new Date(e.target.value))}
+                  style={{
+                    padding: 12,
+                    fontSize: 16,
+                    borderRadius: 8,
+                    border: '1px solid #dadce0',
+                    width: '100%',
+                  }}
+                />
+              </View>
+            ) : (
+              <DateTimePicker
+                value={tempWeekDate}
+                mode="date"
+                display="spinner"
+                onChange={(event, selectedDate) => {
+                  if (selectedDate) setTempWeekDate(selectedDate);
+                }}
+              />
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowWeekPicker(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={handleWeekDateConfirm}
+              >
+                <Text style={styles.modalButtonConfirmText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={showMonthPicker}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMonthPicker(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Month</Text>
+              <TouchableOpacity onPress={() => setShowMonthPicker(false)} style={styles.modalClose}>
+                <X size={20} color="#5f6368" />
+              </TouchableOpacity>
+            </View>
+            
+            {Platform.OS === 'web' ? (
+              <View style={styles.webDatePicker}>
+                <input
+                  type="month"
+                  value={`${tempMonthDate.getFullYear()}-${String(tempMonthDate.getMonth() + 1).padStart(2, '0')}`}
+                  onChange={(e: any) => {
+                    const [year, month] = e.target.value.split('-');
+                    setTempMonthDate(new Date(parseInt(year), parseInt(month) - 1, 1));
+                  }}
+                  style={{
+                    padding: 12,
+                    fontSize: 16,
+                    borderRadius: 8,
+                    border: '1px solid #dadce0',
+                    width: '100%',
+                  }}
+                />
+              </View>
+            ) : (
+              <DateTimePicker
+                value={tempMonthDate}
+                mode="date"
+                display="spinner"
+                onChange={(event, selectedDate) => {
+                  if (selectedDate) setTempMonthDate(selectedDate);
+                }}
+              />
+            )}
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.modalButtonCancel}
+                onPress={() => setShowMonthPicker(false)}
+              >
+                <Text style={styles.modalButtonCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButtonConfirm}
+                onPress={handleMonthDateConfirm}
+              >
+                <Text style={styles.modalButtonConfirmText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -814,57 +906,83 @@ const styles = StyleSheet.create({
   timeRangeOptions: {
     marginTop: 8,
   },
-  dateInputContainer: {
-    marginTop: 12,
+  selectedDateContainer: {
+    marginTop: 8,
     marginLeft: 28,
     paddingLeft: 12,
+    paddingVertical: 8,
     borderLeftWidth: 2,
-    borderLeftColor: '#e8eaed',
-  },
-  dateInputLabel: {
-    fontSize: 11,
-    fontWeight: '600' as const,
-    color: '#5f6368',
-    marginBottom: 8,
-    textTransform: 'uppercase' as const,
-  },
-  dateInput: {
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#dadce0',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 13,
-    color: '#202124',
-    marginBottom: 8,
-  },
-  monthYearRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  monthInput: {
-    flex: 1,
-  },
-  yearInput: {
-    flex: 2,
-  },
-  dateSubmitButton: {
-    backgroundColor: '#4285F4',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  dateSubmitButtonText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '600' as const,
+    borderLeftColor: '#4285F4',
+    backgroundColor: '#f8f9fa',
+    borderRadius: 4,
   },
   selectedDateText: {
     fontSize: 12,
     color: '#34A853',
     fontWeight: '600' as const,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 24,
+    width: '90%',
+    maxWidth: 400,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700' as const,
+    color: '#202124',
+  },
+  modalClose: {
+    padding: 4,
+  },
+  webDatePicker: {
+    marginBottom: 20,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    gap: 12,
+    marginTop: 20,
+  },
+  modalButtonCancel: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#dadce0',
+  },
+  modalButtonCancelText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#5f6368',
+  },
+  modalButtonConfirm: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    backgroundColor: '#4285F4',
+  },
+  modalButtonConfirmText: {
+    fontSize: 14,
+    fontWeight: '600' as const,
+    color: '#ffffff',
   },
 });
