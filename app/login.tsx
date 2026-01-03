@@ -150,6 +150,12 @@ export default function LoginScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
+      <Image
+        source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/om5tiauqos27a3kmjk12g' }}
+        style={styles.backgroundImage}
+        contentFit="cover"
+        cachePolicy="memory-disk"
+      />
       
       <View style={styles.mainContainer}>
         <KeyboardAvoidingView
@@ -175,7 +181,7 @@ export default function LoginScreen() {
               style={styles.logoPlaceholder}
             >
               <Image
-                source={{ uri: 'https://rork.app/pa/a6nricbie4k46krkbi3f1/mounktczoga5o2xw99z4g' }}
+                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/2c5mawnzodi7hnr233r1x' }}
                 style={styles.logoImage}
                 contentFit="contain"
                 transition={200}
@@ -327,11 +333,20 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#000000',
+  },
+  backgroundImage: {
+    position: 'absolute' as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: '100%',
+    height: '100%',
   },
   mainContainer: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: 'transparent',
   },
   content: {
     flex: 1,
@@ -349,7 +364,7 @@ const styles = StyleSheet.create({
   logoImage: {
     width: 120,
     height: 120,
-    borderRadius: 20,
+    borderRadius: 60,
   },
   accentBar: {
     width: 60,
