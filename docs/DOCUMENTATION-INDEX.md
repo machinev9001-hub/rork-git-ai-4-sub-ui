@@ -7,6 +7,16 @@ This directory contains comprehensive documentation for the project tracker appl
 
 ## 📚 Core Documentation
 
+### [USER-MANUAL-COMPREHENSIVE.md](./USER-MANUAL-COMPREHENSIVE.md) ⭐ NEW
+**Complete User Manual for MACHINE Business Tracker**
+- Getting started and installation guide
+- All user roles explained (Master, Admin, Planner, Supervisor, QC, Surveyor, Operators, Managers)
+- Core features walkthrough (Dashboard, Company Management, Tasks, Time Tracking, Assets)
+- Specialized features (QC, Progress Tracking, Requests, Messaging, Offline Mode)
+- Administration guide (Admin Panel, Reports, Settings)
+- Troubleshooting and FAQ
+- Quick reference and glossary
+
 ### [FIREBASE-INDEXES.md](./FIREBASE-INDEXES.md)
 Complete guide to all required Firebase indexes including:
 - Core workflow indexes (requests, activities, tasks)
