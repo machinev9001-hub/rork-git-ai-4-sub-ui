@@ -751,7 +751,7 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     paddingTop: 16,
-    paddingBottom: 80,
+    paddingBottom: 120,
   },
   section: {
     paddingHorizontal: 16,
@@ -931,8 +931,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffffff',
     borderRadius: 16,
     padding: 24,
-    width: '90%',
-    maxWidth: 400,
+    width: '85%',
+    maxWidth: 320,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
