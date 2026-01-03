@@ -150,9 +150,11 @@ MACHINE Business Tracker is a comprehensive cross-platform mobile application de
 
 **Free Account:**
 - Basic features
-- Up to 5 users, single site
+- Up to 5 users
+- **Single site and single company profile only** (Additional sites require VAS)
 - Auto-generated activation
 - Instant setup
+- Optional Value-Added Services (VAS) for upgrades
 
 ### Creating Master Account (Enterprise)
 
@@ -1094,6 +1096,283 @@ MACHINE automatically switches to offline mode when internet is unavailable. You
 3. Confirm restore
 4. App restarts
 5. Data restored
+
+### Value-Added Services (VAS)
+
+**Overview:**
+Value-Added Services allow Free account users to unlock specific enterprise features without upgrading to a full Enterprise account. This modular approach lets you pay only for the features you need.
+
+**Available VAS Features:**
+
+#### 1. Multiple Sites ($39/month)
+**For Free Accounts Only**
+
+By default, Free accounts are limited to:
+- **One site** 
+- **One company profile**
+
+Subscribe to Multiple Sites VAS to:
+- Create unlimited sites
+- Manage multiple company profiles
+- Track independent site progress
+- Allocate resources across sites
+- View consolidated multi-site analytics
+
+**How to Subscribe:**
+1. Settings → VAS Management
+2. Tap "Multiple Sites"
+3. Review benefits and pricing
+4. Tap "Subscribe"
+5. Complete payment
+6. Feature unlocked immediately
+
+**Use Cases:**
+- Growing businesses expanding to new locations
+- Companies managing multiple projects simultaneously
+- Contractors working across different sites
+
+---
+
+#### 2. Advanced Analytics ($49/month)
+
+Unlock powerful analytics and insights:
+- Real-time performance dashboards
+- Customizable KPI tracking
+- Trend analysis and forecasting
+- Cross-site performance comparison
+- Export charts and reports
+
+**Benefits:**
+- Make data-driven decisions
+- Identify bottlenecks early
+- Optimize resource allocation
+- Reduce costs through insights
+- Track team productivity
+
+---
+
+#### 3. Advanced Reporting ($39/month)
+
+Generate comprehensive professional reports:
+- Customizable report templates
+- Scheduled report delivery
+- Multi-format exports (PDF, Excel, CSV)
+- Compliance-ready documentation
+- Automated distribution to stakeholders
+
+**Benefits:**
+- Save hours on manual reporting
+- Professional client presentations
+- Automated stakeholder updates
+- Audit-ready documentation
+- Historical trend reports
+
+---
+
+#### 4. Data Exports ($29/month)
+
+Export your data in multiple formats:
+- Export to CSV, Excel, and PDF
+- Bulk data exports
+- Filtered and custom exports
+- Automated backup scheduling
+- Integration-ready data formats
+
+**Benefits:**
+- Full data ownership
+- Integration with accounting software
+- Payroll system compatibility
+- Business intelligence tool support
+- Regulatory compliance
+
+---
+
+#### 5. Advanced Integrations ($59/month)
+
+Connect with existing tools and systems:
+- REST API access
+- Webhook notifications
+- Pre-built integrations (QuickBooks, Xero, etc.)
+- Custom integration support
+- Real-time data synchronization
+
+**Benefits:**
+- Streamline workflows
+- Eliminate double data entry
+- Connect with ERP systems
+- Automate data flows
+- Enhance productivity
+
+---
+
+#### 6. Custom Branding ($99/month)
+
+White-label the app with your branding:
+- Custom logo and colors
+- Branded login screen
+- Custom email templates
+- Branded reports and exports
+- Professional client appearance
+
+**Benefits:**
+- Professional company identity
+- Brand consistency
+- Client confidence
+- Subcontractor perception
+- Competitive advantage
+
+---
+
+#### 7. Priority Support ($79/month)
+
+Get help when you need it:
+- 24/7 phone and email support
+- Priority queue - faster response times
+- Dedicated account manager
+- Training and onboarding assistance
+- Proactive system health monitoring
+
+**Benefits:**
+- Minimize downtime
+- Expert guidance
+- Faster issue resolution
+- Personalized training
+- Peace of mind
+
+---
+
+#### 8. Marketplace Access ($49/month)
+
+List plant assets for hire:
+- List assets on the marketplace
+- Receive hire requests from other companies
+- Set your own rates and availability
+- Track marketplace performance
+- Grow your rental business
+
+**Benefits:**
+- Generate additional revenue
+- Maximize asset utilization
+- Reach new customers
+- Competitive pricing visibility
+- Expand rental operations
+
+---
+
+#### 9. Plant Manager Access ($79/month)
+
+Full plant management capabilities:
+- Plant asset management
+- Timesheet tracking and approval
+- Asset allocation to sites
+- Operator assignment tracking
+- Maintenance scheduling
+
+**Benefits:**
+- Complete equipment oversight
+- Accurate billing
+- Maintenance compliance
+- Utilization optimization
+- Operator accountability
+
+---
+
+#### 10. Staff Manager Access ($79/month)
+
+Complete staff management:
+- Employee management
+- Site allocation tracking
+- Timesheet oversight
+- Staff requests handling
+- Cross-site employee visibility
+
+**Benefits:**
+- Streamlined HR operations
+- Accurate payroll
+- Resource optimization
+- Compliance tracking
+- Employee performance insights
+
+---
+
+#### 11. Logistics Access ($59/month)
+
+Manage logistics operations:
+- Material request management
+- Delivery coordination
+- Supply chain visibility
+- Vendor communication
+- Inventory tracking
+
+**Benefits:**
+- Reduce material delays
+- Optimize inventory
+- Vendor accountability
+- Cost control
+- Just-in-time delivery
+
+---
+
+#### 12. Operations Bundle ($149/month)
+
+Complete operations package:
+- Task planning and scheduling (Planner role)
+- Supervisor task management
+- QC request handling
+- Progress tracking
+- Cross-team coordination
+
+**Benefits:**
+- Complete site operations control
+- Bundled savings vs individual purchases
+- Integrated workflow
+- Team collaboration
+- End-to-end visibility
+
+---
+
+### Managing VAS Subscriptions
+
+**View Active Subscriptions:**
+1. Settings → VAS Management
+2. View "Active Subscriptions" section
+3. See renewal dates and pricing
+
+**Subscribe to New VAS:**
+1. Settings → VAS Management
+2. Browse available features
+3. Tap feature card
+4. Review benefits
+5. Tap "Subscribe"
+6. Complete payment
+7. Feature activates immediately
+
+**Cancel Subscription:**
+1. Settings → VAS Management
+2. Find active subscription
+3. Tap "Manage"
+4. Tap "Cancel Subscription"
+5. Confirm cancellation
+6. Access continues until period ends
+
+**Upgrade to Enterprise:**
+If you need multiple VAS features, consider upgrading to Enterprise:
+1. Settings → Account Settings
+2. Tap "Upgrade to Enterprise"
+3. Contact sales team
+4. Receive activation code
+5. All features unlocked
+
+**Cost Comparison:**
+- **Free + 3 VAS:** ~$150-200/month
+- **Enterprise:** Contact for pricing (typically includes all features)
+
+**Notes:**
+- VAS subscriptions are per-company
+- Billing is monthly unless otherwise arranged
+- Features activate immediately upon payment
+- Cancel anytime, no long-term contracts
+- Enterprise accounts don't need VAS (all features included)
 
 ---
 
