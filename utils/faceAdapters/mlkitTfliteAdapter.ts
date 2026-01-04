@@ -1,4 +1,5 @@
 import { Platform } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import type { ImageBlob, EmbeddingResult, LivenessResult } from '../faceCapture';
 
 type LatLon = {
@@ -39,12 +40,32 @@ export async function initEmbeddingModel(): Promise<void> {
 
 export async function captureFaceImage(cameraRef?: any): Promise<ImageBlob | null> {
   if (!NATIVE_MODULES_AVAILABLE) {
-    console.log('[mlkit-adapter] Native camera not available. Using mock.');
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log('[mlkit-adapter] Using Expo camera for image capture...');
+    
+    const permissionResult = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permissionResult.granted) {
+      console.warn('[mlkit-adapter] Camera permission denied');
+      return null;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+      cameraType: ImagePicker.CameraType.front,
+    });
+
+    if (result.canceled) {
+      console.log('[mlkit-adapter] User cancelled camera');
+      return null;
+    }
+
+    const asset = result.assets[0];
     return {
-      uri: 'https://via.placeholder.com/400x400/4A90E2/FFFFFF?text=Face',
-      width: 400,
-      height: 400,
+      uri: asset.uri,
+      width: asset.width,
+      height: asset.height,
     };
   }
 
