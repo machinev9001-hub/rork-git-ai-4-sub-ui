@@ -161,7 +161,7 @@ export default function LoginScreen() {
     <SafeAreaView style={styles.container} edges={['top']}>
       <Stack.Screen options={{ headerShown: false }} />
       <Image
-        source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/om5tiauqos27a3kmjk12g' }}
+        source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/5bsyx2wogfmr3jeuma8un' }}
         style={styles.backgroundImage}
         contentFit="cover"
         cachePolicy="memory-disk"
@@ -191,7 +191,7 @@ export default function LoginScreen() {
               style={styles.logoPlaceholder}
             >
               <Image
-                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/2c5mawnzodi7hnr233r1x' }}
+                source={{ uri: 'https://pub-e001eb4506b145aa938b5d3badbff6a5.r2.dev/attachments/f7fpj16kxbm9whhxgw79p' }}
                 style={styles.logoImage}
                 contentFit="contain"
                 transition={200}
