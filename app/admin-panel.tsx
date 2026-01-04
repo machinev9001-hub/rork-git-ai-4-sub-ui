@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import { X, Key, Copy, Share2, Plus, AlertTriangle, Shield, CreditCard, List } from 'lucide-react-native';
+import { X, Key, Copy, Share2, Plus, AlertTriangle, Shield, CreditCard, List, Bell } from 'lucide-react-native';
 import { collection, addDoc, serverTimestamp, Timestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { generateActivationCode } from '@/utils/activationCode';
@@ -271,6 +271,20 @@ export default function AdminPanelScreen() {
               </TouchableOpacity>
             </View>
           </View>
+
+          <TouchableOpacity
+            style={styles.managementButton}
+            onPress={() => router.push('/admin-notifications' as any)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.managementButtonContent}>
+              <Bell size={24} color="#f59e0b" />
+              <View style={styles.managementButtonText}>
+                <Text style={styles.managementButtonTitle}>Admin Notifications</Text>
+                <Text style={styles.managementButtonSubtitle}>View activation and subscription notifications</Text>
+              </View>
+            </View>
+          </TouchableOpacity>
 
           <TouchableOpacity
             style={styles.managementButton}

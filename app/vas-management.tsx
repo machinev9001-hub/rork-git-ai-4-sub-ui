@@ -10,7 +10,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { ArrowLeft, Lock, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Wrench, Users, Truck, ClipboardList, UserCheck, Shield } from 'lucide-react-native';
+import { ArrowLeft, Lock, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Wrench, Users, Truck, ClipboardList, UserCheck, Shield, Clock } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { getAvailableVASFeatures } from '@/utils/featureFlags';
 import { VASFeatureId } from '@/types';
@@ -18,6 +18,7 @@ import { useAccountType } from '@/utils/hooks/useFeatureFlags';
 import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { Colors } from '@/constants/colors';
+import { startVASTrialSubscription } from '@/utils/vasSubscription';
 
 type SubscriptionGroup = {
   id: string;
@@ -135,7 +136,7 @@ export default function VASManagementScreen() {
     return selectedFeatures.includes(featureId);
   };
 
-  const handleFeatureToggle = async (featureId: VASFeatureId) => {
+  const handleFeatureToggle = async (featureId: VASFeatureId, featureName: string, price: string) => {
     const masterAccountId = user?.masterAccountId;
     if (!masterAccountId) {
       Alert.alert('Error', 'Master account not found');
@@ -143,34 +144,60 @@ export default function VASManagementScreen() {
     }
 
     const isSubscribed = selectedFeatures.includes(featureId);
-    const action = isSubscribed ? 'unsubscribe from' : 'subscribe to';
+    const action = isSubscribed ? 'unsubscribe from' : 'start 12-day trial for';
 
     Alert.alert(
-      isSubscribed ? 'Unsubscribe' : 'Subscribe to Feature',
-      `This will ${action} this feature. In production, this would process payment.`,
+      isSubscribed ? 'Unsubscribe' : 'Start Free Trial',
+      isSubscribed 
+        ? `This will ${action} ${featureName}.`
+        : `Start a 12-day free trial for ${featureName}? After the trial, you'll need to activate the subscription with payment to continue using this feature.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Continue',
+          text: isSubscribed ? 'Unsubscribe' : 'Start Trial',
           onPress: async () => {
             setIsUpdating(true);
             try {
-              const newFeatures = isSubscribed
-                ? selectedFeatures.filter((id) => id !== featureId)
-                : [...selectedFeatures, featureId];
+              if (isSubscribed) {
+                // Unsubscribe logic (remove feature)
+                const newFeatures = selectedFeatures.filter((id) => id !== featureId);
+                const masterAccountRef = doc(db, 'masterAccounts', masterAccountId);
+                await updateDoc(masterAccountRef, {
+                  vasFeatures: newFeatures,
+                  updatedAt: serverTimestamp(),
+                });
+                setSelectedFeatures(newFeatures);
+                Alert.alert('Success', 'Feature unsubscribed successfully.');
+              } else {
+                // Start trial subscription
+                const priceNumber = parseFloat(price.replace(/[^0-9.]/g, ''));
+                const result = await startVASTrialSubscription(
+                  masterAccountId,
+                  featureId,
+                  featureName,
+                  priceNumber,
+                  'USD'
+                );
 
-              const masterAccountRef = doc(db, 'masterAccounts', masterAccountId);
-              await updateDoc(masterAccountRef, {
-                vasFeatures: newFeatures,
-                updatedAt: serverTimestamp(),
-              });
-
-              setSelectedFeatures(newFeatures);
-              
-              Alert.alert(
-                'Success',
-                `Feature ${isSubscribed ? 'unsubscribed' : 'subscribed'} successfully. Changes are now active.`
-              );
+                if (result.success) {
+                  // Add to selected features for immediate UI update
+                  const newFeatures = [...selectedFeatures, featureId];
+                  const masterAccountRef = doc(db, 'masterAccounts', masterAccountId);
+                  await updateDoc(masterAccountRef, {
+                    vasFeatures: newFeatures,
+                    updatedAt: serverTimestamp(),
+                  });
+                  setSelectedFeatures(newFeatures);
+                  
+                  Alert.alert(
+                    'Trial Started',
+                    `Your 12-day free trial for ${featureName} has started! You can use this feature immediately. Remember to activate with payment before the trial ends.`,
+                    [{ text: 'OK' }]
+                  );
+                } else {
+                  Alert.alert('Error', result.error || 'Failed to start trial. Please try again.');
+                }
+              }
             } catch (error) {
               console.error('Error updating VAS features:', error);
               Alert.alert(
@@ -333,14 +360,14 @@ export default function VASManagementScreen() {
                           isActive && styles.featureButtonActive,
                           isUpdating && styles.featureButtonDisabled,
                         ]}
-                        onPress={() => handleFeatureToggle(feature.id)}
+                        onPress={() => handleFeatureToggle(feature.id, feature.name, feature.price)}
                         disabled={isUpdating}
                       >
                         {isUpdating ? (
                           <ActivityIndicator size="small" color={isActive ? Colors.textSecondary : "#fff"} />
                         ) : (
                           <Text style={[styles.featureButtonText, isActive && styles.featureButtonTextActive]}>
-                            {isActive ? 'Unsubscribe' : 'Subscribe'}
+                            {isActive ? 'Unsubscribe' : 'Start Trial'}
                           </Text>
                         )}
                       </TouchableOpacity>
@@ -485,7 +512,7 @@ export default function VASManagementScreen() {
                       feature.isActive && styles.subscribeButtonActive,
                       isUpdating && styles.subscribeButtonDisabled,
                     ]}
-                    onPress={() => handleFeatureToggle(feature.id)}
+                    onPress={() => handleFeatureToggle(feature.id, feature.name, feature.price || '$0/month')}
                     disabled={isUpdating}
                   >
                     {isUpdating ? (
@@ -497,7 +524,7 @@ export default function VASManagementScreen() {
                           feature.isActive && styles.subscribeButtonTextActive,
                         ]}
                       >
-                        {feature.isActive ? 'Unsubscribe' : 'Subscribe'}
+                        {feature.isActive ? 'Unsubscribe' : 'Start 12-Day Trial'}
                       </Text>
                     )}
                   </TouchableOpacity>

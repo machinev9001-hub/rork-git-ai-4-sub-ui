@@ -2263,8 +2263,84 @@
         { "fieldPath": "masterAccountId", "order": "ASCENDING" },
         { "fieldPath": "siteId", "order": "ASCENDING" }
       ]
+    },
+
+    {
+      "collectionGroup": "vasSubscriptions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "state", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "vasSubscriptions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "featureId", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "vasSubscriptions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "state", "order": "ASCENDING" },
+        { "fieldPath": "trialEndDate", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "vasSubscriptions",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "state", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+
+    {
+      "collectionGroup": "adminNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "adminNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "isRead", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "adminNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "priority", "order": "DESCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "adminNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masterAccountId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "adminNotifications",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "type", "order": "ASCENDING" },
+        { "fieldPath": "isRead", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": [],
-  "deployNote": "CRITICAL: After editing this file, run 'firebase deploy --only firestore:indexes' to deploy all indexes. This comprehensive index file includes all collections: sites, tasks, employees, plantAssets, BOQ, requests, activities, messages, users, companies, subcontractors, timesheets, face clock system, menu management, PV grid tracking (pvAreaId, blockId, row, column), EPH agreement workflow (ephPendingEdits, pendingAgreements, agreedTimesheets), master account verification system (masterAccounts, companyOwnership, companyRoles, masterIDVerification, fraudDisputes, ownershipChangeRequests, masterAccountAuditLogs), and all multi-tenant indexes."
+  "deployNote": "CRITICAL: After editing this file, run 'firebase deploy --only firestore:indexes' to deploy all indexes. This comprehensive index file includes all collections: sites, tasks, employees, plantAssets, BOQ, requests, activities, messages, users, companies, subcontractors, timesheets, face clock system, menu management, PV grid tracking (pvAreaId, blockId, row, column), EPH agreement workflow (ephPendingEdits, pendingAgreements, agreedTimesheets), master account verification system (masterAccounts, companyOwnership, companyRoles, masterIDVerification, fraudDisputes, ownershipChangeRequests, masterAccountAuditLogs), VAS subscriptions (vasSubscriptions), and admin notifications (adminNotifications), and all multi-tenant indexes."
 }
