@@ -7,10 +7,41 @@ import {
   where, 
   getDocs,
   serverTimestamp,
-  Timestamp 
+  Timestamp,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { VASSubscription, VASFeatureId, VASSubscriptionState, AdminNotification, AdminNotificationType } from '@/types';
+
+/**
+ * Fetch master account details for notifications
+ */
+async function getMasterAccountDetails(masterAccountId: string): Promise<{
+  name?: string;
+  companyIds?: string[];
+  nationalIdNumber?: string;
+  accountType?: string;
+}> {
+  try {
+    const masterAccountRef = doc(db, 'masterAccounts', masterAccountId);
+    const masterAccountSnap = await getDoc(masterAccountRef);
+    
+    if (!masterAccountSnap.exists()) {
+      return {};
+    }
+    
+    const data = masterAccountSnap.data();
+    return {
+      name: data.name,
+      companyIds: data.companyIds || [],
+      nationalIdNumber: data.nationalIdNumber,
+      accountType: data.accountType,
+    };
+  } catch (error) {
+    console.error('[VASSubscription] Error fetching master account:', error);
+    return {};
+  }
+}
 
 /**
  * Start a VAS subscription trial
@@ -25,6 +56,9 @@ export async function startVASTrialSubscription(
 ): Promise<{ success: boolean; subscriptionId?: string; error?: string }> {
   try {
     console.log('[VASSubscription] Starting trial for feature:', featureId);
+
+    // Fetch master account details
+    const accountDetails = await getMasterAccountDetails(masterAccountId);
 
     // Check if subscription already exists
     const subscriptionsRef = collection(db, 'vasSubscriptions');
@@ -68,19 +102,25 @@ export async function startVASTrialSubscription(
     const docRef = await addDoc(subscriptionsRef, subscription);
     console.log('[VASSubscription] Trial created:', docRef.id);
 
-    // Create admin notification
+    // Create admin notification with full applicant details
     await createAdminNotification({
       type: 'VAS_SUBSCRIPTION_STARTED',
-      title: 'New VAS Trial Started',
-      message: `Trial subscription started for ${featureName}`,
+      title: `VAS Trial Started: ${featureName}`,
+      message: `${accountDetails.name || 'User'} started a 12-day trial for ${featureName}. State: TRIAL_ACTIVE`,
       masterAccountId,
+      masterAccountName: accountDetails.name,
       vasSubscriptionId: docRef.id,
       featureId,
       priority: 'medium',
       metadata: {
+        state: 'TRIAL_ACTIVE',
+        trialStartDate: now.toISOString(),
         trialEndDate: trialEndDate.toISOString(),
         price,
         currency,
+        accountType: accountDetails.accountType,
+        nationalIdNumber: accountDetails.nationalIdNumber,
+        companyIds: accountDetails.companyIds,
       },
     });
 
@@ -105,6 +145,9 @@ export async function activateVASSubscription(
   try {
     console.log('[VASSubscription] Activating subscription:', subscriptionId);
 
+    // Fetch master account details
+    const accountDetails = await getMasterAccountDetails(masterAccountId);
+
     const subscriptionRef = doc(db, 'vasSubscriptions', subscriptionId);
     
     // Calculate next payment due (30 days from now)
@@ -128,17 +171,25 @@ export async function activateVASSubscription(
     if (!subscriptionSnapshot.empty) {
       const subscription = subscriptionSnapshot.docs[0].data() as VASSubscription;
       
-      // Create admin notification
+      // Create admin notification with full applicant details
       await createAdminNotification({
         type: 'VAS_SUBSCRIPTION_ACTIVATED',
-        title: 'VAS Subscription Activated',
-        message: `Subscription activated for ${subscription.featureName}`,
+        title: `VAS Activated: ${subscription.featureName}`,
+        message: `${accountDetails.name || 'User'} activated subscription for ${subscription.featureName}. State: ACTIVE`,
         masterAccountId,
+        masterAccountName: accountDetails.name,
         vasSubscriptionId: subscriptionId,
         featureId: subscription.featureId,
         priority: 'low',
         metadata: {
+          state: 'ACTIVE',
+          activationDate: now.toISOString(),
           nextPaymentDue: nextPaymentDue.toISOString(),
+          price: subscription.price,
+          currency: subscription.currency,
+          accountType: accountDetails.accountType,
+          nationalIdNumber: accountDetails.nationalIdNumber,
+          companyIds: accountDetails.companyIds,
         },
       });
     }
@@ -166,6 +217,9 @@ export async function suspendVASSubscription(
   try {
     console.log('[VASSubscription] Suspending subscription:', subscriptionId);
 
+    // Fetch master account details
+    const accountDetails = await getMasterAccountDetails(masterAccountId);
+
     const subscriptionRef = doc(db, 'vasSubscriptions', subscriptionId);
     
     await updateDoc(subscriptionRef, {
@@ -183,17 +237,25 @@ export async function suspendVASSubscription(
     if (!subscriptionSnapshot.empty) {
       const subscription = subscriptionSnapshot.docs[0].data() as VASSubscription;
       
-      // Create admin notification
+      // Create admin notification with full applicant details
       await createAdminNotification({
         type: 'VAS_SUSPENDED',
-        title: 'VAS Subscription Suspended',
-        message: `Subscription suspended for ${subscription.featureName}: ${reason}`,
+        title: `VAS Suspended: ${subscription.featureName}`,
+        message: `${accountDetails.name || 'User'}'s subscription for ${subscription.featureName} was suspended. State: SUSPENDED. Reason: ${reason}`,
         masterAccountId,
+        masterAccountName: accountDetails.name,
         vasSubscriptionId: subscriptionId,
         featureId: subscription.featureId,
         priority: 'high',
         metadata: {
+          state: 'SUSPENDED',
+          suspensionDate: new Date().toISOString(),
           reason,
+          price: subscription.price,
+          currency: subscription.currency,
+          accountType: accountDetails.accountType,
+          nationalIdNumber: accountDetails.nationalIdNumber,
+          companyIds: accountDetails.companyIds,
         },
       });
     }
@@ -236,23 +298,33 @@ export async function checkAndUpdateExpiredTrials(): Promise<{
       const trialEndDate = subscription.trialEndDate?.toDate();
 
       if (trialEndDate && trialEndDate < now) {
+        // Fetch master account details
+        const accountDetails = await getMasterAccountDetails(subscription.masterAccountId);
+
         // Trial has expired - move to PAYMENT_PENDING
         await updateDoc(doc(db, 'vasSubscriptions', docSnapshot.id), {
           state: 'PAYMENT_PENDING',
           updatedAt: serverTimestamp(),
         });
 
-        // Create notification
+        // Create notification with full applicant details for PAYMENT_PENDING state
         await createAdminNotification({
-          type: 'VAS_TRIAL_EXPIRED',
-          title: 'VAS Trial Expired',
-          message: `Trial period expired for ${subscription.featureName}. Payment now required.`,
+          type: 'VAS_PAYMENT_PENDING',
+          title: `VAS Payment Pending: ${subscription.featureName}`,
+          message: `${accountDetails.name || 'User'}'s trial for ${subscription.featureName} has expired. State: PAYMENT_PENDING. Payment now required to continue.`,
           masterAccountId: subscription.masterAccountId,
+          masterAccountName: accountDetails.name,
           vasSubscriptionId: docSnapshot.id,
           featureId: subscription.featureId,
           priority: 'high',
           metadata: {
+            state: 'PAYMENT_PENDING',
             trialEndDate: trialEndDate.toISOString(),
+            price: subscription.price,
+            currency: subscription.currency,
+            accountType: accountDetails.accountType,
+            nationalIdNumber: accountDetails.nationalIdNumber,
+            companyIds: accountDetails.companyIds,
           },
         });
 
@@ -262,18 +334,28 @@ export async function checkAndUpdateExpiredTrials(): Promise<{
         // Check if trial is expiring soon (within 2 days)
         const daysUntilExpiry = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         if (daysUntilExpiry <= 2 && daysUntilExpiry > 0) {
+          // Fetch master account details
+          const accountDetails = await getMasterAccountDetails(subscription.masterAccountId);
+
           // Create notification about upcoming expiration
           await createAdminNotification({
             type: 'VAS_TRIAL_EXPIRING',
-            title: 'VAS Trial Expiring Soon',
-            message: `Trial for ${subscription.featureName} expires in ${daysUntilExpiry} day${daysUntilExpiry > 1 ? 's' : ''}.`,
+            title: `VAS Trial Expiring: ${subscription.featureName}`,
+            message: `${accountDetails.name || 'User'}'s trial for ${subscription.featureName} expires in ${daysUntilExpiry} day${daysUntilExpiry > 1 ? 's' : ''}. State: TRIAL_ACTIVE`,
             masterAccountId: subscription.masterAccountId,
+            masterAccountName: accountDetails.name,
             vasSubscriptionId: docSnapshot.id,
             featureId: subscription.featureId,
             priority: 'medium',
             metadata: {
+              state: 'TRIAL_ACTIVE',
               daysRemaining: daysUntilExpiry,
               trialEndDate: trialEndDate.toISOString(),
+              price: subscription.price,
+              currency: subscription.currency,
+              accountType: accountDetails.accountType,
+              nationalIdNumber: accountDetails.nationalIdNumber,
+              companyIds: accountDetails.companyIds,
             },
           });
         }
