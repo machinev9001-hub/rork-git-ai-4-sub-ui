@@ -1,6 +1,7 @@
 import { collection, query, where, getDocs, updateDoc, doc, Timestamp, addDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { ActivationCode, ActivationValidationResult } from '@/types/activation';
+import { notifyActivationCodeRedeemed } from './vasSubscription';
 
 export async function validateActivationCode(code: string): Promise<ActivationValidationResult> {
   try {
@@ -80,7 +81,8 @@ export async function validateActivationCode(code: string): Promise<ActivationVa
 
 export async function markActivationCodeAsRedeemed(
   codeId: string,
-  redeemedBy: string
+  redeemedBy: string,
+  masterAccountName?: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
     console.log('[ActivationCode] Marking code as redeemed:', codeId);
@@ -95,6 +97,8 @@ export async function markActivationCodeAsRedeemed(
     const data = codeSnapshot.docs[0].data();
     const currentRedemptions = data.currentRedemptions || 0;
     const maxRedemptions = data.maxRedemptions || 1;
+    const accountType = data.accountType || 'enterprise';
+    const companyName = data.companyName;
     
     const updates: any = {
       currentRedemptions: currentRedemptions + 1,
@@ -108,6 +112,17 @@ export async function markActivationCodeAsRedeemed(
     }
     
     await updateDoc(codeRef, updates);
+    
+    // Create admin notification about the activation
+    if (masterAccountName) {
+      await notifyActivationCodeRedeemed(
+        redeemedBy,
+        masterAccountName,
+        codeId,
+        accountType,
+        companyName
+      );
+    }
     
     console.log('[ActivationCode] Code marked as redeemed');
     return { success: true };

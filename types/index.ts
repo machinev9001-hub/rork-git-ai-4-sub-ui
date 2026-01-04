@@ -1,5 +1,16 @@
 export type AccountType = 'enterprise' | 'free';
 
+/**
+ * VAS Subscription State
+ * Manages the lifecycle of a VAS subscription
+ */
+export type VASSubscriptionState = 
+  | 'INACTIVE'           // Not subscribed
+  | 'TRIAL_ACTIVE'       // In trial period
+  | 'PAYMENT_PENDING'    // Trial ended, awaiting payment
+  | 'ACTIVE'             // Fully active with payment
+  | 'SUSPENDED';         // Suspended due to non-payment or admin action
+
 export type VASFeatureId =
   | 'analytics'
   | 'reporting'
@@ -20,6 +31,67 @@ export type VASFeature = {
   description: string;
   price?: string;
   isActive: boolean;
+};
+
+/**
+ * VAS Subscription
+ * Tracks individual VAS feature subscription with trial and payment states
+ */
+export type VASSubscription = {
+  id?: string;
+  masterAccountId: string;
+  featureId: VASFeatureId;
+  featureName: string;
+  state: VASSubscriptionState;
+  trialStartDate?: any;           // When trial started
+  trialEndDate?: any;             // When trial expires (typically 12 days)
+  activationDate?: any;           // When fully activated with payment
+  suspensionDate?: any;           // When suspended
+  suspensionReason?: string;      // Why suspended
+  lastPaymentDate?: any;          // Last payment received
+  nextPaymentDue?: any;           // Next payment due date
+  price?: number;                 // Monthly price
+  currency?: string;              // Currency code (e.g., 'USD')
+  autoRenew?: boolean;            // Auto-renewal enabled
+  notes?: string;
+  createdAt: any;
+  updatedAt?: any;
+  createdBy: string;              // MasterAccountId who created
+};
+
+/**
+ * Admin Notification Type
+ */
+export type AdminNotificationType =
+  | 'ACTIVATION_CODE_REDEEMED'    // Enterprise account activated
+  | 'VAS_SUBSCRIPTION_STARTED'    // VAS subscription trial started
+  | 'VAS_SUBSCRIPTION_ACTIVATED'  // VAS subscription fully activated
+  | 'VAS_TRIAL_EXPIRING'          // VAS trial expiring soon
+  | 'VAS_TRIAL_EXPIRED'           // VAS trial expired
+  | 'VAS_PAYMENT_PENDING'         // Payment pending
+  | 'VAS_SUSPENDED'               // Subscription suspended
+  | 'GENERAL';                    // General admin notification
+
+/**
+ * Admin Notification
+ * Notifications for system admins about subscription events
+ */
+export type AdminNotification = {
+  id?: string;
+  type: AdminNotificationType;
+  title: string;
+  message: string;
+  masterAccountId?: string;       // Related master account
+  masterAccountName?: string;     // Account name for display
+  activationCodeId?: string;      // Related activation code
+  vasSubscriptionId?: string;     // Related VAS subscription
+  featureId?: VASFeatureId;       // Related feature
+  isRead: boolean;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  metadata?: Record<string, any>; // Additional data
+  createdAt: any;
+  readAt?: any;
+  readBy?: string;                // Admin who read it
 };
 
 export type FeatureFlags = {
