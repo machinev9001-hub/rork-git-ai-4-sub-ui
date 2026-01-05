@@ -49,11 +49,13 @@ const [isNavigatorReady, setIsNavigatorReady] = useState(false);
 
 // 2. Added useEffect to mark navigator as ready after mounting
 useEffect(() => {
+  // Call onReady synchronously to notify parent immediately
+  onReady();
+  
   // Use InteractionManager to wait for all interactions and animations to complete
   // This is more reliable than a fixed timeout as it waits for actual readiness
   const interaction = InteractionManager.runAfterInteractions(() => {
     setIsNavigatorReady(true);
-    onReady();
   });
   
   return () => interaction.cancel();
@@ -140,7 +142,7 @@ This fix addresses the common Expo Router error when:
 To prevent similar issues in the future:
 
 1. ✅ Always check navigator readiness before programmatic navigation
-2. ✅ Use proper timing controls (setTimeout, useEffect)
+2. ✅ Use proper timing controls (InteractionManager, useEffect)
 3. ✅ Add comprehensive logging for debugging race conditions
 4. ✅ Test cold starts and various auth states
 

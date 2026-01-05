@@ -165,12 +165,14 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
   // attempts occur. Without this, there's a race condition where auth initialization
   // completes and triggers navigation before the navigator is ready to handle it.
   useEffect(() => {
+    // Call onReady synchronously to notify parent immediately
+    onReady();
+    
     // Use InteractionManager to wait for all interactions and animations to complete
     // This is more reliable than a fixed timeout as it waits for actual readiness
     const interaction = InteractionManager.runAfterInteractions(() => {
       console.log('[RootLayoutNav] Navigator marked as ready after interactions complete');
       setIsNavigatorReady(true);
-      onReady();
     });
     
     return () => interaction.cancel();
