@@ -49,12 +49,14 @@ const [isNavigatorReady, setIsNavigatorReady] = useState(false);
 
 // 2. Added useEffect to mark navigator as ready after mounting
 useEffect(() => {
-  const timer = setTimeout(() => {
+  // Use InteractionManager to wait for all interactions and animations to complete
+  // This is more reliable than a fixed timeout as it waits for actual readiness
+  const interaction = InteractionManager.runAfterInteractions(() => {
     setIsNavigatorReady(true);
     onReady();
-  }, 100); // Small delay to ensure Stack is mounted
+  });
   
-  return () => clearTimeout(timer);
+  return () => interaction.cancel();
 }, [onReady]);
 
 // 3. Added guard in navigation logic
@@ -79,9 +81,10 @@ useEffect(() => {
 Time 0ms:   App starts
 Time 50ms:  Auth loading completes → authInitializing = false
 Time 55ms:  Navigation logic checks isNavigatorReady → false, waits
-Time 100ms: Navigator ready → isNavigatorReady = true
-Time 105ms: Navigation logic triggers → router.replace('/tabs')
-Time 110ms: ✅ Navigation succeeds!
+Time 90ms:  All interactions complete (InteractionManager callback)
+Time 95ms:  Navigator ready → isNavigatorReady = true
+Time 100ms: Navigation logic triggers → router.replace('/tabs')
+Time 105ms: ✅ Navigation succeeds!
 ```
 
 ## Testing

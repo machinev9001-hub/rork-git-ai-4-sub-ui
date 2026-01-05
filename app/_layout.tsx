@@ -165,14 +165,15 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
   // attempts occur. Without this, there's a race condition where auth initialization
   // completes and triggers navigation before the navigator is ready to handle it.
   useEffect(() => {
-    // Wait for the Stack component to be fully mounted
-    const timer = setTimeout(() => {
-      console.log('[RootLayoutNav] Navigator marked as ready');
+    // Use InteractionManager to wait for all interactions and animations to complete
+    // This is more reliable than a fixed timeout as it waits for actual readiness
+    const interaction = InteractionManager.runAfterInteractions(() => {
+      console.log('[RootLayoutNav] Navigator marked as ready after interactions complete');
       setIsNavigatorReady(true);
       onReady();
-    }, 100); // Small delay to ensure Stack is mounted
+    });
     
-    return () => clearTimeout(timer);
+    return () => interaction.cancel();
   }, [onReady]);
 
   useEffect(() => {
