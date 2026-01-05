@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, router, usePathname } from "expo-router";
-import React, { useEffect, Component, ErrorInfo, ReactNode, useCallback, useRef } from "react";
+import React, { useEffect, Component, ErrorInfo, ReactNode, useCallback, useRef, useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Platform, ActivityIndicator, InteractionManager, LayoutChangeEvent } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootSiblingParent } from 'react-native-root-siblings';
@@ -140,6 +140,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
   const qrLoginInProgress = useRef(false);
   const pathname = usePathname();
   const previousUserIdRef = useRef<string | null>(null);
+  const [isNavigatorReady, setIsNavigatorReady] = useState(false);
 
   // Debug logging
   useEffect(() => {
@@ -149,21 +150,43 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
       hasUser: !!user,
       userRole: user?.role,
       hasMasterAccount: !!masterAccount,
-      pathname
+      pathname,
+      isNavigatorReady
     }));
     
     if (user) {
       console.log('[RootLayoutNav Debug] User details:', JSON.stringify(user));
     }
-  }, [isLoading, authInitializing, user, masterAccount, pathname]);
+  }, [isLoading, authInitializing, user, masterAccount, pathname, isNavigatorReady]);
 
+  // Mark navigator as ready after render completes
+  // FIX for "Attempted to navigate before mounting the Root Layout component" error:
+  // This useEffect ensures the Stack navigator is fully mounted before any navigation
+  // attempts occur. Without this, there's a race condition where auth initialization
+  // completes and triggers navigation before the navigator is ready to handle it.
   useEffect(() => {
+    // Call onReady synchronously to notify parent immediately
     onReady();
+    
+    // Use InteractionManager to wait for all interactions and animations to complete
+    // This is more reliable than a fixed timeout as it waits for actual readiness
+    const interaction = InteractionManager.runAfterInteractions(() => {
+      console.log('[RootLayoutNav] Navigator marked as ready after interactions complete');
+      setIsNavigatorReady(true);
+    });
+    
+    return () => interaction.cancel();
   }, [onReady]);
 
   useEffect(() => {
+    // CRITICAL FIX: Only perform navigation when BOTH auth is ready AND navigator is mounted
     if (authInitializing || isLoading) {
       console.log('[RootLayoutNav] Auth initializing or loading, waiting...', { authInitializing, isLoading });
+      return;
+    }
+    
+    if (!isNavigatorReady) {
+      console.log('[RootLayoutNav] Navigator not ready yet, deferring navigation');
       return;
     }
     
@@ -304,7 +327,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
     }
     
     return () => { isActive = false; };
-  }, [user, masterAccount, isLoading, authInitializing, pathname]);
+  }, [user, masterAccount, isLoading, authInitializing, pathname, isNavigatorReady]);
 
   if (isLoading || authInitializing) {
     console.log('[RootLayout] Rendering loading screen...', { isLoading, authInitializing });
