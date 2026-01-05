@@ -160,6 +160,10 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
   }, [isLoading, authInitializing, user, masterAccount, pathname, isNavigatorReady]);
 
   // Mark navigator as ready after render completes
+  // FIX for "Attempted to navigate before mounting the Root Layout component" error:
+  // This useEffect ensures the Stack navigator is fully mounted before any navigation
+  // attempts occur. Without this, there's a race condition where auth initialization
+  // completes and triggers navigation before the navigator is ready to handle it.
   useEffect(() => {
     // Wait for the Stack component to be fully mounted
     const timer = setTimeout(() => {
