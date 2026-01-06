@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Modal, Platform, Pressable } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { 
   LayoutDashboard, 
@@ -597,11 +597,21 @@ export default function DashboardFilterSidebar({
         animationType="fade"
         onRequestClose={() => setShowWeekPicker(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setShowWeekPicker(false)}
+        >
+          <Pressable
+            style={styles.modalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Week</Text>
-              <TouchableOpacity onPress={() => setShowWeekPicker(false)} style={styles.modalClose}>
+              <TouchableOpacity 
+                onPress={() => setShowWeekPicker(false)} 
+                style={styles.modalClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <X size={20} color="#5f6368" />
               </TouchableOpacity>
             </View>
@@ -625,10 +635,11 @@ export default function DashboardFilterSidebar({
               <DateTimePicker
                 value={tempWeekDate}
                 mode="date"
-                display="spinner"
+                display="default"
                 onChange={(event, selectedDate) => {
                   if (selectedDate) setTempWeekDate(selectedDate);
                 }}
+                style={{ height: 200 }}
               />
             )}
 
@@ -636,18 +647,20 @@ export default function DashboardFilterSidebar({
               <TouchableOpacity
                 style={styles.modalButtonCancel}
                 onPress={() => setShowWeekPicker(false)}
+                activeOpacity={0.7}
               >
                 <Text style={styles.modalButtonCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalButtonConfirm}
                 onPress={handleWeekDateConfirm}
+                activeOpacity={0.7}
               >
                 <Text style={styles.modalButtonConfirmText}>Apply</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
 
       <Modal
@@ -656,11 +669,21 @@ export default function DashboardFilterSidebar({
         animationType="fade"
         onRequestClose={() => setShowMonthPicker(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <Pressable 
+          style={styles.modalOverlay}
+          onPress={() => setShowMonthPicker(false)}
+        >
+          <Pressable
+            style={styles.modalContent}
+            onPress={(e) => e.stopPropagation()}
+          >
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Select Month</Text>
-              <TouchableOpacity onPress={() => setShowMonthPicker(false)} style={styles.modalClose}>
+              <TouchableOpacity 
+                onPress={() => setShowMonthPicker(false)} 
+                style={styles.modalClose}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
                 <X size={20} color="#5f6368" />
               </TouchableOpacity>
             </View>
@@ -687,10 +710,11 @@ export default function DashboardFilterSidebar({
               <DateTimePicker
                 value={tempMonthDate}
                 mode="date"
-                display="spinner"
+                display="default"
                 onChange={(event, selectedDate) => {
                   if (selectedDate) setTempMonthDate(selectedDate);
                 }}
+                style={{ height: 200 }}
               />
             )}
 
@@ -698,18 +722,20 @@ export default function DashboardFilterSidebar({
               <TouchableOpacity
                 style={styles.modalButtonCancel}
                 onPress={() => setShowMonthPicker(false)}
+                activeOpacity={0.7}
               >
                 <Text style={styles.modalButtonCancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalButtonConfirm}
                 onPress={handleMonthDateConfirm}
+                activeOpacity={0.7}
               >
                 <Text style={styles.modalButtonConfirmText}>Apply</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </Pressable>
+        </Pressable>
       </Modal>
     </View>
   );
