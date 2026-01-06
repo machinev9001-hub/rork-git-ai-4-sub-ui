@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Clock, Users, AlertTriangle } from 'lucide-react-native';
+import { Clock, Users, AlertTriangle, Fuel } from 'lucide-react-native';
 
 export default function BillingMenuScreen() {
   const insets = useSafeAreaInsets();
@@ -30,6 +30,14 @@ export default function BillingMenuScreen() {
       icon: Users,
       color: '#22c55e',
       route: '/emh-menu',
+    },
+    {
+      id: 'diesel',
+      title: 'Diesel Report',
+      description: 'View and export fuel log reports for subcontractors',
+      icon: Fuel,
+      color: '#f59e0b',
+      route: '/diesel-report',
     },
     {
       id: 'dumbass',
