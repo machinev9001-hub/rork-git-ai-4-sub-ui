@@ -918,6 +918,9 @@ export type PlantAsset = {
   billingMethod?: 'PER_HOUR' | 'MINIMUM_BILLING';
   ratesSetAt?: any;
   ratesSetBy?: string;
+  meterType?: 'HOUR_METER' | 'ODOMETER';
+  lastMeterReading?: number;
+  lastMeterReadingDate?: string;
   archived?: boolean;
   archivedAt?: any;
   archivedBy?: string;

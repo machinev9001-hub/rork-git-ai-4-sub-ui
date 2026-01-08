@@ -20,6 +20,8 @@ type FuelLogEntry = {
   ownerId?: string;
   ownerType?: 'company' | 'subcontractor';
   notes?: string;
+  meterDifference?: number;
+  consumptionRate?: number;
 };
 
 type DieselReportOptions = {
@@ -192,6 +194,15 @@ export async function generateDieselReportPDF(options: DieselReportOptions): Pro
       color: #f59e0b;
     }
     
+    .consumption-rate {
+      font-weight: 600;
+      color: #15803d;
+      background: #f0fdf4;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
+    }
+    
     .notes-cell {
       font-size: 9px;
       color: #64748b;
@@ -279,13 +290,14 @@ export async function generateDieselReportPDF(options: DieselReportOptions): Pro
       <tr>
         <th>Date</th>
         <th>Plant No.</th>
-        <th>Site No.</th>
+        <th>Reg No.</th>
         <th>Owner</th>
         <th>Type</th>
-        <th>Refueled By</th>
-        <th>Machine Hours</th>
+        <th>Meter Reading</th>
         <th>Fuel (L)</th>
-        <th>Notes</th>
+        <th>Usage</th>
+        <th>Consumption</th>
+        <th>Logged By</th>
       </tr>
     </thead>
     <tbody>
@@ -296,16 +308,17 @@ export async function generateDieselReportPDF(options: DieselReportOptions): Pro
           <td>${log.registrationNumber || '-'}</td>
           <td>${log.ownerName || '-'}</td>
           <td>${log.assetType}</td>
-          <td>${log.loggedByName}</td>
-          <td>${log.meterReading} ${log.meterType === 'HOUR_METER' ? 'hrs' : 'km'}</td>
+          <td>${log.meterReading.toFixed(1)} ${log.meterType === 'HOUR_METER' ? 'hrs' : 'km'}</td>
           <td class="fuel-amount">${log.fuelAmount.toFixed(2)}</td>
-          <td class="notes-cell">${log.notes || '-'}</td>
+          <td>${log.meterDifference !== undefined && log.meterDifference > 0 ? `${log.meterDifference.toFixed(1)} ${log.meterType === 'HOUR_METER' ? 'hrs' : 'km'}` : '-'}</td>
+          <td>${log.consumptionRate !== undefined && log.consumptionRate > 0 ? `<span class="consumption-rate">${log.consumptionRate.toFixed(2)} ${log.meterType === 'HOUR_METER' ? 'L/h' : 'L/km'}</span>` : '-'}</td>
+          <td>${log.loggedByName}</td>
         </tr>
       `).join('')}
       <tr class="total-row">
-        <td colspan="7" style="text-align: right;">TOTAL FUEL:</td>
+        <td colspan="6" style="text-align: right;">TOTAL FUEL:</td>
         <td class="fuel-amount">${totalFuel.toFixed(2)} L</td>
-        <td></td>
+        <td colspan="3"></td>
       </tr>
     </tbody>
   </table>

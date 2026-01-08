@@ -53,6 +53,8 @@ type FuelLogEntry = {
   ownerId?: string;
   ownerType?: 'company' | 'subcontractor';
   notes?: string;
+  meterDifference?: number;
+  consumptionRate?: number;
 };
 
 type Subcontractor = {
@@ -148,6 +150,41 @@ export default function DieselReportScreen() {
         selectedSubcontractors.has(log.ownerId)
       );
     }
+
+    logs = calculateConsumption(logs);
+
+    return logs;
+  };
+
+  const calculateConsumption = (logs: FuelLogEntry[]): FuelLogEntry[] => {
+    const assetGroups: { [assetId: string]: FuelLogEntry[] } = {};
+    
+    logs.forEach(log => {
+      if (!assetGroups[log.assetId]) {
+        assetGroups[log.assetId] = [];
+      }
+      assetGroups[log.assetId].push(log);
+    });
+
+    Object.keys(assetGroups).forEach(assetId => {
+      const assetLogs = assetGroups[assetId].sort((a, b) => 
+        new Date(a.date).getTime() - new Date(b.date).getTime()
+      );
+
+      for (let i = 1; i < assetLogs.length; i++) {
+        const currentLog = assetLogs[i];
+        const previousLog = assetLogs[i - 1];
+
+        if (currentLog.meterType === previousLog.meterType) {
+          const meterDiff = currentLog.meterReading - previousLog.meterReading;
+          
+          if (meterDiff > 0) {
+            currentLog.meterDifference = meterDiff;
+            currentLog.consumptionRate = currentLog.fuelAmount / meterDiff;
+          }
+        }
+      }
+    });
 
     return logs;
   };
@@ -532,9 +569,11 @@ export default function DieselReportScreen() {
                   <Text style={styles.logValue}>{log.loggedByName}</Text>
                 </View>
                 <View style={styles.logRow}>
-                  <Text style={styles.logLabel}>Machine Hours:</Text>
+                  <Text style={styles.logLabel}>
+                    {log.meterType === 'HOUR_METER' ? 'Hour Meter Reading:' : 'Odometer Reading:'}
+                  </Text>
                   <Text style={styles.logValue}>
-                    {log.meterReading} {log.meterType === 'HOUR_METER' ? 'hrs' : 'km'}
+                    {log.meterReading.toFixed(1)} {log.meterType === 'HOUR_METER' ? 'hrs' : 'km'}
                   </Text>
                 </View>
                 <View style={styles.logRow}>
@@ -543,6 +582,24 @@ export default function DieselReportScreen() {
                     {log.fuelAmount.toFixed(2)} L
                   </Text>
                 </View>
+                {log.meterDifference !== undefined && log.meterDifference > 0 && (
+                  <>
+                    <View style={styles.logRow}>
+                      <Text style={styles.logLabel}>
+                        {log.meterType === 'HOUR_METER' ? 'Hours Worked:' : 'Distance Traveled:'}
+                      </Text>
+                      <Text style={styles.logValue}>
+                        {log.meterDifference.toFixed(1)} {log.meterType === 'HOUR_METER' ? 'hrs' : 'km'}
+                      </Text>
+                    </View>
+                    <View style={[styles.logRow, styles.consumptionRow]}>
+                      <Text style={styles.logLabel}>Fuel Consumption:</Text>
+                      <Text style={[styles.logValue, styles.consumptionValue]}>
+                        {log.consumptionRate?.toFixed(2)} {log.meterType === 'HOUR_METER' ? 'L/h' : 'L/km'}
+                      </Text>
+                    </View>
+                  </>
+                )}
                 {log.notes && (
                   <View style={styles.logRow}>
                     <Text style={styles.logLabel}>Notes:</Text>
@@ -1027,6 +1084,18 @@ const styles = StyleSheet.create({
   fuelAmount: {
     color: '#f59e0b',
     fontSize: 15,
+  },
+  consumptionRow: {
+    backgroundColor: '#f0fdf4',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginTop: 4,
+  },
+  consumptionValue: {
+    color: '#15803d',
+    fontWeight: '700' as const,
+    fontSize: 14,
   },
   modalOverlay: {
     flex: 1,
