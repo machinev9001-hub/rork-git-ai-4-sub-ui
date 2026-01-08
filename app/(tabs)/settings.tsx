@@ -1,7 +1,7 @@
 import { Stack, useRouter } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
-import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, CreditCard, MapPin, Plus, Users, Truck } from 'lucide-react-native';
+import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, CreditCard, MapPin, Plus, Users, Truck, Fuel } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
 import { useAccountType } from '@/utils/hooks/useFeatureFlags';
@@ -586,6 +586,21 @@ export default function SettingsScreen() {
                         <View style={styles.subMenuContent}>
                           <Text style={styles.subMenuTitle}>Progress Report</Text>
                           <Text style={styles.subMenuDescription}>Track project progress</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.subMenuCard}>
+                      <TouchableOpacity 
+                        style={styles.subMenuItem}
+                        onPress={() => router.push('/diesel-report' as any)}
+                      >
+                        <View style={styles.subMenuIcon}>
+                          <Fuel size={20} color="#8b5cf6" />
+                        </View>
+                        <View style={styles.subMenuContent}>
+                          <Text style={styles.subMenuTitle}>Diesel Report</Text>
+                          <Text style={styles.subMenuDescription}>View and export fuel logs</Text>
                         </View>
                       </TouchableOpacity>
                     </View>
