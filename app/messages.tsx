@@ -133,41 +133,92 @@ export default function MessagesScreen() {
   }, [user?.userId, user?.siteId]);
 
   const loadSiteUsers = async () => {
-    if (!user?.siteId) return;
+    if (!user?.siteId || !user?.currentCompanyId) return;
 
     try {
       console.log('[Messages] Loading site users for siteId:', user.siteId);
-      console.log('[Messages] Current user.companyName:', user.companyName);
+      console.log('[Messages] Current user.companyId:', user.currentCompanyId);
       
       const employeesRef = collection(db, 'employees');
-      const employeesQuery = query(employeesRef, where('siteId', '==', user.siteId));
-      const employeesSnapshot = await getDocs(employeesQuery);
+      
+      // Query 1: Employees directly assigned to this site
+      const siteEmployeesQuery = query(employeesRef, where('siteId', '==', user.siteId));
+      const siteEmployeesSnapshot = await getDocs(siteEmployeesQuery);
+      console.log('[Messages] Found', siteEmployeesSnapshot.docs.length, 'site-level employees');
 
-      console.log('[Messages] Found', employeesSnapshot.docs.length, 'raw employee documents');
+      // Query 2: Company-level employees
+      const companyEmployeesQuery = query(
+        employeesRef,
+        where('companyId', '==', user.currentCompanyId)
+      );
+      const companyEmployeesSnapshot = await getDocs(companyEmployeesQuery);
+      console.log('[Messages] Found', companyEmployeesSnapshot.docs.length, 'company-level employees');
 
-      const employees = employeesSnapshot.docs.map(doc => {
+      // Query 3: Get employee-site links for this site
+      const employeeSiteLinksRef = collection(db, 'employeeSiteLinks');
+      const linksQuery = query(
+        employeeSiteLinksRef,
+        where('siteId', '==', user.siteId),
+        where('isActive', '==', true)
+      );
+      const linksSnapshot = await getDocs(linksQuery);
+      const linkedEmployeeIds = new Set(linksSnapshot.docs.map(doc => doc.data().employeeId));
+      console.log('[Messages] Found', linkedEmployeeIds.size, 'active employee-site links');
+
+      const employeeMap = new Map<string, SiteUser>();
+
+      // Add site-level employees
+      siteEmployeesSnapshot.docs.forEach(doc => {
         const data = doc.data();
-        
         const displayName = data.name || data.employeeIdNumber || doc.id;
-        
-        console.log('[Messages] Employee doc:', {
-          id: doc.id,
-          name: data.name,
-          employeeIdNumber: data.employeeIdNumber,
-          calculatedName: displayName,
-          role: data.role,
-          linkedUserRole: data.linkedUserRole,
-          siteId: data.siteId,
-        });
-        return {
+        employeeMap.set(doc.id, {
           id: doc.id,
           name: displayName,
           role: (data.linkedUserRole || data.role || 'General Worker') as UserRole,
-        };
-      }).filter(emp => emp.id !== user.userId);
+        });
+      });
 
-      console.log('[Messages] Processed', employees.length, 'employees after filtering out current user');
-      console.log('[Messages] Sample employees:', employees.slice(0, 3));
+      // Add company-level employees who are linked to this site
+      companyEmployeesSnapshot.docs.forEach(doc => {
+        const data = doc.data();
+        
+        // Include if:
+        // 1. Linked to this site via employeeSiteLinks
+        // 2. Has 'all-sites' access scope
+        // 3. Already in site-level employees (handled above)
+        const hasLinkAccess = linkedEmployeeIds.has(doc.id);
+        const hasAllSitesAccess = data.accessScope === 'all-sites';
+        const alreadyAdded = employeeMap.has(doc.id);
+        
+        if ((hasLinkAccess || hasAllSitesAccess) && !alreadyAdded) {
+          const displayName = data.name || data.employeeIdNumber || doc.id;
+          console.log('[Messages] Adding company-level employee:', {
+            id: doc.id,
+            name: displayName,
+            role: data.role,
+            accessScope: data.accessScope,
+            hasLinkAccess,
+            hasAllSitesAccess,
+          });
+          employeeMap.set(doc.id, {
+            id: doc.id,
+            name: displayName,
+            role: (data.linkedUserRole || data.role || 'General Worker') as UserRole,
+          });
+        }
+      });
+
+      // Filter out current user
+      const employees = Array.from(employeeMap.values()).filter(emp => emp.id !== user.userId);
+
+      console.log('[Messages] Total unique employees available:', employees.length);
+      console.log('[Messages] Roles breakdown:', 
+        employees.reduce((acc, emp) => {
+          acc[emp.role] = (acc[emp.role] || 0) + 1;
+          return acc;
+        }, {} as Record<string, number>)
+      );
+      
       setAllSiteUsers(employees);
     } catch (error) {
       console.error('❌ Error loading site users:', error);
