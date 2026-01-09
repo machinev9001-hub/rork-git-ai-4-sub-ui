@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/contexts/PermissionsContext';
 import { Camera, CheckCircle2, AlertCircle, User } from 'lucide-react-native';
 import { captureFaceImage, runLivenessCheck, computeEmbedding } from '@/utils/faceCapture';
 import { saveLocalTemplate, hasLocalTemplate } from '@/utils/secureFaceStore';
@@ -18,7 +19,9 @@ import { saveLocalTemplate, hasLocalTemplate } from '@/utils/secureFaceStore';
 export default function FaceEnrollmentScreen() {
   const router = useRouter();
   const { user } = useAuth();
+  const { canEnrollFace } = usePermissions();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [hasPermission, setHasPermission] = useState(false);
   const [currentStep, setCurrentStep] = useState<'idle' | 'capturing' | 'liveness' | 'embedding' | 'saving'>('idle');
   const [hasEnrolled, setHasEnrolled] = useState(false);
 
@@ -32,7 +35,25 @@ export default function FaceEnrollmentScreen() {
     checkEnrollmentStatus();
   }, [checkEnrollmentStatus]);
 
+  React.useEffect(() => {
+    if (user?.role) {
+      const userType = user.role === 'master' ? 'Master' : user.role;
+      const canEnroll = canEnrollFace(userType as any);
+      setHasPermission(canEnroll);
+      console.log('[FaceEnrollment] User type:', userType, 'Can enroll:', canEnroll);
+    }
+  }, [user?.role, canEnrollFace]);
+
   const handleEnroll = async () => {
+    if (!hasPermission) {
+      Alert.alert(
+        'Permission Denied',
+        'You do not have permission to enroll faces. Please contact your administrator.',
+        [{ text: 'OK', onPress: () => router.back() }]
+      );
+      return;
+    }
+
     if (!user?.id || !user?.name) {
       Alert.alert('Error', 'User information not available');
       return;
@@ -162,12 +183,23 @@ export default function FaceEnrollmentScreen() {
           </View>
         </View>
 
-        <View style={styles.infoCard}>
-          <AlertCircle size={20} color="#F59E0B" />
-          <Text style={styles.infoText}>
-            Your face data is encrypted and stored securely on your device and server.
-          </Text>
-        </View>
+        {!hasPermission && (
+          <View style={[styles.infoCard, { backgroundColor: '#FEE2E2' }]}>
+            <AlertCircle size={20} color="#DC2626" />
+            <Text style={[styles.infoText, { color: '#991B1B' }]}>
+              You do not have permission to enroll faces. Contact your administrator for access.
+            </Text>
+          </View>
+        )}
+
+        {hasPermission && (
+          <View style={styles.infoCard}>
+            <AlertCircle size={20} color="#F59E0B" />
+            <Text style={styles.infoText}>
+              Your face data is encrypted and stored securely on your device and server.
+            </Text>
+          </View>
+        )}
 
         {isProcessing && (
           <View style={styles.progressCard}>
@@ -177,13 +209,13 @@ export default function FaceEnrollmentScreen() {
         )}
 
         <TouchableOpacity
-          style={[styles.enrollButton, isProcessing && styles.enrollButtonDisabled]}
+          style={[styles.enrollButton, (isProcessing || !hasPermission) && styles.enrollButtonDisabled]}
           onPress={handleEnroll}
-          disabled={isProcessing}
+          disabled={isProcessing || !hasPermission}
         >
           <Camera size={24} color="#FFF" />
           <Text style={styles.enrollButtonText}>
-            {hasEnrolled ? 'Re-enroll Face' : 'Start Enrollment'}
+            {!hasPermission ? 'Permission Required' : hasEnrolled ? 'Re-enroll Face' : 'Start Enrollment'}
           </Text>
         </TouchableOpacity>
       </ScrollView>

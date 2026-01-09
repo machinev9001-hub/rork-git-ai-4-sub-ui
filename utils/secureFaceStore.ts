@@ -3,6 +3,7 @@ import { collection, query, where, getDocs, addDoc, updateDoc, doc, serverTimest
 import { db } from '@/config/firebase';
 
 const FACE_TEMPLATE_KEY = '@face_templates';
+const SITE_TEMPLATES_CACHE_KEY = '@site_face_templates';
 
 export type EncryptedTemplate = {
   userId: string;
@@ -227,4 +228,91 @@ export async function deleteLocalTemplate(userId: string): Promise<void> {
 export async function hasLocalTemplate(userId: string): Promise<boolean> {
   const template = await getLocalTemplate(userId);
   return template !== null;
+}
+
+export async function syncSiteTemplatesForOffline(
+  siteId: string,
+  masterAccountId: string
+): Promise<{ success: boolean; count: number; error?: string }> {
+  try {
+    console.log('[SecureFaceStore] Syncing site templates for offline use:', siteId);
+    
+    const templatesRef = collection(db, 'faceTemplates');
+    const q = query(
+      templatesRef,
+      where('siteId', '==', siteId),
+      where('masterAccountId', '==', masterAccountId),
+      where('isActive', '==', true)
+    );
+    const snapshot = await getDocs(q);
+
+    const siteTemplates: EncryptedTemplate[] = [];
+    snapshot.forEach((doc) => {
+      const data = doc.data();
+      const template: EncryptedTemplate = {
+        userId: data.userId,
+        userName: data.userName,
+        encryptedEmbedding: data.encryptedEmbedding,
+        encryptionSalt: data.encryptionSalt,
+        version: data.version || 1,
+        enrolledAt: data.enrolledAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        isActive: data.isActive,
+        facePhotoUri: data.facePhotoUri,
+      };
+      siteTemplates.push(template);
+    });
+
+    await AsyncStorage.setItem(
+      `${SITE_TEMPLATES_CACHE_KEY}_${siteId}`,
+      JSON.stringify({
+        siteId,
+        masterAccountId,
+        templates: siteTemplates,
+        syncedAt: new Date().toISOString(),
+      })
+    );
+
+    console.log(
+      '[SecureFaceStore] Site templates synced:',
+      siteTemplates.length,
+      'templates cached for offline use'
+    );
+    return { success: true, count: siteTemplates.length };
+  } catch (error) {
+    console.error('[SecureFaceStore] Error syncing site templates:', error);
+    return { success: false, count: 0, error: 'Failed to sync site templates' };
+  }
+}
+
+export async function invalidateUserTemplate(userId: string): Promise<void> {
+  try {
+    console.log('[SecureFaceStore] Invalidating template for user:', userId);
+    
+    const storedTemplates = await AsyncStorage.getItem(FACE_TEMPLATE_KEY);
+    if (storedTemplates) {
+      const templates: EncryptedTemplate[] = JSON.parse(storedTemplates);
+      const updated = templates.map(t => 
+        t.userId === userId ? { ...t, isActive: false } : t
+      );
+      await AsyncStorage.setItem(FACE_TEMPLATE_KEY, JSON.stringify(updated));
+    }
+
+    const keys = await AsyncStorage.getAllKeys();
+    const siteKeys = keys.filter(key => key.startsWith(SITE_TEMPLATES_CACHE_KEY));
+    
+    for (const key of siteKeys) {
+      const cacheData = await AsyncStorage.getItem(key);
+      if (cacheData) {
+        const cache = JSON.parse(cacheData);
+        cache.templates = cache.templates.map((t: EncryptedTemplate) =>
+          t.userId === userId ? { ...t, isActive: false } : t
+        );
+        await AsyncStorage.setItem(key, JSON.stringify(cache));
+      }
+    }
+    
+    console.log('[SecureFaceStore] Template invalidated in all caches');
+  } catch (error) {
+    console.error('[SecureFaceStore] Error invalidating template:', error);
+  }
 }

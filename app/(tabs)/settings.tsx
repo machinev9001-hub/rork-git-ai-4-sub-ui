@@ -723,7 +723,10 @@ export default function SettingsScreen() {
 
                   {user?.role === 'master' && (
                     <View style={styles.subMenuCard}>
-                      <TouchableOpacity style={styles.subMenuItem}>
+                      <TouchableOpacity 
+                        style={styles.subMenuItem}
+                        onPress={() => router.push('/permissions-management' as any)}
+                      >
                         <View style={styles.subMenuIcon}>
                           <UserIcon size={20} color="#8B5CF6" />
                         </View>

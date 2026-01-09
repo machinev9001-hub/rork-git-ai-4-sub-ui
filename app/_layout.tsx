@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { RootSiblingParent } from 'react-native-root-siblings';
 import { LinearGradient } from 'expo-linear-gradient';
 import { AuthProvider, useAuth } from "../contexts/AuthContext";
+import { PermissionsProvider } from "../contexts/PermissionsContext";
 import { isManagementRole, isOperatorRole } from "../utils/roles";
 import OfflineBanner from "../components/OfflineBanner";
 import { offlineQueue } from "../utils/offlineQueue";
@@ -554,11 +555,13 @@ export default function RootLayout() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <RootSiblingParent>
-            <GestureHandlerRootView style={{ flex: 1 }} onLayout={handleRootLayout}>
-              <RootLayoutNav onReady={handleNavReady} />
-            </GestureHandlerRootView>
-          </RootSiblingParent>
+          <PermissionsProvider>
+            <RootSiblingParent>
+              <GestureHandlerRootView style={{ flex: 1 }} onLayout={handleRootLayout}>
+                <RootLayoutNav onReady={handleNavReady} />
+              </GestureHandlerRootView>
+            </RootSiblingParent>
+          </PermissionsProvider>
         </AuthProvider>
       </QueryClientProvider>
     </ErrorBoundary>

@@ -37,9 +37,6 @@ import {
 import { collection, addDoc, serverTimestamp, doc, getDoc } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import type { LatLon, Site } from '@/types';
-import type { UserRole } from '@/contexts/AuthContext';
-
-const ALLOWED_ROLES = new Set<UserRole>(['Planner', 'Supervisor', 'HSE', 'HR']);
 
 type ClockStep =
   | 'idle'
@@ -83,12 +80,6 @@ export default function FaceClockScreen() {
   const handleFaceClock = async (isClockIn: boolean) => {
     if (!user || !site) {
       Alert.alert('Error', 'User or site information not available');
-      return;
-    }
-
-    const hasPermission = ALLOWED_ROLES.has(user.role);
-    if (!hasPermission) {
-      Alert.alert('Permission Denied', "You don&apos;t have permission to use face clock-in");
       return;
     }
 
@@ -303,10 +294,7 @@ export default function FaceClockScreen() {
     }
   };
 
-  const canUseFaceClock =
-    user &&
-    ALLOWED_ROLES.has(user.role) &&
-    site?.faceClockInEnabled;
+  const canUseFaceClock = user && site?.faceClockInEnabled;
 
   return (
     <View style={styles.container}>
@@ -332,9 +320,7 @@ export default function FaceClockScreen() {
             <View style={styles.warningTextContainer}>
               <Text style={styles.warningTitle}>Not Available</Text>
               <Text style={styles.warningText}>
-                {!site?.faceClockInEnabled
-                  ? 'Face clock-in is not enabled for this site.'
-                  : "You don&apos;t have permission to use face clock-in."}
+                Face clock-in is not enabled for this site. Please contact your administrator.
               </Text>
             </View>
           </View>
@@ -399,8 +385,7 @@ export default function FaceClockScreen() {
         <View style={styles.infoCard}>
           <AlertCircle size={20} color="#6366F1" />
           <Text style={styles.infoText}>
-            Make sure you&apos;re within the allowed radius and have enrolled your face before using this
-            feature.
+            Face clock-in is available to all users. Make sure you&apos;re within the allowed radius and have enrolled your face before using this feature.
           </Text>
         </View>
 

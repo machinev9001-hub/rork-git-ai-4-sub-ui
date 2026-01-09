@@ -1436,6 +1436,55 @@ export type OwnershipChangeRequest = {
 /**
  * Enhanced Audit Log for Master Account Operations
  */
+/**
+ * User Type for Permissions
+ * Represents different user roles that can have permissions assigned
+ */
+export type UserTypeForPermissions = 
+  | 'Master'
+  | 'Planner'
+  | 'HR'
+  | 'HSE'
+  | 'Plant Manager'
+  | 'Supervisor'
+  | 'Employee'
+  | 'Operator'
+  | 'Staff Manager'
+  | 'Logistics Manager'
+  | 'Onboarding & Inductions'
+  | 'General Worker'
+  | 'QC'
+  | 'Surveyor'
+  | 'Accounts'
+  | 'Admin';
+
+/**
+ * Permission ID
+ * Represents different permissions that can be granted
+ */
+export type PermissionId =
+  | 'face_enrolment'
+  | 'face_removal'
+  | 'face_update';
+
+/**
+ * User Type Permissions
+ * Maps a user type to its permissions
+ */
+export type UserTypePermissions = {
+  id?: string;
+  masterAccountId: string;
+  userType: UserTypeForPermissions;
+  permissions: {
+    face_enrolment: boolean;
+    face_removal: boolean;
+    face_update: boolean;
+  };
+  updatedAt?: any;
+  updatedBy?: string;
+  createdAt: any;
+};
+
 export type MasterAccountAuditLog = {
   id: string;
   masterAccountId: string;
