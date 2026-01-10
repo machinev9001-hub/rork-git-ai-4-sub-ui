@@ -397,13 +397,61 @@ class OfflineQueue {
   }
 
   private async executeOperation(operation: QueueOperation) {
+    const { conflictResolver } = await import('@/utils/conflictResolution');
+
     switch (operation.type) {
       case 'set': {
+        if (operation.data.updatedAt || operation.data.lastModified) {
+          const localTimestamp = operation.data.updatedAt || operation.data.lastModified || Date.now();
+          
+          const conflict = await conflictResolver.detectConflict(
+            operation.collection,
+            operation.docId,
+            operation.data,
+            localTimestamp
+          );
+
+          if (conflict) {
+            console.log('[OfflineQueue] Conflict detected during sync, resolving...');
+            const result = await conflictResolver.resolveConflict(conflict);
+            
+            if (!result.success) {
+              throw new Error(`Conflict resolution failed: ${result.error}`);
+            }
+            
+            console.log('[OfflineQueue] Conflict resolved successfully');
+            return;
+          }
+        }
+
         const docRef = doc(db, operation.collection, operation.docId);
         await setDoc(docRef, operation.data, { merge: operation.merge ?? false });
         break;
       }
       case 'update': {
+        if (operation.data.updatedAt || operation.data.lastModified) {
+          const localTimestamp = operation.data.updatedAt || operation.data.lastModified || Date.now();
+          
+          const conflict = await conflictResolver.detectConflict(
+            operation.collection,
+            operation.docId,
+            operation.data,
+            localTimestamp
+          );
+
+          if (conflict) {
+            console.log('[OfflineQueue] Conflict detected during sync, resolving...');
+            const result = await conflictResolver.resolveConflict(conflict);
+            
+            if (!result.success) {
+              throw new Error(`Conflict resolution failed: ${result.error}`);
+            }
+            
+            console.log('[OfflineQueue] Conflict resolved successfully');
+            return;
+          }
+        }
+
         const docRef = doc(db, operation.collection, operation.docId);
         await updateDoc(docRef, operation.data);
         break;
