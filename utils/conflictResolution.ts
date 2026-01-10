@@ -185,6 +185,19 @@ class ConflictResolver {
       }
     });
 
+    const numericFields = ['completedToday', 'quantity', 'hours'];
+    numericFields.forEach(field => {
+      if (typeof localData[field] === 'number' && typeof serverData[field] === 'number') {
+        merged[field] = Math.max(localData[field], serverData[field]);
+      }
+    });
+
+    if (localData.version && serverData.version) {
+      merged.version = Math.max(localData.version, serverData.version) + 1;
+    } else {
+      merged.version = (serverData.version || 1) + 1;
+    }
+
     return merged;
   }
 
