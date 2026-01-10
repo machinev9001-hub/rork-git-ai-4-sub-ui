@@ -6,6 +6,12 @@ import {
   getDocs,
   QuerySnapshot,
   DocumentData,
+  getDocsFromCache,
+  getDocsFromServer,
+  getDocFromCache,
+  getDocFromServer,
+  DocumentReference,
+  DocumentSnapshot,
 } from 'firebase/firestore';
 import { logger } from './logger';
 
@@ -168,5 +174,119 @@ export async function batchGetDocs<T = DocumentData>(
       error
     );
     throw error;
+  }
+}
+
+/**
+ * Cache-first query strategy
+ * Tries to read from local cache first, falls back to server if needed
+ */
+export async function getCachedDocs<T = DocumentData>(
+  baseQuery: Query<T>,
+  options: {
+    maxLimit?: number;
+    context?: string;
+    fallbackToServer?: boolean;
+  } = {}
+): Promise<{ snapshot: QuerySnapshot<T>; source: 'cache' | 'server' }> {
+  const maxLimit = options.maxLimit ?? DEFAULT_QUERY_LIMITS.LIST;
+  const fallbackToServer = options.fallbackToServer ?? true;
+  const limitedQuery = query(baseQuery, limit(maxLimit));
+
+  try {
+    const snapshot = await getDocsFromCache(limitedQuery);
+    
+    if (snapshot.empty && fallbackToServer) {
+      logger.debug(
+        `Cache miss [${options.context ?? 'unknown'}], fetching from server`
+      );
+      const serverSnapshot = await getDocsFromServer(limitedQuery);
+      return { snapshot: serverSnapshot, source: 'server' };
+    }
+
+    logger.debug(
+      `Cache hit [${options.context ?? 'unknown'}]:`,
+      `${snapshot.size} documents`
+    );
+    return { snapshot, source: 'cache' };
+  } catch (error) {
+    if (fallbackToServer) {
+      logger.debug(
+        `Cache error [${options.context ?? 'unknown'}], fetching from server`
+      );
+      const serverSnapshot = await getDocsFromServer(limitedQuery);
+      return { snapshot: serverSnapshot, source: 'server' };
+    }
+    throw error;
+  }
+}
+
+/**
+ * Cache-first document read
+ * Tries to read from local cache first, falls back to server if needed
+ */
+export async function getCachedDoc<T = DocumentData>(
+  docRef: DocumentReference<T>,
+  options: {
+    context?: string;
+    fallbackToServer?: boolean;
+  } = {}
+): Promise<{ snapshot: DocumentSnapshot<T>; source: 'cache' | 'server' }> {
+  const fallbackToServer = options.fallbackToServer ?? true;
+
+  try {
+    const snapshot = await getDocFromCache(docRef);
+    
+    if (!snapshot.exists() && fallbackToServer) {
+      logger.debug(
+        `Cache miss for doc [${options.context ?? 'unknown'}], fetching from server`
+      );
+      const serverSnapshot = await getDocFromServer(docRef);
+      return { snapshot: serverSnapshot, source: 'server' };
+    }
+
+    logger.debug(
+      `Cache hit for doc [${options.context ?? 'unknown'}]`
+    );
+    return { snapshot, source: 'cache' };
+  } catch (error) {
+    if (fallbackToServer) {
+      logger.debug(
+        `Cache error for doc [${options.context ?? 'unknown'}], fetching from server`
+      );
+      const serverSnapshot = await getDocFromServer(docRef);
+      return { snapshot: serverSnapshot, source: 'server' };
+    }
+    throw error;
+  }
+}
+
+/**
+ * Offline-safe query that only reads from cache
+ * Returns empty result if cache is not available
+ */
+export async function getOfflineDocs<T = DocumentData>(
+  baseQuery: Query<T>,
+  options: {
+    maxLimit?: number;
+    context?: string;
+  } = {}
+): Promise<QuerySnapshot<T> | null> {
+  const maxLimit = options.maxLimit ?? DEFAULT_QUERY_LIMITS.LIST;
+  const limitedQuery = query(baseQuery, limit(maxLimit));
+
+  try {
+    const snapshot = await getDocsFromCache(limitedQuery);
+    logger.debug(
+      `Offline read [${options.context ?? 'unknown'}]:`,
+      `${snapshot.size} documents from cache`
+    );
+    return snapshot;
+  } catch {
+    logger.debug(
+      `Offline read failed [${options.context ?? 'unknown'}]:`,
+      'No cached data available'
+    );
+    return null;
   }
 }
