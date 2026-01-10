@@ -177,14 +177,15 @@ if (Platform.OS === 'web') {
     db = getFirestore(app);
   }
 } else {
-  console.log('[Firebase] Initializing native Firestore');
+  console.log('[Firebase] Initializing native Firestore with offline persistence');
   try {
     db = initializeFirestore(app, {
+      localCache: persistentLocalCache(),
       ignoreUndefinedProperties: true,
     });
-    console.log('[Firebase] Native Firestore initialized');
+    console.log('[Firebase] Native Firestore initialized with offline persistence enabled');
   } catch (error) {
-    console.warn('[Firebase] Firestore init failed, using default:', error);
+    console.warn('[Firebase] Native persistence failed, using default:', error);
     db = getFirestore(app);
   }
 }
