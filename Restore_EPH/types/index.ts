@@ -1,0 +1,1533 @@
+export type AccountType = 'enterprise' | 'free';
+
+/**
+ * VAS Subscription State
+ * Manages the lifecycle of a VAS subscription
+ */
+export type VASSubscriptionState = 
+  | 'INACTIVE'           // Not subscribed
+  | 'TRIAL_ACTIVE'       // In trial period
+  | 'PAYMENT_PENDING'    // Trial ended, awaiting payment
+  | 'ACTIVE'             // Fully active with payment
+  | 'SUSPENDED';         // Suspended due to non-payment or admin action
+
+export type VASFeatureId =
+  | 'analytics'
+  | 'reporting'
+  | 'data_exports'
+  | 'advanced_integrations'
+  | 'custom_branding'
+  | 'priority_support'
+  | 'marketplace_access'
+  | 'plant_manager_access'
+  | 'staff_manager_access'
+  | 'logistics_access'
+  | 'operations_bundle'
+  | 'multiple_sites';
+
+export type VASFeature = {
+  id: VASFeatureId;
+  name: string;
+  description: string;
+  price?: string;
+  isActive: boolean;
+};
+
+/**
+ * VAS Subscription
+ * Tracks individual VAS feature subscription with trial and payment states
+ */
+export type VASSubscription = {
+  id?: string;
+  masterAccountId: string;
+  featureId: VASFeatureId;
+  featureName: string;
+  state: VASSubscriptionState;
+  trialStartDate?: any;           // When trial started
+  trialEndDate?: any;             // When trial expires (typically 12 days)
+  activationDate?: any;           // When fully activated with payment
+  suspensionDate?: any;           // When suspended
+  suspensionReason?: string;      // Why suspended
+  lastPaymentDate?: any;          // Last payment received
+  nextPaymentDue?: any;           // Next payment due date
+  price?: number;                 // Monthly price
+  currency?: string;              // Currency code (e.g., 'USD')
+  autoRenew?: boolean;            // Auto-renewal enabled
+  notes?: string;
+  createdAt: any;
+  updatedAt?: any;
+  createdBy: string;              // MasterAccountId who created
+};
+
+/**
+ * Admin Notification Type
+ */
+export type AdminNotificationType =
+  | 'ACTIVATION_CODE_REDEEMED'    // Enterprise account activated
+  | 'VAS_SUBSCRIPTION_STARTED'    // VAS subscription trial started
+  | 'VAS_SUBSCRIPTION_ACTIVATED'  // VAS subscription fully activated
+  | 'VAS_TRIAL_EXPIRING'          // VAS trial expiring soon
+  | 'VAS_TRIAL_EXPIRED'           // VAS trial expired
+  | 'VAS_PAYMENT_PENDING'         // Payment pending
+  | 'VAS_SUSPENDED'               // Subscription suspended
+  | 'GENERAL';                    // General admin notification
+
+/**
+ * Admin Notification
+ * Notifications for system admins about subscription events
+ */
+export type AdminNotification = {
+  id?: string;
+  type: AdminNotificationType;
+  title: string;
+  message: string;
+  masterAccountId?: string;       // Related master account
+  masterAccountName?: string;     // Account name for display
+  activationCodeId?: string;      // Related activation code
+  vasSubscriptionId?: string;     // Related VAS subscription
+  featureId?: VASFeatureId;       // Related feature
+  isRead: boolean;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  metadata?: Record<string, any>; // Additional data
+  createdAt: any;
+  readAt?: any;
+  readBy?: string;                // Admin who read it
+};
+
+export type FeatureFlags = {
+  employee_management: boolean;
+  asset_management: boolean;
+  external_data_reception: boolean;
+  analytics: boolean;
+  reporting: boolean;
+  data_exports: boolean;
+  advanced_integrations: boolean;
+  custom_branding: boolean;
+  priority_support: boolean;
+  task_management: boolean;
+  time_tracking: boolean;
+  progress_reporting: boolean;
+  plant_manager_access: boolean;
+  staff_manager_access: boolean;
+  logistics_access: boolean;
+  operations_bundle: boolean;
+};
+
+export type UserRole =
+  | "Admin"
+  | "Planner"
+  | "Supervisor"
+  | "QC"
+  | "Operator"
+  | "Plant Manager"
+  | "Surveyor"
+  | "Staff Manager"
+  | "Logistics Manager"
+  | "HSE"
+  | "HR"
+  | "Accounts"
+  | "General Worker"
+  | "Foreman"
+  | "Engineer"
+  | "Electrician"
+  | "Plumber"
+  | "Carpenter"
+  | "Welder"
+  | "Diesel Clerk"
+  | "master";
+
+export type CompanySettings = {
+  legalEntityName: string;
+  alias: string;
+  address: string;
+  contact: string;
+  adminContact: string;
+  adminEmail: string;
+  companyRegistrationNr: string;
+  vatNr: string;
+  plantTypes?: string[];
+};
+
+export type Company = {
+  id: string;
+  legalEntityName: string;
+  alias: string;
+  address: string;
+  contactNumber: string;
+  adminContact: string;
+  adminEmail: string;
+  companyRegistrationNr: string;
+  vatNumber: string;
+  industrySector: string;
+  status: 'Active' | 'Inactive' | 'Archived';
+  accountType?: AccountType; // Company account type (free/enterprise)
+  subscriptionTier?: 'free' | 'basic' | 'premium' | 'enterprise';
+  vasFeatures?: VASFeatureId[]; // Active VAS features for this company
+  billingEmail?: string;
+  subscriptionStartDate?: any;
+  subscriptionEndDate?: any;
+  // Geographic availability settings for marketplace
+  plantAvailabilityProvince?: string; // Province/County where assets are available
+  plantAvailabilityRadiusKm?: number; // Radius in KM from company location
+  plantAvailabilityGeoType?: 'province' | 'radius'; // Type of geographic filter
+  // Multi-owner support
+  totalOwnershipPercentage?: number; // Total ownership percentage allocated
+  ownerCount?: number; // Number of active owners
+  createdAt: any;
+  updatedAt?: any;
+  createdBy: string; // Primary creator (still supported for legacy)
+};
+
+export type CompanyUser = {
+  userId: string;
+  companyId: string;
+  role: UserRole;
+  siteIds?: string[];
+  addedAt: any;
+  addedBy: string;
+};
+
+export type SubContractorUser = {
+  id: string;
+  userId: string;
+  pin?: string;
+  subContractorName: string;
+  legalEntityName: string;
+  userName?: string;
+  directPersonalContactNr: string;
+  adminContact: string;
+  adminEmail: string;
+  companyRegistrationNr: string;
+  vatNr: string;
+  role: UserRole;
+  siteId: string;
+  createdAt: any;
+  createdBy: string;
+  disabledMenus?: string[];
+  isLocked?: boolean;
+};
+
+/**
+ * ID Verification Status
+ */
+export type IDVerificationStatus = 
+  | 'unverified' 
+  | 'pending_review' 
+  | 'verified' 
+  | 'rejected' 
+  | 'expired';
+
+/**
+ * Duplicate ID Status
+ */
+export type DuplicateIDStatus = 
+  | 'none' 
+  | 'detected' 
+  | 'under_investigation' 
+  | 'resolved' 
+  | 'blocked';
+
+export type MasterAccount = {
+  id: string;
+  masterId: string;
+  name: string;
+  surname?: string; // Surname for credentials
+  username?: string; // Username for credentials
+  pin: string;
+  nationalIdNumber?: string; // National ID number for verification
+  idVerificationStatus?: IDVerificationStatus; // ID verification status
+  idVerifiedAt?: any; // When ID was verified
+  idVerifiedBy?: string; // Admin who verified ID
+  idDocumentUrl?: string; // URL to uploaded ID document
+  duplicateIdStatus?: DuplicateIDStatus; // Duplicate ID detection status
+  canOwnCompanies?: boolean; // Can own companies (requires verified ID)
+  canReceivePayouts?: boolean; // Can receive financial payouts
+  canApproveOwnershipChanges?: boolean; // Can approve ownership changes
+  restrictionReason?: string; // Reason for any restrictions
+  companyIds: string[];
+  currentCompanyId?: string;
+  accountType?: AccountType;
+  vasFeatures?: VASFeatureId[];
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type AccessScope = 'company-level' | 'all-sites' | 'selected-sites' | 'no-sites';
+
+export type User = {
+  id: string;
+  userId: string;
+  name: string;
+  role: UserRole | 'master';
+  companyIds: string[];
+  currentCompanyId?: string;
+  companyName?: string;
+  companyContactMobile?: string;
+  supervisorName?: string;
+  supervisorMobile?: string;
+  siteId?: string;
+  siteName?: string;
+  pin?: string;
+  masterAccountId?: string;
+  accountType?: AccountType;
+  vasFeatures?: VASFeatureId[];
+  canAccessMasterCompanyProfile?: boolean; // Flag for Master Company Profile access
+  accessScope?: AccessScope; // Defines where user's actions apply
+  createdAt: any;
+  disabledMenus?: string[];
+  isLocked?: boolean;
+};
+
+export type LatLon = {
+  latitude: number;
+  longitude: number;
+};
+
+export type FacePolicy = {
+  minMatchScore: number;
+  requireLiveness: boolean;
+  allowOfflineMatch: boolean;
+  maxGpsAccuracyMeters?: number;
+};
+
+export type Site = {
+  id: string;
+  name: string;
+  companyId: string;
+  masterAccountId: string;
+  companySettings?: CompanySettings;
+  description?: string;
+  location?: string;
+  status?: 'Active' | 'Inactive' | 'Archived' | 'Deleted';
+  faceClockInEnabled?: boolean;
+  faceGeoCenter?: LatLon;
+  faceGeoRadiusKm?: number;
+  facePolicy?: FacePolicy;
+  createdAt: any;
+  updatedAt?: any;
+  deletedAt?: any;
+};
+
+export type RequestType =
+  | 'TASK_REQUEST'
+  | 'SCOPE_REQUEST'
+  | 'ACTIVITY_SCOPE'
+  | 'QC_REQUEST'
+  | 'CABLING_REQUEST'
+  | 'TERMINATION_REQUEST'
+  | 'SURVEYOR_TASK'
+  | 'HANDOVER_REQUEST'
+  | 'CONCRETE_REQUEST'
+  | 'LOGISTICS_REQUEST'
+  | 'PLANT_REQUEST'
+  | 'STAFF_REQUEST';
+
+export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'scheduled';
+
+export type ActivityStatus = 'LOCKED' | 'OPEN' | 'DONE' | 'HANDOFF_SENT';
+
+export type ScopePolicy = 'NORMAL' | 'NONE';
+
+export type CanonicalUnit = {
+  canonical: string;
+  setBy: string;
+  setAt: any;
+};
+
+export type ScopeValue = {
+  value: number;
+  unit: string;
+  setBy: string;
+  setAt: any;
+};
+
+export type QCValue = {
+  value?: number;
+  unit?: string;
+  completedAt?: any;
+  completedBy?: string;
+  status?: 'not_requested' | 'pending' | 'scheduled' | 'in_progress' | 'completed' | 'rejected';
+  lastRequestId?: string;
+  lastUpdatedAt?: any;
+  scheduledAt?: any;
+};
+
+export type ProgressEntry = {
+  id?: string;
+  supervisorId: string;
+  enteredAt: any;
+  raw: {
+    value: number;
+    unit: string;
+  };
+  normalized: {
+    value: number;
+    unit: string;
+  };
+  note?: string;
+  source?: 'manual' | 'import' | 'sync';
+};
+
+export type InitTaskActivityParams = {
+  taskId: string;
+  subMenuKey: string;
+  activityId: string;
+  siteId: string;
+  masterAccountId: string;
+  createdBy: string;
+};
+
+export type SubmitProgressParams = {
+  taskId: string;
+  subMenuKey: string;
+  activityId: string;
+  supervisorId: string;
+  value: number;
+  unit: string;
+  canonicalUnit: string;
+  note?: string;
+};
+
+export type QCRequestParams = {
+  taskId: string;
+  subMenuKey: string;
+  activityId: string;
+  requestedBy: string;
+  siteId: string;
+  masterAccountId: string;
+  activityName: string;
+};
+
+export type QCValidationParams = {
+  taskId: string;
+  subMenuKey: string;
+  activityId: string;
+  qcValue: number;
+  qcUnit: string;
+  canonicalUnit: string;
+  validatedBy: string;
+};
+
+export type ClearInputParams = {
+  taskId: string;
+  subMenuKey: string;
+  activityId: string;
+};
+
+export type ProgressCalcParams = {
+  scopeValue?: number;
+  cumulativeProgress: number;
+};
+
+export type StatusParams = {
+  taskId: string;
+  subMenuKey: string;
+  activityId: string;
+};
+
+export type CompletedTodayLock = {
+  isLocked: boolean;
+  lockType?: 'QC_INTERACTION' | 'TIME_LOCK';
+  lockedAt?: any;
+  lockedValue?: number;
+  lockedUnit?: string;
+  lockDate?: string;
+  qcApprovedValue?: number;
+  qcApprovedUnit?: string;
+};
+
+export type ActivityDetail = {
+  id: string;
+  name: string;
+  status: ActivityStatus;
+  scopePolicy: ScopePolicy;
+  scopeValue?: ScopeValue;
+  canonicalUnit?: CanonicalUnit;
+  supervisorInputValue?: number;
+  supervisorInputUnit?: string;
+  supervisorInputAt?: any;
+  supervisorInputBy?: string;
+  supervisorInputLocked?: boolean;
+  completedTodayLock?: CompletedTodayLock;
+  cumulativeProgress: number;
+  progressPercentage: number;
+  qc?: QCValue;
+  qcValue?: number;
+  createdAt?: any;
+  updatedAt?: any;
+};
+
+export type SurveyorTaskStatus = 'PENDING_APPROVAL' | 'APPROVED' | 'REJECTED' | 'CANCELLED' | 'CLOSED';
+
+export type SurveyorTask = {
+  id?: string;
+  taskId: string;
+  siteId: string;
+  createdByUserId: string;
+  assignedSurveyorUserId?: string;
+  status: SurveyorTaskStatus;
+  pvArea: string;
+  blockNumber: string;
+  rowNr?: string;
+  columnNr?: string;
+  notes?: string;
+  linkedImageIds?: string[];
+  archived?: boolean;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type SurveyorImageType = 'BASEMAP_OVERLAY' | 'DETAIL' | 'OTHER';
+
+export type SurveyorImage = {
+  id?: string;
+  imageId: string;
+  siteId: string;
+  pvArea?: string;
+  blockNumber?: string;
+  rowNr?: string;
+  columnNr?: string;
+  sourceTaskId: string;
+  imageUrl: string;
+  storagePath: string;
+  imageType: SurveyorImageType;
+  description?: string;
+  createdByUserId: string;
+  createdAt: any;
+  isActive: boolean;
+  version?: number;
+  replacesImageId?: string;
+};
+
+export type ImageShareStatus = 'PENDING' | 'VIEWED' | 'DOWNLOADED';
+
+export type SharedImage = {
+  id?: string;
+  shareId: string;
+  siteId: string;
+  imageId: string;
+  imageUrl: string;
+  fileName: string;
+  fileType: string;
+  sharedByUserId: string;
+  sharedByUserName: string;
+  sharedToUserId: string;
+  sharedToUserName: string;
+  message?: string;
+  status: ImageShareStatus;
+  sharedAt: any;
+  viewedAt?: any;
+  downloadedAt?: any;
+};
+
+export type Attachment = {
+  id: string;
+  fileName: string;
+  fileType: 'image' | 'document';
+  mimeType: string;
+  downloadUrl: string;
+  storagePath: string;
+  uploadedAt: any;
+  uploadedBy: string;
+  size?: number;
+};
+
+export type Subcontractor = {
+  id?: string;
+  name: string;
+  legalEntityName?: string;
+  contactPerson?: string;
+  contactNumber?: string;
+  adminEmail?: string;
+  address?: string;
+  companyRegistrationNr?: string;
+  vatNumber?: string;
+  linkedSites?: string[];
+  linkedProjects?: string[];
+  isCrossHire: boolean;
+  crossHireName?: string;
+  masterAccountId: string;
+  siteId?: string;
+  companyId?: string;
+  status: 'Active' | 'Inactive' | 'Archived';
+  notes?: string;
+  createdAt: any;
+  updatedAt?: any;
+  createdBy: string;
+};
+
+export type Employee = {
+  id?: string;
+  name: string;
+  role: string;
+  contact: string;
+  email?: string;
+  employeeIdNumber?: string;
+  citizenshipCountry?: string;
+  companyId: string; // Company-level ownership (required)
+  masterAccountId: string;
+  siteId?: string; // DEPRECATED: Use EmployeeSiteLink instead
+  type?: 'employee' | 'subcontractor';
+  subcontractorCompany?: string;
+  employerName?: string;
+  employerId?: string;
+  employerType: 'company' | 'subcontractor';
+  isCrossHire?: boolean;
+  crossHireName?: string;
+  accessScope?: AccessScope; // Access scope for this employee
+  canAccessMasterCompanyProfile?: boolean; // Can access Master Company Profile
+  allocatedPvArea?: string;
+  allocatedBlockNumber?: string;
+  areaAllocationDate?: any;
+  inductionStatus: boolean;
+  inductionDate?: any;
+  inductionNotes?: string;
+  attachments?: Attachment[];
+  medicalExpiryDate?: any;
+  licenseExpiryDate?: any;
+  competencyExpiryDate?: any;
+  pdpExpiryDate?: any;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+// New type for many-to-many employee-site relationships
+export type EmployeeSiteLink = {
+  id?: string;
+  employeeId: string;
+  employeeName?: string;
+  siteId: string;
+  siteName?: string;
+  companyId: string;
+  masterAccountId: string;
+  isActive: boolean;
+  assignedAt: any;
+  assignedBy: string;
+  removedAt?: any;
+  removedBy?: string;
+  notes?: string;
+};
+
+/**
+ * EmployeeSite - Junction table for company-level employees and site assignments
+ * Employees are created once at company level, then linked to sites via this table
+ */
+export type EmployeeSite = {
+  id?: string;
+  employeeId: string;
+  employeeName: string;
+  siteId: string;
+  siteName: string;
+  companyId: string;
+  masterAccountId: string;
+  role?: string; // Site-specific role (can override employee's default role)
+  linkedAt: any;
+  linkedBy: string;
+  unlinkedAt?: any;
+  unlinkedBy?: string;
+  isActive: boolean;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+/**
+ * AssetSite - Junction table for company-level assets and site allocations
+ * Assets are created once at company level, then linked to sites via this table
+ */
+export type AssetSite = {
+  id?: string;
+  assetId: string;
+  assetName: string;
+  assetType: string;
+  siteId: string;
+  siteName: string;
+  companyId: string;
+  masterAccountId: string;
+  linkedAt: any;
+  linkedBy: string;
+  unlinkedAt?: any;
+  unlinkedBy?: string;
+  isActive: boolean;
+  allocationNotes?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type ChecklistItem = {
+  id: string;
+  label: string;
+  completed: boolean;
+  completedAt?: any;
+  completedBy?: string;
+  order: number;
+};
+
+export type DailyChecklistEntry = {
+  id?: string;
+  assetId: string;
+  assetType: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  operatorId: string;
+  operatorName: string;
+  checklist: ChecklistItem[];
+  completedCount: number;
+  totalCount: number;
+  isFullyCompleted: boolean;
+  notes?: string;
+  siteId?: string;
+  siteName?: string;
+  masterAccountId: string;
+  companyId?: string;
+  submittedAt: any;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type AllocationStatus = 'UNALLOCATED' | 'ALLOCATED' | 'IN_TRANSIT';
+
+export type CurrentAllocation = {
+  siteId: string;
+  siteName?: string;
+  allocatedAt: any;
+  allocatedBy: string;
+  pvArea?: string;
+  blockArea?: string;
+  requestId?: string;
+  notes?: string;
+};
+
+export type AllocationHistoryEntry = {
+  siteId: string;
+  siteName?: string;
+  allocatedAt: any;
+  allocatedBy: string;
+  deallocatedAt?: any;
+  deallocatedBy?: string;
+  notes?: string;
+};
+
+export type OperatorHistory = {
+  operatorId: string;
+  operatorName: string;
+  operatorContact?: string;
+  assignedAt: any;
+  removedAt?: any;
+  assignedBy: string;
+  removedBy?: string;
+  reason?: string; // Reason for operator change
+};
+
+export type PlantAssetTimesheet = {
+  id?: string;
+  assetId: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  meterType?: 'HOUR_METER' | 'ODOMETER'; // Type of meter reading
+  openHours: number; // Opening hour meter reading
+  closeHours: number; // Closing hour meter reading
+  totalHours: number; // Calculated (close - open)
+  operatorId: string; // Current operator who entered
+  operatorName: string; // Operator name for display
+  logBreakdown: boolean; // Log breakdown for the day
+  scheduledMaintenance: boolean; // Scheduled maintenance performed
+  rainDay?: boolean; // Rain day flag
+  strikeDay?: boolean; // Strike day flag
+  hasAttachment?: boolean; // Has attachment flag
+  inclementWeather: boolean; // Weather-related downtime
+  weatherNotes?: string; // Weather details if applicable
+  siteId?: string; // Current work site
+  siteName?: string; // Site display name
+  location?: string; // Site ID (auto-generated number)
+  pvArea?: string; // PV area if applicable
+  blockNumber?: string; // Block number if applicable
+  notes?: string; // General notes
+  masterAccountId: string;
+  companyId?: string;
+  verified?: boolean;
+  verifiedAt?: any;
+  verifiedBy?: string;
+  hasAdjustment?: boolean;
+  adjustmentId?: string;
+  isAdjustment?: boolean;
+  originalEntryId?: string;
+  createdAt: any;
+  updatedAt: any;
+};
+
+export type OperatorTimesheet = {
+  id?: string;
+  operatorId: string; // Employee ID
+  operatorName: string; // Employee name
+  date: string; // ISO date (YYYY-MM-DD)
+  startTime: string; // HH:MM format
+  stopTime: string; // HH:MM format
+  lunchBreak: boolean; // Lunch break taken
+  noLunchBreak?: boolean;
+  totalManHours: number; // Calculated hours
+  normalHours?: number;
+  overtimeHours?: number;
+  sundayHours?: number;
+  publicHolidayHours?: number;
+  siteId?: string; // Work site
+  siteName?: string; // Site display name
+  notes?: string; // Optional notes
+  masterAccountId: string;
+  companyId?: string;
+  status?: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+  submittedAt?: any; // Submission time
+  approvedBy?: string; // Approver ID
+  approvedAt?: any; // Approval time
+  approvalNotes?: string; // Approval/rejection notes
+  verified?: boolean;
+  verifiedAt?: any;
+  verifiedBy?: string;
+  hasAdjustment?: boolean;
+  adjustmentId?: string;
+  isAdjustment?: boolean;
+  originalEntryId?: string;
+  agreedNormalHours?: number;
+  agreedOvertimeHours?: number;
+  agreedSundayHours?: number;
+  agreedPublicHolidayHours?: number;
+  agreedNotes?: string;
+  hasAgreedHours?: boolean;
+  agreedTimesheetId?: string;
+  createdAt: any;
+  updatedAt: any;
+};
+
+export type AgreedTimesheet = {
+  id: string;
+  originalTimesheetId: string;
+  timesheetType: 'operator' | 'plant_asset';
+  date: string;
+  operatorId?: string;
+  operatorName?: string;
+  assetId?: string;
+  assetType?: string;
+  originalHours: number;
+  agreedHours: number;
+  billableHours?: number;
+  billingRule?: string;
+  agreedNormalHours?: number;
+  agreedOvertimeHours?: number;
+  agreedSundayHours?: number;
+  agreedPublicHolidayHours?: number;
+  originalNormalHours?: number;
+  originalOvertimeHours?: number;
+  originalSundayHours?: number;
+  originalPublicHolidayHours?: number;
+  originalOpenHours?: number;
+  originalCloseHours?: number;
+  isBreakdown?: boolean;
+  isRainDay?: boolean;
+  isInclementWeather?: boolean;
+  isPublicHoliday?: boolean;
+  hoursDifference: number;
+  originalNotes?: string;
+  adminNotes?: string;
+  siteId?: string;
+  siteName?: string;
+  masterAccountId: string;
+  companyId?: string;
+  subcontractorId?: string;
+  subcontractorName?: string;
+  status: 'approved_for_billing' | 'disputed' | 'rejected';
+  agreedAt: any;
+  agreedBy: string;
+  agreedByRole?: 'Operator' | 'Plant Manager' | 'Admin';
+  approvedForBillingAt?: any;
+  approvedForBillingBy?: string;
+  createdAt: any;
+  updatedAt: any;
+};
+
+export type PlantAssetOperatorHistory = {
+  id?: string;
+  assetId: string; // Plant asset ID
+  assetType: string; // Asset type
+  assetSiteId: string; // Asset site ID
+  previousOperatorId?: string; // Previous operator ID
+  previousOperatorName?: string; // Previous operator name
+  newOperatorId: string; // New operator ID
+  newOperatorName: string; // New operator name
+  changeDate: any; // When change occurred
+  changeReason: string; // Reason for change
+  changedBy: string; // User who made change
+  changedByName: string; // Name of user
+  notes?: string; // Additional notes
+  masterAccountId: string;
+  companyId?: string;
+  createdAt: any;
+};
+
+export type PlantAsset = {
+  id?: string;
+  assetId: string;
+  type: string;
+  typeId?: string;
+  groupId?: string;
+  location?: string;
+  assignedJob?: string;
+  assignedSite?: string;
+  plantNumber?: string;
+  registrationNumber?: string;
+  subcontractor?: string;
+  crossHire?: string;
+  currentOperator?: string;
+  currentOperatorId?: string;
+  ownerName?: string;
+  ownerId?: string;
+  ownerType: 'company' | 'subcontractor';
+  ownerMasterAccountId?: string;
+  ownerEmail?: string;
+  ownerContactName?: string;
+  ownerProvince?: string;
+  ownerAddress?: string;
+  isCrossHire?: boolean;
+  crossHireName?: string;
+  salaryPayer?: string;
+  operatorHistory?: OperatorHistory[];
+  siteId?: string | null; // DEPRECATED: Use PlantAssetAllocation instead
+  masterAccountId: string;
+  companyId: string; // Company-level ownership (required)
+  allocationStatus: AllocationStatus;
+  currentAllocation?: CurrentAllocation;
+  allocationHistory?: AllocationHistoryEntry[];
+  allocatedPvArea?: string;
+  allocatedBlockNumber?: string;
+  allocationDate?: any;
+  breakdownStatus?: boolean;
+  breakdownStartDate?: string;
+  breakdownEndDate?: string | null;
+  breakdownTimestamp?: any;
+  breakdownLoggedBy?: string;
+  breakdownReactivatedBy?: string;
+  breakdownReactivatedAt?: any;
+  inductionStatus: boolean;
+  inductionDate?: any;
+  onboardingDate?: any;
+  inductionNotes?: string;
+  attachments?: Attachment[];
+  checklist?: ChecklistItem[];
+  offHireDate?: any;
+  offHireTimestamp?: any;
+  offHireSubmittedBy?: string;
+  dryRate?: number;
+  wetRate?: number;
+  dailyRate?: number;
+  billingMethod?: 'PER_HOUR' | 'MINIMUM_BILLING';
+  ratesSetAt?: any;
+  ratesSetBy?: string;
+  meterType?: 'HOUR_METER' | 'ODOMETER';
+  lastMeterReading?: number;
+  lastMeterReadingDate?: string;
+  archived?: boolean;
+  archivedAt?: any;
+  archivedBy?: string;
+  // New marketplace fields
+  internalAllocationEnabled?: boolean; // Can be allocated to own sites
+  marketplaceVisibilityEnabled?: boolean; // Listed in marketplace (VAS-gated)
+  isAvailableForVAS?: boolean; // Visible in VAS marketplace
+  availability?: 'available' | 'allocated' | 'maintenance';
+  createdAt: any;
+  updatedAt?: any;
+};
+
+// New type for plant asset allocation tracking
+export type PlantAssetAllocation = {
+  id?: string;
+  assetId: string;
+  assetType?: string;
+  companyId: string;
+  siteId: string;
+  siteName?: string;
+  masterAccountId: string;
+  isActive: boolean; // Current allocation or historical
+  allocatedAt: any;
+  allocatedBy: string;
+  deallocatedAt?: any;
+  deallocatedBy?: string;
+  pvArea?: string;
+  blockArea?: string;
+  requestId?: string;
+  notes?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+// New type for marketplace listings
+export type MarketplaceListing = {
+  id?: string;
+  assetId: string;
+  assetType: string;
+  companyId: string; // Owner company
+  companyName?: string;
+  plantNumber?: string;
+  registrationNumber?: string;
+  description?: string;
+  availability: 'available' | 'currently_allocated' | 'maintenance';
+  currentAllocationSiteId?: string; // If currently allocated
+  currentAllocationSiteName?: string;
+  dryRate?: number;
+  wetRate?: number;
+  dailyRate?: number;
+  billingMethod?: 'PER_HOUR' | 'MINIMUM_BILLING';
+  location?: string;
+  contactPerson?: string;
+  contactNumber?: string;
+  isActive: boolean; // Listing active or hidden
+  listedAt: any;
+  lastUpdatedAt?: any;
+  viewCount?: number;
+  inquiryCount?: number;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type Asset = {
+  id?: string;
+  assetName: string;
+  assetType: string;
+  serialNumber?: string;
+  location?: string;
+  assignedJob?: string;
+  siteId: string;
+  masterAccountId: string;
+  inductionStatus?: boolean;
+  inductionDate?: any;
+  inductionNotes?: string;
+  attachments?: Attachment[];
+  checklist?: ChecklistItem[];
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type OnboardingMessage = {
+  id?: string;
+  siteId: string;
+  masterAccountId: string;
+  fromUserId: string;
+  fromUserName: string;
+  toUserId: string;
+  message: string;
+  type: 'EXIT_MEDICAL' | 'GENERAL' | 'EXPIRY_WARNING';
+  employeeName?: string;
+  read: boolean;
+  createdAt: any;
+};
+
+export type HandoverRequest = {
+  id?: string;
+  type: 'HANDOVER_REQUEST';
+  requestType?: 'SURVEYOR_REQUEST' | 'CABLING_REQUEST' | 'TERMINATION_REQUEST' | 'HANDOVER_REQUEST' | 'QC_REQUEST' | 'PLANT_REQUEST' | 'LOGISTICS_REQUEST' | 'STAFF_REQUEST';
+  fromSupervisorId: string;
+  toSupervisorId?: string;
+  fromTaskId?: string;
+  toTaskId?: string;
+  activityId: string;
+  activityName: string;
+  subMenuKey: string;
+  subMenuName?: string;
+  pvArea: string;
+  blockNumber: string;
+  rowNr?: string;
+  columnNr?: string;
+  siteId: string;
+  masterAccountId?: string;
+  status: RequestStatus | 'RESOLVED_BY_PLANNER';
+  noteFromSender?: string;
+  noteFromPlanner?: string;
+  handoverMode: 'SUPERVISOR_TO_SUPERVISOR' | 'PLANNER_APPOINTMENT';
+  appointedSupervisorId?: string;
+  appointedTaskId?: string;
+  targetUserRole?: UserRole;
+  linkedImageIds?: string[];
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type OperatorAssetHours = {
+  id?: string;
+  operatorId: string;
+  operatorName: string;
+  assetId: string;
+  assetType: string;
+  assetSiteId: string;
+  date: string;
+  openHours: string;
+  closingHours: string;
+  totalHours: number;
+  siteId?: string;
+  siteName?: string;
+  masterAccountId: string;
+  notes?: string;
+  status: 'SUBMITTED' | 'APPROVED' | 'REJECTED';
+  submittedAt: any;
+  approvedAt?: any;
+  approvedBy?: string;
+  rejectionReason?: string;
+  isRainDay?: boolean;
+  isStrikeDay?: boolean;
+  isBreakdown?: boolean;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type FaceTemplate = {
+  id?: string;
+  userId: string;
+  userName: string;
+  encryptedEmbedding: string;
+  encryptionSalt: string;
+  enrolledAt: any;
+  enrolledBy: string;
+  version: number;
+  isActive: boolean;
+  masterAccountId: string;
+  companyId?: string;
+  siteId?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type ActivityBaseBlockType = 'STANDARD_COMPLETED_TODAY' | 'GRID_TYPE_ROW_PROGRESS';
+
+export type ActivityMicroModule = 
+  | 'HANDOVER_CARDS'
+  | 'QC_REQUEST'
+  | 'CONCRETE_REQUEST'
+  | 'CABLING_REQUEST'
+  | 'TERMINATION_REQUEST'
+  | 'SURVEYOR_REQUEST'
+  | 'PLANT_REQUEST'
+  | 'MATERIALS_REQUEST'
+  | 'STAFF_REQUEST';
+
+export type GridNamingConvention = 'ALPHA' | 'NUMERIC';
+
+export type FlexibleColumnConfig = {
+  column: string;
+  rows: number;
+};
+
+export type GridConfiguration = {
+  pvAreaId?: string;
+  pvAreaName?: string;
+  blockAreaId?: string;
+  blockAreaName?: string;
+  scopeValue?: number;
+  scopeUnit?: string;
+  totalRows: number;
+  totalColumns: number;
+  flexibleColumns?: FlexibleColumnConfig[];
+  rowNamingConvention: GridNamingConvention;
+  columnNamingConvention: GridNamingConvention;
+  reverseRowOrder?: boolean;
+  reverseColumnOrder?: boolean;
+};
+
+export type HandoverTarget = 
+  | 'Surveyor'
+  | 'Cabling'
+  | 'Termination'
+  | 'Inverters'
+  | 'Mechanical'
+  | 'Commissioning'
+  | 'Drilling';
+
+export type RequestCardsConfig = {
+  plant?: { enabled: boolean };
+  staff?: { enabled: boolean };
+  materials?: { enabled: boolean };
+};
+
+export type ActivityModuleConfig = {
+  baseBlockType: ActivityBaseBlockType;
+  microModules: {
+    [key in ActivityMicroModule]?: {
+      enabled: boolean;
+      placement: 'inside' | 'above' | 'between';
+      handoverTarget?: HandoverTarget;
+      requestCardsConfig?: RequestCardsConfig;
+    };
+  };
+  gridConfig?: GridConfiguration;
+  boqQuantity?: number;
+  boqUnit?: string;
+};
+
+export type FaceClockAttempt = {
+  id?: string;
+  userId: string;
+  userName: string;
+  userRole: UserRole;
+  siteId: string;
+  siteName?: string;
+  companyId?: string;
+  masterAccountId: string;
+  eventType: 'clock-in' | 'clock-out';
+  method: 'face';
+  timestampClient: string;
+  timestampServer?: any;
+  gps: {
+    latitude: number;
+    longitude: number;
+    accuracy: number;
+  };
+  distanceFromSiteKm: number;
+  matchScore: number | null;
+  livenessPassed: boolean;
+  verificationState: 'verified' | 'rejected' | 'pending';
+  rejectionReason?: 'out_of_zone' | 'liveness_failed' | 'face_mismatch' | 'gps_accuracy_poor' | 'no_template' | 'other';
+  deviceInfo: {
+    deviceId: string;
+    appVersion: string;
+    platform: string;
+  };
+  offlineMode: boolean;
+  syncedToServer: boolean;
+  notes?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type GridCellProgress = {
+  id?: string;
+  activityId: string;
+  activityName: string;
+  taskId: string;
+  siteId: string;
+  masterAccountId: string;
+  pvAreaId: string;
+  pvAreaName: string;
+  blockAreaId: string;
+  blockAreaName: string;
+  row: string;
+  rowIndex: number;
+  column: string;
+  columnIndex: number;
+  supervisorId: string;
+  supervisorName: string;
+  status: 'pending' | 'in-progress' | 'completed';
+  completedValue?: number;
+  targetValue?: number;
+  unit?: string;
+  progressPercentage: number;
+  lastUpdatedAt?: any;
+  completedAt?: any;
+  notes?: string;
+  isLocked?: boolean;
+  lockType?: 'TIME_LOCK' | 'QC_INTERACTION';
+  lockedAt?: any;
+  lockDate?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+export type TimesheetWorkflowStatus = 'pending_eph' | 'in_negotiation' | 'approved_for_billing' | 'rejected';
+
+export type EPHRecord = {
+  assetId: string;
+  assetType: string;
+  plantNumber?: string;
+  registrationNumber?: string;
+  rate: number;
+  rateType: 'wet' | 'dry';
+  normalHours: number;
+  saturdayHours: number;
+  sundayHours: number;
+  publicHolidayHours: number;
+  breakdownHours: number;
+  rainDayHours: number;
+  strikeDayHours: number;
+  totalRawHours: number;
+  totalBillableHours: number;
+  estimatedCost: number;
+  rawTimesheets: TimesheetEntry[];
+  status?: 'draft' | 'sent_to_subcontractor' | 'subcontractor_reviewed' | 'admin_finalized';
+  subcontractorDisputedHours?: number;
+  adminFinalizedHours?: number;
+  disputeNotes?: string;
+  disputedAt?: string;
+  disputedBy?: string;
+};
+
+export type TimesheetEntry = {
+  id: string;
+  date: string;
+  dayOfWeek: string;
+  openHours: string;
+  closeHours: string;
+  closingHours?: string;
+  totalHours: number;
+  operatorName: string;
+  isRainDay: boolean;
+  isStrikeDay: boolean;
+  isBreakdown: boolean;
+  isPublicHoliday: boolean;
+  notes?: string;
+  operatorNotes?: string;
+  additionalNotes?: string;
+  adminNotes?: string;
+  billingNotes?: string;
+  verifiedAt?: string;
+  hasOriginalEntry?: boolean;
+  originalEntryData?: Partial<TimesheetEntry>;
+  originalEntryId?: string;
+  adjustedBy?: string;
+  adjustedAt?: string;
+  isAdjustment?: boolean;
+  agreedByRole?: 'Admin' | 'Plant Manager' | 'Operator';
+};
+
+
+
+// ============================================================================
+// MASTER ACCOUNT & COMPANY OWNERSHIP SYSTEM
+// ============================================================================
+
+/**
+ * Company Ownership - Defines ownership percentages for master accounts
+ * Supports multi-owner companies with percentage-based ownership
+ */
+export type CompanyOwnership = {
+  id: string;
+  companyId: string;
+  masterAccountId: string;
+  masterAccountName: string; // Denormalized for performance
+  ownershipPercentage: number; // Must be between 0-100
+  status: 'active' | 'pending' | 'suspended' | 'revoked';
+  votingRights: boolean; // Can vote on company decisions
+  economicRights: boolean; // Receives financial benefits
+  transferRestrictions?: string; // Any restrictions on transfer
+  grantedAt: any;
+  grantedBy: string; // Master Account ID who granted ownership
+  approvedAt?: any;
+  approvedBy?: string; // Required for ownership changes
+  revokedAt?: any;
+  revokedBy?: string;
+  revocationReason?: string;
+  notes?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+/**
+ * Company Role - Defines functional roles separate from ownership
+ * A master account can have both ownership and roles
+ */
+export type CompanyRole = {
+  id: string;
+  companyId: string;
+  masterAccountId: string;
+  masterAccountName: string; // Denormalized
+  role: 'Director' | 'Admin' | 'Manager' | 'Viewer' | 'Custom';
+  customRoleName?: string; // For custom roles
+  permissions: string[]; // Array of permission strings
+  status: 'active' | 'suspended' | 'revoked';
+  assignedAt: any;
+  assignedBy: string; // Master Account ID
+  revokedAt?: any;
+  revokedBy?: string;
+  notes?: string;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+/**
+ * Master ID Verification - Tracks ID document verification process
+ */
+export type MasterIDVerification = {
+  id: string;
+  masterAccountId: string;
+  nationalIdNumber: string;
+  documentType: 'national_id' | 'passport' | 'drivers_license' | 'other';
+  documentUrl: string; // Storage URL for uploaded document
+  storagePath: string; // Firebase storage path
+  status: IDVerificationStatus;
+  submittedAt: any;
+  reviewedAt?: any;
+  reviewedBy?: string; // Admin ID who reviewed
+  reviewNotes?: string;
+  rejectionReason?: string;
+  verifiedAt?: any;
+  expiryDate?: any; // If document has expiry
+  metadata?: {
+    fileName?: string;
+    fileSize?: number;
+    mimeType?: string;
+  };
+  createdAt: any;
+  updatedAt?: any;
+};
+
+/**
+ * Fraud Dispute - Handles duplicate national ID conflicts
+ */
+export type FraudDispute = {
+  id: string;
+  nationalIdNumber: string; // The disputed ID number
+  reportedBy: string; // Master Account ID reporting fraud
+  reportedByName: string;
+  reportedByEmail?: string;
+  existingAccountId?: string; // The existing account with this ID
+  existingAccountName?: string;
+  newAccountId: string; // The new account attempting to use same ID
+  newAccountName: string;
+  status: 'pending' | 'under_investigation' | 'resolved' | 'dismissed';
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  disputeType: 'duplicate_id' | 'identity_theft' | 'data_error' | 'other';
+  explanation: string; // Explanation from reporter
+  supportingDocuments?: {
+    url: string;
+    storagePath: string;
+    fileName: string;
+    uploadedAt: any;
+  }[];
+  investigationNotes?: string;
+  resolution?: 'verified_original' | 'verified_new' | 'both_legitimate' | 'both_blocked' | 'data_corrected';
+  resolvedAt?: any;
+  resolvedBy?: string; // Admin ID
+  resolutionDetails?: string;
+  actionTaken?: string; // What action was taken (merge, block, etc.)
+  reportedAt: any;
+  createdAt: any;
+  updatedAt?: any;
+};
+
+/**
+ * Ownership Change Request - Multi-owner approval workflow
+ */
+export type OwnershipChangeRequest = {
+  id: string;
+  companyId: string;
+  companyName: string;
+  requestType: 'add_owner' | 'remove_owner' | 'change_percentage' | 'transfer_ownership';
+  requestedBy: string; // Master Account ID
+  requestedByName: string;
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled';
+  // Change details
+  targetMasterAccountId: string; // Account being added/removed/changed
+  targetMasterAccountName: string;
+  currentOwnershipPercentage?: number;
+  proposedOwnershipPercentage?: number;
+  transferToMasterAccountId?: string; // For transfers
+  transferToMasterAccountName?: string;
+  // Approval workflow
+  requiredApprovals: number; // How many approvals needed
+  currentApprovals: number; // How many received
+  approvers: {
+    masterAccountId: string;
+    masterAccountName: string;
+    approvedAt?: any;
+    rejectedAt?: any;
+    reason?: string;
+  }[];
+  // Metadata
+  reason: string;
+  notes?: string;
+  createdAt: any;
+  approvedAt?: any;
+  rejectedAt?: any;
+  processedAt?: any;
+  processedBy?: string;
+};
+
+/**
+ * Enhanced Audit Log for Master Account Operations
+ */
+/**
+ * User Type for Permissions
+ * Represents different user roles that can have permissions assigned
+ */
+export type UserTypeForPermissions = 
+  | 'Master'
+  | 'Planner'
+  | 'HR'
+  | 'HSE'
+  | 'Plant Manager'
+  | 'Supervisor'
+  | 'Employee'
+  | 'Operator'
+  | 'Staff Manager'
+  | 'Logistics Manager'
+  | 'Onboarding & Inductions'
+  | 'General Worker'
+  | 'QC'
+  | 'Surveyor'
+  | 'Accounts'
+  | 'Admin';
+
+/**
+ * Permission ID
+ * Represents different permissions that can be granted
+ */
+export type PermissionId =
+  | 'face_enrolment'
+  | 'face_removal'
+  | 'face_update';
+
+/**
+ * User Type Permissions
+ * Maps a user type to its permissions
+ */
+export type UserTypePermissions = {
+  id?: string;
+  masterAccountId: string;
+  userType: UserTypeForPermissions;
+  permissions: {
+    face_enrolment: boolean;
+    face_removal: boolean;
+    face_update: boolean;
+  };
+  updatedAt?: any;
+  updatedBy?: string;
+  createdAt: any;
+};
+
+export type MasterAccountAuditLog = {
+  id: string;
+  masterAccountId: string;
+  masterAccountName: string;
+  companyId?: string; // If action is company-specific
+  companyName?: string;
+  siteId?: string; // If action is site-specific
+  siteName?: string;
+  actionType: 
+    | 'master_account_created'
+    | 'master_account_verified'
+    | 'id_document_uploaded'
+    | 'id_verification_approved'
+    | 'id_verification_rejected'
+    | 'duplicate_id_detected'
+    | 'fraud_dispute_created'
+    | 'company_created'
+    | 'company_ownership_added'
+    | 'company_ownership_removed'
+    | 'company_ownership_changed'
+    | 'company_role_assigned'
+    | 'company_role_revoked'
+    | 'ownership_change_requested'
+    | 'ownership_change_approved'
+    | 'ownership_change_rejected'
+    | 'payout_processed'
+    | 'asset_edit'
+    | 'timesheet_approval'
+    | 'user_role_change'
+    | 'restriction_applied'
+    | 'restriction_lifted'
+    | 'other';
+  actionDescription: string;
+  performedBy: string; // Master Account ID or system
+  performedByName: string;
+  targetEntity?: string; // ID of entity being acted upon
+  targetEntityType?: 'master_account' | 'company' | 'ownership' | 'role' | 'site' | 'asset' | 'user' | 'timesheet';
+  previousValue?: string; // JSON string of previous state
+  newValue?: string; // JSON string of new state
+  ipAddress?: string;
+  userAgent?: string;
+  metadata?: Record<string, any>; // Additional context
+  timestamp: any;
+  createdAt: any;
+};
+
