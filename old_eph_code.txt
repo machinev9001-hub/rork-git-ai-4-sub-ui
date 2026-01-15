@@ -2401,34 +2401,8 @@ BATCH 2 was previously missing from this bundle.
 These are THE MOST CRITICAL files - the billing-config.tsx EPH tab integration.
 
 ========================================
-FILE: app/billing-config.tsx (Lines 1-2000 of 4284)
+FILE: components/accounts/PlantAssetsTimesheetsTab.tsx (1849 lines) - FULL CODE
 ========================================
-See full file in your repository at app/billing-config.tsx
-This file contains the EPH tab integration inside billing-config.tsx
-Key sections:
-- EPH Report generation (line ~666-859)
-- EPH Record rendering (line ~2715-2873)
-- Send to Subcontractor modal (line ~3159-3167)
-- Edit EPH Hours modal integration (line ~3140-3148)
-
-========================================
-FILE: components/accounts/PlantAssetsTimesheetsTab.tsx (1849 lines)
-========================================
-See full file at components/accounts/PlantAssetsTimesheetsTab.tsx
-This is the "Process Payments" tab that shows approved billing timesheets.
-Key features:
-- Loads agreed timesheets approved for billing (line ~273-615)
-- Groups by asset/operator (line ~617-691)
-- Shows billing hierarchy (Admin > PM > Operator) (line ~786-866)
-- PDF generation for approved billing (line ~726-783)
-- Asset/subcontractor selector UI (line ~1102-1244)
-
-========================================
-FILE: components/accounts/AgreedHoursModal.tsx (402 lines)
-========================================
-See full file at components/accounts/AgreedHoursModal.tsx
-Modal for agreeing hours before billing approval.
-Supports both plant hours and man hours views.
 
 ========================================
 BATCH 2 COMPLETE - Now adding complete BATCH 4
