@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { View, StyleSheet, Animated, Text } from 'react-native';
+import { View, StyleSheet, Animated, Text, Platform } from 'react-native';
 import { useOfflineStatus } from '@/utils/hooks/useOfflineStatus';
 import { RefreshCw, WifiOff, CheckCircle, AlertCircle, Clock, MapPin } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +9,8 @@ import { getInitials } from '@/utils/nameHelpers';
 export default function HeaderSyncStatus() {
   const { isConnected, syncStatus } = useOfflineStatus();
   const spinValue = useRef(new Animated.Value(0)).current;
+  const pulseValue = useRef(new Animated.Value(1)).current;
+  const glowValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (syncStatus.isSyncing) {
@@ -19,10 +21,47 @@ export default function HeaderSyncStatus() {
           useNativeDriver: true,
         })
       ).start();
+      
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseValue, {
+            toValue: 1.3,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(pulseValue, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
     } else {
       spinValue.setValue(0);
+      pulseValue.setValue(1);
     }
-  }, [syncStatus.isSyncing, spinValue]);
+  }, [syncStatus.isSyncing, spinValue, pulseValue]);
+
+  useEffect(() => {
+    if (syncStatus.pendingCount > 0 || syncStatus.failedCount > 0) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowValue, {
+            toValue: 1,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+          Animated.timing(glowValue, {
+            toValue: 0,
+            duration: 1000,
+            useNativeDriver: true,
+          }),
+        ])
+      ).start();
+    } else {
+      glowValue.setValue(0);
+    }
+  }, [syncStatus.pendingCount, syncStatus.failedCount, glowValue]);
 
   const spin = spinValue.interpolate({
     inputRange: [0, 1],
@@ -31,30 +70,58 @@ export default function HeaderSyncStatus() {
 
   const getStatusIcon = () => {
     if (!isConnected) {
-      return <WifiOff size={16} color="#ef4444" />;
+      return (
+        <Animated.View style={{ transform: [{ scale: pulseValue }] }}>
+          <WifiOff size={16} color="#ef4444" strokeWidth={2.5} />
+        </Animated.View>
+      );
     }
 
     if (syncStatus.isSyncing) {
       return (
-        <Animated.View style={{ transform: [{ rotate: spin }] }}>
-          <RefreshCw size={16} color="#FBBC04" />
+        <Animated.View style={{ transform: [{ rotate: spin }, { scale: pulseValue }] }}>
+          <RefreshCw size={16} color="#FBBC04" strokeWidth={2.5} />
         </Animated.View>
       );
     }
 
     if (syncStatus.failedCount > 0) {
-      return <AlertCircle size={16} color="#f59e0b" />;
+      return (
+        <Animated.View style={{ opacity: glowValue.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) }}>
+          <AlertCircle size={16} color="#f59e0b" strokeWidth={2.5} />
+        </Animated.View>
+      );
     }
 
     if (syncStatus.pendingCount > 0) {
-      return <Clock size={16} color="#6b7280" />;
+      return (
+        <Animated.View style={{ opacity: glowValue.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }}>
+          <Clock size={16} color="#6b7280" strokeWidth={2.5} />
+        </Animated.View>
+      );
     }
 
-    return <CheckCircle size={16} color="#10b981" />;
+    return <CheckCircle size={16} color="#10b981" strokeWidth={2.5} />;
   };
+
+  const glowOpacity = glowValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, 0.3],
+  });
 
   return (
     <View style={styles.container}>
+      {(syncStatus.isSyncing || syncStatus.pendingCount > 0 || syncStatus.failedCount > 0) && (
+        <Animated.View 
+          style={[
+            styles.glow,
+            { 
+              opacity: glowOpacity,
+              backgroundColor: syncStatus.isSyncing ? '#FBBC04' : syncStatus.failedCount > 0 ? '#f59e0b' : '#6b7280',
+            }
+          ]} 
+        />
+      )}
       {getStatusIcon()}
     </View>
   );
@@ -102,6 +169,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginLeft: 8,
+  },
+  glow: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#FBBC04',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
   titleContainer: {
     flexDirection: 'row',

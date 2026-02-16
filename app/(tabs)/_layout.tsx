@@ -1,11 +1,59 @@
 import { Tabs } from "expo-router";
 import { Home, Settings } from "lucide-react-native";
-import React from "react";
-import { StyleSheet, Platform } from "react-native";
+import React, { useRef, useEffect } from "react";
+import { StyleSheet, Platform, Animated } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuth } from "@/contexts/AuthContext";
 import { Colors, getRoleAccentColor } from "@/constants/colors";
 import HeaderSyncStatus from "@/components/HeaderSyncStatus";
+
+function AnimatedTabIcon({ Icon, color, focused }: { Icon: any; color: string; focused: boolean }) {
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const rotateAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (focused) {
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1.15,
+          friction: 6,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    } else {
+      Animated.parallel([
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          friction: 6,
+          tension: 100,
+          useNativeDriver: true,
+        }),
+        Animated.timing(rotateAnim, {
+          toValue: 0,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+      ]).start();
+    }
+  }, [focused, scaleAnim, rotateAnim]);
+
+  const rotate = rotateAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '5deg'],
+  });
+
+  return (
+    <Animated.View style={{ transform: [{ scale: scaleAnim }, { rotate }] }}>
+      <Icon size={24} color={color} strokeWidth={focused ? 2.5 : 2} />
+    </Animated.View>
+  );
+}
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -46,14 +94,18 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Home",
-          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon Icon={Home} color={color} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon Icon={Settings} color={color} focused={focused} />
+          ),
         }}
       />
     </Tabs>
@@ -66,6 +118,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 2,
     borderTopColor: Colors.accent,
     paddingTop: 8,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 8,
   },
   tabBarLabel: {
     fontSize: 12,

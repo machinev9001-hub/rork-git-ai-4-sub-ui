@@ -1,6 +1,6 @@
 import { Stack, useRouter } from 'expo-router';
-import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, Image } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Alert, Image, Animated } from 'react-native';
 import { Building2, ChevronDown, ChevronUp, LogOut, User as UserIcon, Bug, QrCode, Scan, Clock, FileText, AlertTriangle, Package, Settings as SettingsIcon, CreditCard, MapPin, Plus, Users, Truck, Fuel } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
@@ -20,6 +20,14 @@ export default function SettingsScreen() {
   const [isAssetsEmployeesExpanded, setIsAssetsEmployeesExpanded] = useState(false);
   const [facePhotoUri, setFacePhotoUri] = useState<string | null>(null);
   const roleAccentColor = getRoleAccentColor(user?.role);
+  
+  const controlSystemsHeight = useRef(new Animated.Value(0)).current;
+  const reportsHeight = useRef(new Animated.Value(0)).current;
+  const masterControlsHeight = useRef(new Animated.Value(0)).current;
+  const siteSetupHeight = useRef(new Animated.Value(0)).current;
+  const companySiteHeight = useRef(new Animated.Value(0)).current;
+  const assetsPoolHeight = useRef(new Animated.Value(0)).current;
+  const assetsEmployeesHeight = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     const loadFacePhoto = async () => {
@@ -41,6 +49,93 @@ export default function SettingsScreen() {
   const isHSE = user?.role === 'HSE' || user?.role === 'Onboarding & Inductions';
   const canPrintQR = isMasterOrPlanner || isHSE;
   const canUseFaceClock = ['Planner', 'Supervisor', 'HSE', 'HR'].includes(user?.role || '');
+
+  const toggleSection = (expanded: boolean, setter: (value: boolean) => void, heightAnim: Animated.Value) => {
+    setter(!expanded);
+    Animated.spring(heightAnim, {
+      toValue: expanded ? 0 : 1,
+      friction: 8,
+      tension: 80,
+      useNativeDriver: false,
+    }).start();
+  };
+
+  useEffect(() => {
+    if (isControlSystemsExpanded) {
+      Animated.spring(controlSystemsHeight, {
+        toValue: 1,
+        friction: 8,
+        tension: 80,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isControlSystemsExpanded, controlSystemsHeight]);
+
+  useEffect(() => {
+    if (isReportsExpanded) {
+      Animated.spring(reportsHeight, {
+        toValue: 1,
+        friction: 8,
+        tension: 80,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isReportsExpanded, reportsHeight]);
+
+  useEffect(() => {
+    if (isMasterControlsExpanded) {
+      Animated.spring(masterControlsHeight, {
+        toValue: 1,
+        friction: 8,
+        tension: 80,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isMasterControlsExpanded, masterControlsHeight]);
+
+  useEffect(() => {
+    if (isSiteSetupExpanded) {
+      Animated.spring(siteSetupHeight, {
+        toValue: 1,
+        friction: 8,
+        tension: 80,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isSiteSetupExpanded, siteSetupHeight]);
+
+  useEffect(() => {
+    if (isCompanySiteExpanded) {
+      Animated.spring(companySiteHeight, {
+        toValue: 1,
+        friction: 8,
+        tension: 80,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isCompanySiteExpanded, companySiteHeight]);
+
+  useEffect(() => {
+    if (isAssetsPoolExpanded) {
+      Animated.spring(assetsPoolHeight, {
+        toValue: 1,
+        friction: 8,
+        tension: 80,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isAssetsPoolExpanded, assetsPoolHeight]);
+
+  useEffect(() => {
+    if (isAssetsEmployeesExpanded) {
+      Animated.spring(assetsEmployeesHeight, {
+        toValue: 1,
+        friction: 8,
+        tension: 80,
+        useNativeDriver: false,
+      }).start();
+    }
+  }, [isAssetsEmployeesExpanded, assetsEmployeesHeight]);
 
   const handleLogout = async () => {
     Alert.alert(
@@ -870,10 +965,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600' as const,
+    fontWeight: '700' as const,
     color: Colors.textSecondary,
     marginBottom: 12,
     marginLeft: 4,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
   },
   card: {
     backgroundColor: Colors.cardBg,
@@ -887,12 +984,12 @@ const styles = StyleSheet.create({
   },
   menuCard: {
     backgroundColor: Colors.cardBg,
-    borderRadius: 12,
+    borderRadius: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
     marginBottom: 12,
   },
   row: {
@@ -942,11 +1039,16 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
   },
   subMenuCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
+    backgroundColor: Colors.surfaceElevated,
+    borderRadius: 12,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: Colors.borderLight,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 2,
   },
   subMenuItem: {
     flexDirection: 'row',
@@ -962,12 +1064,13 @@ const styles = StyleSheet.create({
   subMenuTitle: {
     fontSize: 14,
     fontWeight: '600' as const,
-    color: '#000000',
+    color: Colors.text,
     marginBottom: 2,
+    letterSpacing: 0.2,
   },
   subMenuDescription: {
     fontSize: 12,
-    color: '#666666',
+    color: Colors.textSecondary,
   },
   menuIcon: {
     width: 48,
@@ -977,6 +1080,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   menuContent: {
     flex: 1,

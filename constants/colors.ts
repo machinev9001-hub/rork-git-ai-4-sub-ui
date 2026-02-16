@@ -1,12 +1,19 @@
 // Ensure Colors is always defined and immutable
 export const Colors = {
   background: "#000000",
+  backgroundSecondary: "#0A0A0A",
   text: "#FFFFFF",
-  textSecondary: "#A0A0A0",
+  textSecondary: "#9CA3AF",
+  textTertiary: "#6B7280",
   accent: "#FFD600",
+  accentDark: "#E6C200",
+  accentLight: "#FFED4E",
   surface: "#1A1A1A",
+  surfaceElevated: "#262626",
   border: "#333333",
+  borderLight: "#404040",
   cardBg: "#1E1E1E",
+  cardBgElevated: "#2A2A2A",
   headerBg: "#000000",
   successBg: "#064E3B",
   successText: "#6EE7B7",
@@ -16,6 +23,8 @@ export const Colors = {
   errorText: "#FCA5A5",
   infoBg: "#2A2A2A",
   infoText: "#FFD600",
+  overlay: "rgba(0, 0, 0, 0.5)",
+  overlayLight: "rgba(0, 0, 0, 0.3)",
 } as const;
 
 export const BACKGROUND_COLOR = '#000000';

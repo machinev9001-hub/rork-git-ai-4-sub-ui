@@ -1,5 +1,5 @@
 import { Stack, router, useFocusEffect } from 'expo-router';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Animated,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -30,6 +31,30 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   
   const pinInputRef = useRef<TextInput>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(30)).current;
+  const logoScale = useRef(new Animated.Value(0.8)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+      Animated.spring(logoScale, {
+        toValue: 1,
+        friction: 6,
+        tension: 40,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, slideAnim, logoScale]);
 
   useFocusEffect(
     useCallback(() => {
@@ -172,7 +197,7 @@ export default function LoginScreen() {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.content}
         >
-          <View style={styles.header}>
+          <Animated.View style={[styles.header, { opacity: fadeAnim, transform: [{ scale: logoScale }] }]}>
             <TouchableOpacity
               testID="login-logo-button"
               activeOpacity={0.7}
@@ -206,9 +231,9 @@ export default function LoginScreen() {
                 <Text style={styles.offlineText}>● Offline Mode</Text>
               </View>
             )}
-          </View>
+          </Animated.View>
 
-          <View style={styles.form}>
+          <Animated.View style={[styles.form, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
             <Text style={styles.formTitle}>Sign In</Text>
             
             <View style={styles.inputContainer}>
@@ -319,9 +344,9 @@ export default function LoginScreen() {
                 <Text style={styles.qrButtonText}>Scan QR</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </Animated.View>
 
-          <View style={styles.footer}>
+          <Animated.View style={[styles.footer, { opacity: fadeAnim }]}>
             <TouchableOpacity
               testID="login-activate-button"
               style={styles.activateButton}
@@ -333,7 +358,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
             
             <Text style={styles.version}>Machine App V1.0.0</Text>
-          </View>
+          </Animated.View>
         </KeyboardAvoidingView>
       </View>
     </SafeAreaView>
@@ -439,8 +464,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     fontSize: 16,
     color: Colors.text,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: Colors.border,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   buttonRow: {
     flexDirection: 'row',
@@ -458,11 +487,21 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     backgroundColor: Colors.accent,
+    shadowColor: Colors.accent,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   qrButton: {
     backgroundColor: Colors.surface,
     borderWidth: 2,
     borderColor: Colors.accent,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 2,
   },
   qrButtonText: {
     fontSize: 16,

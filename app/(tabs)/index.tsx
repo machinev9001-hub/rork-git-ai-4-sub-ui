@@ -1,6 +1,6 @@
 import { Stack, router } from 'expo-router';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
-import { useCallback, useState, useMemo } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, RefreshControl, Animated } from 'react-native';
+import { useCallback, useState, useMemo, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { Colors, getRoleAccentColor } from '@/constants/colors';
@@ -10,6 +10,7 @@ import {
   HardHat, UserCheck, Lock
 } from 'lucide-react-native';
 import { StandardHeaderRight, StandardSiteIndicator } from '@/components/HeaderSyncStatus';
+import AnimatedCard from '@/components/AnimatedCard';
 import { normalizeRole } from '@/utils/roles';
 import { useFeatureFlags } from '@/utils/hooks/useFeatureFlags';
 import { FeatureFlags, VASFeatureId } from '@/types';
@@ -127,6 +128,11 @@ export default function HomeScreen() {
     router.push(item.route as any);
   };
 
+  const createPressAnimation = () => {
+    const scaleValue = useRef(new Animated.Value(1)).current;
+    return { scaleValue };
+  };
+
   const isItemLocked = useCallback((item: MenuItem): boolean => {
     if (!item.featureKey) return false;
     return !featureFlags[item.featureKey];
@@ -178,11 +184,12 @@ export default function HomeScreen() {
             const Icon = item.icon;
             const locked = isItemLocked(item);
             return (
-              <TouchableOpacity
+              <AnimatedCard
                 key={index}
-                style={[styles.menuCard, locked && styles.menuCardLocked]}
                 onPress={() => handleMenuPress(item)}
-                activeOpacity={0.7}
+                delay={index * 50}
+                elevation={3}
+                style={[styles.menuCard, locked && styles.menuCardLocked]}
               >
                 <View style={[styles.iconContainer, { backgroundColor: locked ? '#9ca3af' : item.bgColor }]}>
                   {locked ? (
@@ -201,7 +208,7 @@ export default function HomeScreen() {
                     <Text style={styles.lockedText}>Locked</Text>
                   </View>
                 )}
-              </TouchableOpacity>
+              </AnimatedCard>
             );
           })}
         </View>
@@ -257,26 +264,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
+    padding: 20,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: 16,
   },
   menuCard: {
     width: '48%',
     aspectRatio: 1,
-    borderRadius: 12,
     padding: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.cardBg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
   },
   iconContainer: {
     width: 70,
@@ -285,12 +285,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   menuTitle: {
-    fontSize: 15,
-    fontWeight: '600' as const,
+    fontSize: 16,
+    fontWeight: '700' as const,
     color: Colors.text,
     textAlign: 'center' as const,
+    letterSpacing: 0.3,
   },
   menuSubtitle: {
     fontSize: 10,

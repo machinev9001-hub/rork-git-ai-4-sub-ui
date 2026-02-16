@@ -13,6 +13,7 @@ import { offlineQueue } from "../utils/offlineQueue";
 import { sitePackManager } from "../utils/sitePackManager";
 import { dataFreshnessManager } from "../utils/dataFreshnessSync";
 import FreshnessNotificationBanner from "../components/FreshnessNotificationBanner";
+import LoadingScreen from "../components/LoadingScreen";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -332,33 +333,7 @@ function RootLayoutNav({ onReady }: RootLayoutNavProps) {
 
   if (isLoading || authInitializing) {
     console.log('[RootLayout] Rendering loading screen...', { isLoading, authInitializing });
-    return (
-      <LinearGradient
-        colors={['#1e3a8a', '#3b82f6', '#60a5fa']}
-        style={{ flex: 1 }}
-      >
-        <View 
-          style={{ 
-            flex: 1, 
-            justifyContent: 'center', 
-            alignItems: 'center'
-          }}
-        >
-          <View style={{ alignItems: 'center', gap: 16 }}>
-            <ActivityIndicator size="large" color="#ffffff" />
-            <Text style={{ 
-              fontSize: 28, 
-              color: '#ffffff', 
-              fontWeight: '700' as const 
-            }}>Machine App</Text>
-            <Text style={{ 
-              fontSize: 14, 
-              color: '#cbd5e1'
-            }}>Loading...</Text>
-          </View>
-        </View>
-      </LinearGradient>
-    );
+    return <LoadingScreen />;
   }
 
   console.log('[RootLayout] Loading complete, rendering main app');
